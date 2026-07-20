@@ -8,9 +8,9 @@ import {
 } from 'react'
 import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues } from './lib/aria'
+import { usePlayEnergy } from './lib/playEnergy'
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
-  downloadUserData,
   findProfileByEmail,
   getCurrentProfile,
   getRecordingBlob,
@@ -532,6 +532,7 @@ function PracticeStage({
 }) {
   const [active, setActive] = useState(true)
   const cue = useAriaCues(active, 'practice')
+  const { energy, denied } = usePlayEnergy(active)
 
   return (
     <section className="slide">
@@ -547,10 +548,15 @@ function PracticeStage({
           mime={partitionMime}
           name={partitionName}
           autoScroll={active}
-          speed={32}
+          energy={energy}
         />
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
+      {denied ? (
+        <p className="footer-note" style={{ paddingTop: '0.75rem' }}>
+          Micro refusé : la partition ne peut pas suivre ton jeu. Autorise le micro pour synchroniser.
+        </p>
+      ) : null}
       <div className="actions">
         <button type="button" className="btn btn-ghost" onClick={() => setActive((v) => !v)}>
           {active ? 'Mettre Aria en pause' : 'Réactiver Aria'}
@@ -584,6 +590,7 @@ function RecordStage({
   const { status, seconds, start, stop } = useMediaRecorder()
   const recording = status === 'recording'
   const cue = useAriaCues(recording, 'record')
+  const { energy } = usePlayEnergy(recording)
   const takesLeft = MAX_TAKES - takesUsed
 
   const toggle = async () => {
@@ -618,7 +625,7 @@ function RecordStage({
                 name={partitionName}
                 compact
                 autoScroll={recording}
-                speed={30}
+                energy={energy}
               />
               {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
             </div>
@@ -693,10 +700,12 @@ function Report({
   state,
   onReplay,
   onNewPiece,
+  onOpenHistory,
 }: {
   state: AppState
   onReplay: () => void
   onNewPiece: () => void
+  onOpenHistory: () => void
 }) {
   const feedback = state.feedback
   if (!feedback) return null
@@ -760,8 +769,8 @@ function Report({
             Choisir un autre morceau
           </button>
         )}
-        <button type="button" className="btn btn-ghost" onClick={downloadUserData}>
-          Exporter mes données
+        <button type="button" className="btn btn-ghost" onClick={onOpenHistory}>
+          Voir mes sessions
         </button>
       </div>
       {exhausted ? (
@@ -807,10 +816,10 @@ function HistoryView({
 
   return (
     <section className="slide">
-      <span className="eyebrow">Espace personnel</span>
-      <h1>Mes enregistrements & retours</h1>
+      <span className="eyebrow">Mon compte · Sessions</span>
+      <h1>Historique de travail</h1>
       <p className="lead">
-        Données internes à ton appareil — confidentielles, non partagées avec d’autres utilisateurs.
+        Rejoue tes takes et relis tes comptes rendus. Tout reste sur ton appareil (interne).
       </p>
       {sessions.length === 0 ? (
         <p className="lead">Aucun take enregistré pour l’instant.</p>
@@ -839,9 +848,6 @@ function HistoryView({
       <div className="actions">
         <button type="button" className="btn btn-primary" onClick={onBack}>
           Retour
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={downloadUserData}>
-          Exporter mes données
         </button>
       </div>
     </section>
@@ -1056,9 +1062,9 @@ export default function App() {
   } else if (state.slide === 7 && withPartition) {
     body = <Analyzing firstName={state.profile.firstName} onDone={afterAnalyze} />
   } else if (state.slide === 7 && !withPartition) {
-    body = <Report state={state} onReplay={replay} onNewPiece={newPiece} />
+    body = <Report state={state} onReplay={replay} onNewPiece={newPiece} onOpenHistory={() => setShowHistory(true)} />
   } else if (state.slide === 8 && withPartition) {
-    body = <Report state={state} onReplay={replay} onNewPiece={newPiece} />
+    body = <Report state={state} onReplay={replay} onNewPiece={newPiece} onOpenHistory={() => setShowHistory(true)} />
   }
 
   return (
@@ -1068,7 +1074,7 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {state.profile.email ? (
             <button type="button" className="top-link" onClick={() => setShowHistory(true)}>
-              Mes retours
+              Mes sessions
             </button>
           ) : null}
           {!showHistory && state.slide > 1 ? <PhaseNav phase={phase} /> : null}

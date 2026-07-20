@@ -5,10 +5,10 @@ type PartitionViewerProps = {
   mime: string | null
   name?: string
   compact?: boolean
-  /** Auto-scroll / abaisse la partition pendant le jeu */
+  /** Défile seulement si true */
   autoScroll?: boolean
-  /** Vitesse en px/s */
-  speed?: number
+  /** Énergie audio 0–1 : plus tu joues, plus ça avance ; silence ≈ pause */
+  energy?: number
 }
 
 export function PartitionViewer({
@@ -17,10 +17,12 @@ export function PartitionViewer({
   name,
   compact,
   autoScroll = false,
-  speed = 28,
+  energy = 0,
 }: PartitionViewerProps) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
+  const energyRef = useRef(energy)
+  energyRef.current = energy
 
   const isPdf =
     Boolean(src) &&
@@ -36,27 +38,25 @@ export function PartitionViewer({
 
     let raf = 0
     let last = performance.now()
-    let offset = 0
+    let offset = viewport.scrollTop
 
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
       const max = Math.max(0, inner.scrollHeight - viewport.clientHeight)
-      if (max > 0) {
-        offset = Math.min(max, offset + speed * dt)
+      const e = energyRef.current
+      // Silence / quasi-silence : quasi à l’arrêt. Jeu clair : avance mesurée.
+      const pxPerSec = e < 0.05 ? 0 : 6 + e * 38
+      if (max > 0 && pxPerSec > 0) {
+        offset = Math.min(max, offset + pxPerSec * dt)
         viewport.scrollTop = offset
-        // Boucle douce quand on arrive en bas
-        if (offset >= max - 1) {
-          offset = 0
-          viewport.scrollTop = 0
-        }
       }
       raf = requestAnimationFrame(tick)
     }
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [autoScroll, speed, src, compact])
+  }, [autoScroll, src, compact])
 
   return (
     <div
@@ -88,7 +88,11 @@ export function PartitionViewer({
           />
         )}
       </div>
-      {autoScroll ? <div className="scroll-hint">La partition s’abaisse pendant que tu joues</div> : null}
+      {autoScroll ? (
+        <div className="scroll-hint">
+          Défilement calé sur ton jeu — silence = pause, tu joues = la partition s’abaisse
+        </div>
+      ) : null}
     </div>
   )
 }
