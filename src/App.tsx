@@ -9,16 +9,25 @@ import {
 import { analyzePerformance, useAriaCues } from './lib/aria'
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
+  downloadUserData,
+  findProfileByEmail,
+  getCurrentProfile,
+  saveProfile,
+  saveSession,
+} from './lib/storage'
+import {
   MAX_TAKES,
   initialState,
   type ArrangementKind,
   type AppState,
+  type UserProfile,
 } from './types'
 
-type ThemeId = 'noir' | 'poussin' | 'acrylique' | 'rose' | 'turquoise' | 'arabesque'
+type ThemeId = 'noir' | 'noir-rose' | 'poussin' | 'acrylique' | 'rose' | 'turquoise' | 'arabesque'
 
 const THEMES: { id: ThemeId; label: string }[] = [
   { id: 'noir', label: 'Noir or' },
+  { id: 'noir-rose', label: 'Noir rose' },
   { id: 'poussin', label: 'Poussin' },
   { id: 'acrylique', label: 'Acrylique' },
   { id: 'rose', label: 'Rose' },
@@ -118,37 +127,135 @@ function Welcome({ onNext }: { onNext: () => void }) {
   )
 }
 
-function Signup({
+
+type AuthMode = 'choose' | 'login' | 'signup'
+
+function AuthSlide({
   profile,
   onChange,
+  onProfileLoaded,
   onNext,
 }: {
   profile: AppState['profile']
   onChange: (key: keyof AppState['profile'], value: string) => void
+  onProfileLoaded: (profile: UserProfile) => void
   onNext: () => void
 }) {
-  const valid =
+  const [mode, setMode] = useState<AuthMode>('choose')
+  const [loginEmail, setLoginEmail] = useState(profile.email)
+  const [loginError, setLoginError] = useState('')
+
+  const signupValid =
     profile.firstName.trim() &&
     profile.lastName.trim() &&
     profile.email.trim() &&
     profile.phone.trim()
 
-  const submit = (e: FormEvent) => {
+  const submitSignup = (e: FormEvent) => {
     e.preventDefault()
-    if (valid) onNext()
+    if (!signupValid) return
+    saveProfile(profile)
+    onNext()
+  }
+
+  const submitLogin = (e: FormEvent) => {
+    e.preventDefault()
+    const found = findProfileByEmail(loginEmail)
+    if (!found) {
+      setLoginError(
+        "Aucun compte trouvé avec cet email. Choisis « C'est ma première fois » pour t'inscrire.",
+      )
+      return
+    }
+    setLoginError('')
+    onProfileLoaded(found)
+    saveProfile(found)
+    onNext()
+  }
+
+  if (mode === 'choose') {
+    return (
+      <section className="slide">
+        <span className="eyebrow">Slide 2 · Accès</span>
+        <h1>Tu as déjà un compte Sonique ?</h1>
+        <p className="lead">Comme ça, tu n'as pas à retaper toutes tes infos si tu reviens.</p>
+        <div className="choice-grid" style={{ marginInline: 'auto' }}>
+          <button type="button" className="choice" onClick={() => setMode('login')}>
+            Connexion
+            <small>J'ai déjà un compte — email suffisant pour retrouver mon profil.</small>
+          </button>
+          <button type="button" className="choice" onClick={() => setMode('signup')}>
+            C'est ma première fois
+            <small>Je crée mon espace : prénom, nom, téléphone, email.</small>
+          </button>
+        </div>
+        <p className="footer-note">
+          Support :{' '}
+          <a className="support" href="mailto:sonique@contact.co">
+            sonique@contact.co
+          </a>
+        </p>
+      </section>
+    )
+  }
+
+  if (mode === 'login') {
+    return (
+      <section className="slide slide-left">
+        <span className="eyebrow">Connexion</span>
+        <h1>Bon retour</h1>
+        <p className="lead">Entre l'email utilisé à l'inscription. On retrouve ton profil sur cet appareil.</p>
+        <form className="stack" onSubmit={submitLogin}>
+          <label className="field">
+            <span>Email</span>
+            <input
+              type="email"
+              autoComplete="email"
+              value={loginEmail}
+              onChange={(e) => {
+                setLoginEmail(e.target.value)
+                setLoginError('')
+              }}
+              required
+            />
+          </label>
+          {loginError ? (
+            <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
+              {loginError}
+            </p>
+          ) : null}
+          <div className="actions">
+            <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
+              Retour
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={!loginEmail.trim()}>
+              Continuer
+            </button>
+          </div>
+        </form>
+        <button
+          type="button"
+          className="linkish"
+          style={{ marginTop: '1rem' }}
+          onClick={() => setMode('signup')}
+        >
+          Première fois ? Créer un compte
+        </button>
+      </section>
+    )
   }
 
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Connexion</span>
+      <span className="eyebrow">Première fois</span>
       <h1>Crée ton espace Sonique</h1>
       <p className="lead">
-        Première inscription ou retour : mêmes champs. Support :{' '}
+        Ces infos restent sur ton appareil (exportables). Support :{' '}
         <a className="support" href="mailto:sonique@contact.co">
           sonique@contact.co
         </a>
       </p>
-      <form className="stack" onSubmit={submit}>
+      <form className="stack" onSubmit={submitSignup}>
         <label className="field">
           <span>Prénom</span>
           <input
@@ -191,7 +298,10 @@ function Signup({
           />
         </label>
         <div className="actions">
-          <button type="submit" className="btn btn-primary" disabled={!valid}>
+          <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
+            Retour
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={!signupValid}>
             Continuer
           </button>
         </div>
@@ -545,9 +655,9 @@ function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => voi
     <section className="slide">
       <div className="analyze">
         <div className="aria-orb" aria-hidden />
-        <h1>L’IA lit ta partition et écoute…</h1>
+        <h1>Aria écoute ta performance…</h1>
         <p className="lead" style={{ marginInline: 'auto' }}>
-          {firstName}, Aria prend le temps de comparer ce qui est écrit et ce que tu as joué.
+          {firstName}, Aria prend le temps de bien entendre avant de te répondre.
         </p>
       </div>
       <FooterLine withPartition />
@@ -577,7 +687,23 @@ function Report({
       </div>
 
       <div className="report-card">
-        <p>{feedback.encouragement}</p>
+        <p>{feedback.greeting}</p>
+        <div className="report-block">
+          <h3>Vue d'ensemble</h3>
+          <p>{feedback.overview}</p>
+        </div>
+        <div className="report-block">
+          <h3>Atmosphère & intention</h3>
+          <p>{feedback.atmosphere}</p>
+        </div>
+        <div className="report-block">
+          <h3>Technique</h3>
+          <p>{feedback.technique}</p>
+        </div>
+        <div className="report-block">
+          <h3>Rythme & tempo</h3>
+          <p>{feedback.rhythm}</p>
+        </div>
         <div className="report-block">
           <h3>Ce qui fonctionne</h3>
           <ul>
@@ -587,12 +713,16 @@ function Report({
           </ul>
         </div>
         <div className="report-block">
-          <h3>Axes d’amélioration</h3>
+          <h3>Axes d'amélioration</h3>
           <ul>
             {feedback.improvements.map((s) => (
               <li key={s}>{s}</li>
             ))}
           </ul>
+        </div>
+        <div className="report-block">
+          <h3>Focus pour la suite</h3>
+          <p>{feedback.nextFocus}</p>
         </div>
       </div>
 
@@ -606,6 +736,9 @@ function Report({
             Choisir un autre morceau
           </button>
         )}
+        <button type="button" className="btn btn-ghost" onClick={downloadUserData}>
+          Exporter mes données
+        </button>
       </div>
       {exhausted ? (
         <p className="footer-note">3 essais atteints — retour à la sélection du morceau.</p>
@@ -628,6 +761,13 @@ export default function App() {
     localStorage.setItem('sonique-theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    const existing = getCurrentProfile()
+    if (existing) {
+      setState((s) => ({ ...s, profile: existing }))
+    }
+  }, [])
+
   const withPartition = state.hasPartition !== false
   const phase = phaseFromSlide(state.slide, state.hasPartition)
 
@@ -644,6 +784,13 @@ export default function App() {
         arrangement: s.arrangement,
         takesUsed,
         maxTakes: MAX_TAKES,
+      })
+      saveSession({
+        email: s.profile.email,
+        pieceName: s.pieceName,
+        hasPartition: s.hasPartition === true,
+        feedbackHeadline: feedback.headline,
+        takeNumber: takesUsed,
       })
       const analyzeSlide = s.hasPartition === false ? 6 : 7
       return { ...s, takesUsed, feedback, slide: analyzeSlide, isRecording: false }
@@ -700,11 +847,12 @@ export default function App() {
   if (state.slide === 1) body = <Welcome onNext={() => go(2)} />
   else if (state.slide === 2) {
     body = (
-      <Signup
+      <AuthSlide
         profile={state.profile}
         onChange={(key, value) =>
           setState((s) => ({ ...s, profile: { ...s.profile, [key]: value } }))
         }
+        onProfileLoaded={(profile) => setState((s) => ({ ...s, profile }))}
         onNext={() => go(3)}
       />
     )

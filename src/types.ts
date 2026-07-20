@@ -9,9 +9,14 @@ export type UserProfile = {
 
 export type AriaFeedback = {
   headline: string
-  encouragement: string
+  greeting: string
+  overview: string
+  atmosphere: string
+  technique: string
+  rhythm: string
   strengths: string[]
   improvements: string[]
+  nextFocus: string
   takesLeft: number
 }
 

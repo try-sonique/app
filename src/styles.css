@@ -19,6 +19,26 @@
   --atmosphere: radial-gradient(900px 500px at 80% -10%, rgba(232, 192, 74, 0.12), transparent 55%);
 }
 
+/* Noir + rose (moins “IA générique”, plus chaleur humaine) */
+[data-theme='noir-rose'] {
+  --bg: #0a0709;
+  --bg-elevated: #161014;
+  --bg-card: #1c1418;
+  --ink: #fff7fa;
+  --ink-muted: rgba(255, 247, 250, 0.68);
+  --ink-faint: rgba(255, 247, 250, 0.4);
+  --gold: #e8a0b5;
+  --gold-soft: rgba(232, 160, 181, 0.16);
+  --gold-glow: rgba(232, 160, 181, 0.35);
+  --line: rgba(255, 247, 250, 0.12);
+  --rec: #e23b3b;
+  --good: #8fd4b0;
+  --warn: #e0a07a;
+  --btn-primary-bg: #fff7fa;
+  --btn-primary-ink: #2a1218;
+  --atmosphere: radial-gradient(900px 520px at 80% -10%, rgba(232, 160, 181, 0.2), transparent 55%);
+}
+
 /* Jaune poussin */
 [data-theme='poussin'] {
   --bg: #f6e27a;
@@ -324,6 +344,7 @@ button {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--ink);
 }
 
 .hero-brand::before {
@@ -501,6 +522,7 @@ h2 {
 }
 
 .theme-swatch[data-swatch='noir'] { background: #111; color: #e8c04a; }
+.theme-swatch[data-swatch='noir-rose'] { background: linear-gradient(135deg, #0a0709, #e8a0b5); }
 .theme-swatch[data-swatch='poussin'] { background: #f6e27a; color: #2a2408; text-shadow: none; }
 .theme-swatch[data-swatch='acrylique'] { background: #1f8f6a; }
 .theme-swatch[data-swatch='rose'] { background: #f3c6d4; color: #3a1a28; text-shadow: none; }
@@ -834,6 +856,16 @@ h2 {
 
 .report-block {
   margin-top: 1rem;
+}
+
+.report-block p {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.report-card > p {
+  color: var(--ink);
 }
 
 .report-block h3 {
