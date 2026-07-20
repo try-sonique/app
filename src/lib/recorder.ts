@@ -10,6 +10,7 @@ export function useMediaRecorder() {
   const chunks = useRef<Blob[]>([])
   const timer = useRef<number | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const stopResolver = useRef<((blob: Blob | null) => void) | null>(null)
 
   const clearTimer = () => {
     if (timer.current) {
@@ -41,13 +42,18 @@ export function useMediaRecorder() {
       }
 
       recorder.onstop = () => {
-        const blob = new Blob(chunks.current, { type: 'audio/webm' })
-        const url = URL.createObjectURL(blob)
-        setAudioUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev)
-          return url
-        })
+        const blob =
+          chunks.current.length > 0 ? new Blob(chunks.current, { type: 'audio/webm' }) : null
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          setAudioUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return url
+          })
+        }
         stopStream()
+        stopResolver.current?.(blob)
+        stopResolver.current = null
       }
 
       recorder.start()
@@ -64,17 +70,25 @@ export function useMediaRecorder() {
 
   const stop = useCallback(() => {
     clearTimer()
-    if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
-      mediaRecorder.current.stop()
-    }
     setStatus('idle')
+    return new Promise<Blob | null>((resolve) => {
+      if (!mediaRecorder.current || mediaRecorder.current.state === 'inactive') {
+        resolve(null)
+        return
+      }
+      stopResolver.current = resolve
+      mediaRecorder.current.stop()
+    })
   }, [])
 
-  useEffect(() => () => {
-    clearTimer()
-    stopStream()
-    if (audioUrl) URL.revokeObjectURL(audioUrl)
-  }, [audioUrl])
+  useEffect(
+    () => () => {
+      clearTimer()
+      stopStream()
+      if (audioUrl) URL.revokeObjectURL(audioUrl)
+    },
+    [audioUrl],
+  )
 
   return { status, seconds, audioUrl, start, stop }
 }

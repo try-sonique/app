@@ -1,8 +1,10 @@
-import type { UserProfile } from '../types'
+import type { AriaFeedback, UserProfile } from '../types'
 
 const PROFILES_KEY = 'sonique.profiles'
 const CURRENT_KEY = 'sonique.currentEmail'
 const SESSIONS_KEY = 'sonique.sessions'
+const DB_NAME = 'sonique-db'
+const DB_STORE = 'recordings'
 
 export type StoredSession = {
   id: string
@@ -12,6 +14,8 @@ export type StoredSession = {
   createdAt: string
   feedbackHeadline: string
   takeNumber: number
+  feedback: AriaFeedback | null
+  hasAudio: boolean
 }
 
 function readProfiles(): Record<string, UserProfile> {
@@ -49,19 +53,83 @@ export function getCurrentProfile(): UserProfile | null {
   return findProfileByEmail(email)
 }
 
-export function saveSession(session: Omit<StoredSession, 'id' | 'createdAt'>) {
+export function getCurrentEmail(): string | null {
+  return localStorage.getItem(CURRENT_KEY)
+}
+
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE)
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+export async function saveRecordingBlob(sessionId: string, blob: Blob) {
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readwrite')
+      tx.objectStore(DB_STORE).put(blob, sessionId)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+  } catch {
+    // demo: ignore storage failures
+  }
+}
+
+export async function getRecordingBlob(sessionId: string): Promise<Blob | null> {
+  try {
+    const db = await openDb()
+    const blob = await new Promise<Blob | null>((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readonly')
+      const req = tx.objectStore(DB_STORE).get(sessionId)
+      req.onsuccess = () => resolve((req.result as Blob) ?? null)
+      req.onerror = () => reject(req.error)
+    })
+    db.close()
+    return blob
+  } catch {
+    return null
+  }
+}
+
+export function listSessions(email?: string | null): StoredSession[] {
   try {
     const raw = localStorage.getItem(SESSIONS_KEY)
     const list: StoredSession[] = raw ? (JSON.parse(raw) as StoredSession[]) : []
-    list.unshift({
-      ...session,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      createdAt: new Date().toISOString(),
-    })
+    if (!email) return list
+    const key = email.trim().toLowerCase()
+    return list.filter((s) => s.email.trim().toLowerCase() === key)
+  } catch {
+    return []
+  }
+}
+
+export function saveSession(
+  session: Omit<StoredSession, 'id' | 'createdAt'>,
+): StoredSession {
+  const entry: StoredSession = {
+    ...session,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+  }
+  try {
+    const list = listSessions()
+    list.unshift(entry)
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(list.slice(0, 50)))
   } catch {
-    // ignore quota errors in demo
+    // ignore
   }
+  return entry
 }
 
 export function exportUserData(): string {
@@ -70,7 +138,8 @@ export function exportUserData(): string {
       exportedAt: new Date().toISOString(),
       currentEmail: localStorage.getItem(CURRENT_KEY),
       profiles: readProfiles(),
-      sessions: JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]'),
+      sessions: listSessions(),
+      note: 'Les fichiers audio sont stockés en interne (IndexedDB) sur cet appareil uniquement.',
     },
     null,
     2,

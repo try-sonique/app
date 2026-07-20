@@ -13,8 +13,12 @@ import {
   downloadUserData,
   findProfileByEmail,
   getCurrentProfile,
+  getRecordingBlob,
+  listSessions,
   saveProfile,
+  saveRecordingBlob,
   saveSession,
+  type StoredSession,
 } from './lib/storage'
 import {
   MAX_TAKES,
@@ -542,6 +546,8 @@ function PracticeStage({
           src={partitionPreview}
           mime={partitionMime}
           name={partitionName}
+          autoScroll={active}
+          speed={32}
         />
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
@@ -573,7 +579,7 @@ function RecordStage({
   partitionName: string
   hasPartition: boolean
   takesUsed: number
-  onFinish: () => void
+  onFinish: (audioBlob: Blob | null) => void
 }) {
   const { status, seconds, start, stop } = useMediaRecorder()
   const recording = status === 'recording'
@@ -582,8 +588,8 @@ function RecordStage({
 
   const toggle = async () => {
     if (recording) {
-      stop()
-      onFinish()
+      const blob = await stop()
+      onFinish(blob)
       return
     }
     await start()
@@ -611,6 +617,8 @@ function RecordStage({
                 mime={partitionMime}
                 name={partitionName}
                 compact
+                autoScroll={recording}
+                speed={30}
               />
               {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
             </div>
@@ -641,7 +649,7 @@ function RecordStage({
               <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
               Lancer l’enregistrement
             </button>
-            <button type="button" className="btn btn-ghost" onClick={onFinish}>
+            <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
               Simuler un take (démo)
             </button>
           </div>
@@ -765,12 +773,88 @@ function Report({
   )
 }
 
+
+function HistoryView({
+  email,
+  onBack,
+  onOpenFeedback,
+}: {
+  email: string
+  onBack: () => void
+  onOpenFeedback: (session: StoredSession) => void
+}) {
+  const sessions = listSessions(email)
+  const [audioUrls, setAudioUrls] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    const urls: Record<string, string> = {}
+    ;(async () => {
+      for (const s of sessions) {
+        if (!s.hasAudio) continue
+        const blob = await getRecordingBlob(s.id)
+        if (blob && !cancelled) {
+          urls[s.id] = URL.createObjectURL(blob)
+        }
+      }
+      if (!cancelled) setAudioUrls(urls)
+    })()
+    return () => {
+      cancelled = true
+      Object.values(urls).forEach((u) => URL.revokeObjectURL(u))
+    }
+  }, [email])
+
+  return (
+    <section className="slide">
+      <span className="eyebrow">Espace personnel</span>
+      <h1>Mes enregistrements & retours</h1>
+      <p className="lead">
+        Données internes à ton appareil — confidentielles, non partagées avec d’autres utilisateurs.
+      </p>
+      {sessions.length === 0 ? (
+        <p className="lead">Aucun take enregistré pour l’instant.</p>
+      ) : (
+        <div className="history-list">
+          {sessions.map((s) => (
+            <article key={s.id} className="history-item">
+              <h3>{s.pieceName}</h3>
+              <div className="meta">
+                {new Date(s.createdAt).toLocaleString('fr-FR')} · Take {s.takeNumber}
+                {s.hasPartition ? ' · avec partition' : ' · à l’oreille'}
+              </div>
+              <p className="lead" style={{ margin: 0 }}>
+                {s.feedbackHeadline}
+              </p>
+              {audioUrls[s.id] ? <audio controls src={audioUrls[s.id]} /> : null}
+              <div className="actions" style={{ marginTop: '0.85rem' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => onOpenFeedback(s)}>
+                  Voir le compte rendu
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      <div className="actions">
+        <button type="button" className="btn btn-primary" onClick={onBack}>
+          Retour
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={downloadUserData}>
+          Exporter mes données
+        </button>
+      </div>
+    </section>
+  )
+}
+
 export default function App() {
   const [state, setState] = useState<AppState>(initialState)
   const [theme, setTheme] = useState<ThemeId>(() => {
     const saved = localStorage.getItem('sonique-theme') as ThemeId | null
     return saved && THEMES.some((t) => t.id === saved) ? saved : 'noir'
   })
+  const [showHistory, setShowHistory] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -790,7 +874,7 @@ export default function App() {
   const go = (slide: number) => setState((s) => ({ ...s, slide }))
   const patch = (partial: Partial<AppState>) => setState((s) => ({ ...s, ...partial }))
 
-  const finishTake = () => {
+  const finishTake = (audioBlob: Blob | null) => {
     setState((s) => {
       const takesUsed = s.takesUsed + 1
       const feedback = analyzePerformance({
@@ -801,13 +885,18 @@ export default function App() {
         takesUsed,
         maxTakes: MAX_TAKES,
       })
-      saveSession({
+      const saved = saveSession({
         email: s.profile.email,
         pieceName: s.pieceName,
         hasPartition: s.hasPartition === true,
         feedbackHeadline: feedback.headline,
         takeNumber: takesUsed,
+        feedback,
+        hasAudio: Boolean(audioBlob),
       })
+      if (audioBlob) {
+        void saveRecordingBlob(saved.id, audioBlob)
+      }
       const analyzeSlide = s.hasPartition === false ? 6 : 7
       return { ...s, takesUsed, feedback, slide: analyzeSlide, isRecording: false }
     })
@@ -868,7 +957,20 @@ export default function App() {
 
   let body: ReactNode = null
 
-  if (state.slide === 1) body = <Welcome onNext={() => go(2)} />
+  if (showHistory) {
+    body = (
+      <HistoryView
+        email={state.profile.email}
+        onBack={() => setShowHistory(false)}
+        onOpenFeedback={(session) => {
+          if (session.feedback) {
+            setState((s) => ({ ...s, feedback: session.feedback, slide: s.hasPartition === false ? 7 : 8 }))
+          }
+          setShowHistory(false)
+        }}
+      />
+    )
+  } else if (state.slide === 1) body = <Welcome onNext={() => go(2)} />
   else if (state.slide === 2) {
     body = (
       <AuthSlide
@@ -963,7 +1065,14 @@ export default function App() {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-mark">Sonique</div>
-        {state.slide > 1 ? <PhaseNav phase={phase} /> : <span />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {state.profile.email ? (
+            <button type="button" className="top-link" onClick={() => setShowHistory(true)}>
+              Mes retours
+            </button>
+          ) : null}
+          {!showHistory && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
+        </div>
       </header>
       {body}
       <ThemeDock theme={theme} onChange={setTheme} />
