@@ -278,7 +278,7 @@ button {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 1.5rem var(--pad) 5rem;
+  padding: 1.5rem var(--pad) 2.5rem;
   animation: rise 0.45s ease both;
 }
 
