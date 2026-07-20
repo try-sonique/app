@@ -11,33 +11,74 @@ import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
   MAX_TAKES,
   initialState,
-  totalSlides,
   type ArrangementKind,
   type AppState,
 } from './types'
 
-function Progress({ slide, total }: { slide: number; total: number }) {
+type Phase = 'partition' | 'jouer' | 'retour'
+
+function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
+  if (hasPartition === false) {
+    if (slide <= 4) return 'partition'
+    if (slide <= 5) return 'jouer'
+    return 'retour'
+  }
+  if (slide <= 4) return 'partition'
+  if (slide <= 6) return 'jouer'
+  return 'retour'
+}
+
+function PhaseNav({ phase }: { phase: Phase }) {
+  const items: { id: Phase; n: number; label: string }[] = [
+    { id: 'partition', n: 1, label: 'Partition' },
+    { id: 'jouer', n: 2, label: 'Jouer' },
+    { id: 'retour', n: 3, label: 'Retour' },
+  ]
+  const order: Phase[] = ['partition', 'jouer', 'retour']
+  const current = order.indexOf(phase)
+
   return (
-    <div className="progress" aria-label={`Étape ${slide} sur ${total}`}>
-      {Array.from({ length: total }, (_, i) => {
-        const n = i + 1
-        const className = n === slide ? 'active' : n < slide ? 'done' : ''
-        return <span key={n} className={className} />
+    <nav className="phase-nav" aria-label="Étapes">
+      {items.map((item, i) => {
+        const state = i < current ? 'done' : i === current ? 'active' : ''
+        return (
+          <div key={item.id} style={{ display: 'contents' }}>
+            {i > 0 ? <span className="sep" /> : null}
+            <div className={`phase ${state}`}>
+              <span className="num">{item.n}</span>
+              <span className="label">{item.label}</span>
+            </div>
+          </div>
+        )
       })}
-    </div>
+    </nav>
+  )
+}
+
+function FooterLine({ withPartition }: { withPartition?: boolean }) {
+  return (
+    <p className="footer-note">
+      {withPartition
+        ? 'Sonique écoute ce que tu joues et le compare à ta partition — pour te faire progresser, jamais pour te juger.'
+        : 'Sonique écoute ce que tu joues ou chantes — et te répond fidèlement.'}
+    </p>
   )
 }
 
 function Welcome({ onNext }: { onNext: () => void }) {
   return (
     <section className="slide">
+      <span className="eyebrow">Prêt·e à jouer</span>
       <p className="hero-brand">Sonique</p>
-      <p className="hero-tagline">L’app qui te permet de jouer tes morceaux préférés.</p>
+      <p className="hero-tagline">
+        Chante ou joue — Sonique t’écoute. Un enregistrement, un retour honnête, jamais générique.
+      </p>
       <div className="actions">
         <button type="button" className="btn btn-primary" onClick={onNext}>
           Commencer
         </button>
       </div>
+      <FooterLine />
     </section>
   )
 }
@@ -63,15 +104,14 @@ function Signup({
   }
 
   return (
-    <section className="slide">
-      <span className="eyebrow">Slide 2 · Connexion</span>
+    <section className="slide slide-left">
+      <span className="eyebrow">Connexion</span>
       <h1>Crée ton espace Sonique</h1>
       <p className="lead">
-        Première inscription ou retour : mêmes champs. En cas de souci, écris à{' '}
+        Première inscription ou retour : mêmes champs. Support :{' '}
         <a className="support" href="mailto:sonique@contact.co">
           sonique@contact.co
         </a>
-        .
       </p>
       <form className="stack" onSubmit={submit}>
         <label className="field">
@@ -152,10 +192,13 @@ function PieceSetup({
   }
 
   return (
-    <section className="slide">
-      <span className="eyebrow">Slide 3 · Morceau</span>
-      <h1>Quel morceau allez-vous jouer ?</h1>
-      <p className="lead">Note le nom du morceau — pas une adresse.</p>
+    <section className="slide slide-left">
+      <span className="eyebrow">Étape 1 · Partition</span>
+      <h1>Quel morceau vas-tu travailler ?</h1>
+      <p className="lead">
+        Dépose la partition que tu comptes jouer — ou continue sans. Sonique écoute pour te faire
+        progresser, jamais pour te juger.
+      </p>
 
       <div className="stack">
         <label className="field">
@@ -168,14 +211,17 @@ function PieceSetup({
           />
         </label>
 
-        <div className="upload" style={{ opacity: noPartition ? 0.45 : 1 }}>
-          <strong>Upload ta partition</strong>
+        <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
+          <div className="upload-icon" aria-hidden>
+            ♫
+          </div>
+          <strong>Glisse ta partition ici, ou choisis un fichier</strong>
           <p className="lead" style={{ margin: 0 }}>
-            PDF ou image. Optionnel si tu coches la case ci-dessous.
+            Image (JPG, PNG) ou PDF — 8 Mo max
           </p>
           <input type="file" accept="image/*,.pdf" disabled={noPartition} onChange={onFile} />
           {partitionName && !noPartition ? (
-            <p className="footer-note" style={{ margin: 0 }}>
+            <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
               Fichier : {partitionName}
             </p>
           ) : null}
@@ -188,9 +234,9 @@ function PieceSetup({
             onChange={(e) => onToggleNoPartition(e.target.checked)}
           />
           <div>
-            <strong>Je n’ai pas de partition</strong>
+            <strong>Je n’ai pas de partition — continuer quand même</strong>
             <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-              Parcours plus direct : questions courtes, puis enregistrement.
+              Sonique écoutera à l’oreille.
             </p>
           </div>
         </label>
@@ -201,32 +247,32 @@ function PieceSetup({
           Continuer
         </button>
       </div>
+      <FooterLine withPartition={!noPartition} />
     </section>
   )
 }
 
 function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => void }) {
   return (
-    <section className="slide">
-      <span className="eyebrow">Slide 4 · Avec partition</span>
+    <section className="slide slide-left">
+      <span className="eyebrow">Avec partition</span>
       <h1>Comment ça marche, {firstName || 'toi'} ?</h1>
       <p className="lead">
-        Une fois ta partition téléversée, <strong>Aria</strong> te guide pas à pas avant
-        l’enregistrement.
+        Aria te guide pas à pas avant l’enregistrement — pour corriger sans te juger.
       </p>
       <ol className="steps">
         <li>
           <span className="step-num">1</span>
           <div>
             <strong>Choisis le passage travaillé</strong>
-            <p>Aria ne peut pas traiter toute la partition d’un coup de façon fiable.</p>
+            <p>Aria ne traite pas toute la partition d’un coup.</p>
           </div>
         </li>
         <li>
           <span className="step-num">2</span>
           <div>
             <strong>Entraîne-toi librement</strong>
-            <p>Aussi longtemps que tu veux — sans enregistrer, sans pression.</p>
+            <p>Aussi longtemps que tu veux — sans enregistrer.</p>
           </div>
         </li>
         <li>
@@ -239,8 +285,8 @@ function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => vo
         <li>
           <span className="step-num">4</span>
           <div>
-            <strong>Passe en enregistrement</strong>
-            <p>Pour laisser une trace du jour — pas pour tout apprendre d’un coup.</p>
+            <strong>Enregistre une trace</strong>
+            <p>Pour garder ce que tu as fait aujourd’hui.</p>
           </div>
         </li>
         <li>
@@ -256,6 +302,7 @@ function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => vo
           Passer à l’entraînement
         </button>
       </div>
+      <FooterLine withPartition />
     </section>
   )
 }
@@ -270,12 +317,11 @@ function NoPartitionQuestions({
   onNext: () => void
 }) {
   return (
-    <section className="slide">
-      <span className="eyebrow">Slide 4 · Sans partition</span>
+    <section className="slide slide-left">
+      <span className="eyebrow">Sans partition</span>
       <h1>Aide Aria à t’écouter</h1>
       <p className="lead">
-        Sans partition, Aria ne prétend pas tout savoir. Dis-lui si tu joues un arrangement ou
-        la version originale.
+        Dis-lui si tu joues un arrangement ou la version originale — pour un retour plus juste.
       </p>
       <div className="choice-grid">
         <button
@@ -297,12 +343,11 @@ function NoPartitionQuestions({
       </div>
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!arrangement} onClick={onNext}>
-          Enregistrer maintenant
+          <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
+          Lancer l’enregistrement
         </button>
       </div>
-      <p className="footer-note">
-        Pas d’entraînement long ici : tu connais déjà ton morceau — on capture ta performance.
-      </p>
+      <FooterLine />
     </section>
   )
 }
@@ -321,14 +366,11 @@ function PracticeStage({
 
   return (
     <section className="slide">
-      <span className="eyebrow">Slide 5 · Entraînement</span>
+      <span className="eyebrow">Étape 2 · Entraînement</span>
       <h1>Joue sans te soucier de l’app</h1>
-      <p className="lead">
-        Ta partition défile. Aria chuchote des consignes — aucun enregistrement ici.
-      </p>
+      <p className="lead">Partition qui défile. Aria chuchote — aucun enregistrement ici.</p>
       <div className="meta-row">
         <span>{pieceName}</span>
-        <span>Mode pratique</span>
       </div>
       <div className="stage">
         {partitionPreview ? (
@@ -354,19 +396,18 @@ function PracticeStage({
           Je suis prêt·e à enregistrer
         </button>
       </div>
+      <FooterLine withPartition />
     </section>
   )
 }
 
 function RecordStage({
-  slideLabel,
   pieceName,
   partitionPreview,
   hasPartition,
   takesUsed,
   onFinish,
 }: {
-  slideLabel: string
   pieceName: string
   partitionPreview: string | null
   hasPartition: boolean
@@ -384,80 +425,77 @@ function RecordStage({
       onFinish()
       return
     }
-    const ok = await start()
-    if (!ok) {
-      // Mic denied/unsupported: still allow demo finish via second click path
-      return
-    }
+    await start()
   }
 
   return (
     <section className="slide">
-      <span className="eyebrow">{slideLabel}</span>
-      <h1>{hasPartition ? 'Enregistre ta performance' : 'Capture ton morceau'}</h1>
-      <p className="lead">
-        {hasPartition
-          ? 'Partition sous les yeux. Aria t’encourage pendant le take — ta voix de coach viendra plus tard.'
-          : 'Sans partition, Aria reste humble : encouragements + lecture globale de ta perf.'}
-      </p>
-      <div className="meta-row">
-        <span>{pieceName}</span>
-        <span className="takes-pill">Essais restants avant ce take : {takesLeft}</span>
-      </div>
-
-      <div className={`record-orb ${recording ? 'live' : ''}`} aria-hidden>
-        {recording ? formatTime(seconds) : 'REC'}
-      </div>
-
-      {hasPartition ? (
-        <div className="stage" style={{ marginTop: '1.25rem' }}>
-          {partitionPreview ? (
-            <img className="partition-preview" src={partitionPreview} alt="Partition" />
-          ) : (
-            <div className="sheet-scroll">
-              <div className="sheet-scroll-inner">
-                <div className="sheet-lines">
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <div className="staff" key={i} />
-                  ))}
-                </div>
-              </div>
+      <span className="eyebrow">Étape 2 · Jouer</span>
+      {recording ? (
+        <>
+          <div className="listen-status">
+            <span className="rec-dot" />
+            En écoute — vas-y tranquillement
+          </div>
+          <div className={`dot-wave live`} aria-hidden>
+            {Array.from({ length: 24 }, (_, i) => (
+              <span key={i} />
+            ))}
+          </div>
+          <p className="timer">{formatTime(seconds)}</p>
+          {hasPartition && partitionPreview ? (
+            <div className="stage" style={{ marginTop: '1.25rem', minHeight: 160 }}>
+              <img
+                className="partition-preview"
+                style={{ height: 160 }}
+                src={partitionPreview}
+                alt="Partition"
+              />
+              {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
             </div>
+          ) : cue ? (
+            <div className={`cue-bubble good`} style={{ position: 'relative', left: 'auto', transform: 'none', marginTop: '1rem' }}>
+              {cue.text}
+            </div>
+          ) : null}
+          <div className="actions">
+            <button type="button" className="btn btn-primary" onClick={toggle}>
+              Terminer et recevoir mon retour
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h1>Prêt·e à jouer ?</h1>
+          <p className="lead">
+            {pieceName} · essais restants : {takesLeft}/{MAX_TAKES}
+          </p>
+          <p className="lead">
+            {hasPartition
+              ? 'Partition sous les yeux. Lance l’enregistrement quand tu es prêt·e.'
+              : 'Aucune partition — Sonique écoutera à l’oreille.'}
+          </p>
+          <div className="actions">
+            <button type="button" className="btn btn-primary" onClick={toggle}>
+              <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
+              Lancer l’enregistrement
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={onFinish}>
+              Simuler un take (démo)
+            </button>
+          </div>
+          {status === 'denied' || status === 'unsupported' ? (
+            <p className="footer-note" style={{ paddingTop: '1rem' }}>
+              Micro indisponible — utilise « Simuler un take » pour la démo.
+            </p>
+          ) : (
+            <p className="footer-note" style={{ paddingTop: '1rem' }}>
+              Tu pourras arrêter quand tu veux.
+            </p>
           )}
-          {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
-        </div>
-      ) : cue && recording ? (
-        <div
-          className="cue-bubble good"
-          style={{ position: 'relative', left: 'auto', transform: 'none', margin: '1rem auto 0' }}
-        >
-          {cue.text}
-        </div>
-      ) : null}
-
-      {status === 'denied' ? (
-        <p className="footer-note">
-          Micro refusé — utilise « Simuler un take » pour la démo du compte rendu.
-        </p>
-      ) : null}
-      {status === 'unsupported' ? (
-        <p className="footer-note">Enregistrement non supporté ici — le parcours démo continue.</p>
-      ) : null}
-
-      <div className="actions">
-        <button
-          type="button"
-          className={`btn ${recording ? 'btn-danger' : 'btn-primary'}`}
-          onClick={toggle}
-        >
-          {recording ? 'Terminer le take' : 'Démarrer l’enregistrement'}
-        </button>
-        {!recording ? (
-          <button type="button" className="btn btn-ghost" onClick={onFinish}>
-            Simuler un take (démo)
-          </button>
-        ) : null}
-      </div>
+        </>
+      )}
+      <FooterLine withPartition={hasPartition} />
     </section>
   )
 }
@@ -471,13 +509,13 @@ function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => voi
   return (
     <section className="slide">
       <div className="analyze">
-        <span className="eyebrow">Aria travaille</span>
-        <h1>Dans quelques instants…</h1>
-        <div className="aria-ring" aria-hidden />
+        <div className="aria-orb" aria-hidden />
+        <h1>L’IA lit ta partition et écoute…</h1>
         <p className="lead" style={{ marginInline: 'auto' }}>
-          {firstName}, Aria prépare le compte rendu de ta performance.
+          {firstName}, Aria prend le temps de comparer ce qui est écrit et ce que tu as joué.
         </p>
       </div>
+      <FooterLine withPartition />
     </section>
   )
 }
@@ -497,14 +535,14 @@ function Report({
 
   return (
     <section className="slide">
-      <span className="eyebrow">Compte rendu</span>
+      <span className="eyebrow">Ton retour personnalisé</span>
       <h1>{feedback.headline}</h1>
-      <p className="lead">{feedback.encouragement}</p>
       <div className="takes-pill">
-        Takes restants sur ce morceau : {feedback.takesLeft}/{MAX_TAKES}
+        Takes restants : {feedback.takesLeft}/{MAX_TAKES}
       </div>
 
-      <div className="report">
+      <div className="report-card">
+        <p>{feedback.encouragement}</p>
         <div className="report-block">
           <h3>Ce qui fonctionne</h3>
           <ul>
@@ -525,20 +563,20 @@ function Report({
 
       <div className="actions">
         {!exhausted ? (
-          <button type="button" className="btn btn-primary" onClick={onReplay}>
+          <button type="button" className="btn btn-gold" onClick={onReplay}>
             Rejouer le morceau
           </button>
         ) : (
-          <button type="button" className="btn btn-primary" onClick={onNewPiece}>
+          <button type="button" className="btn btn-gold" onClick={onNewPiece}>
             Choisir un autre morceau
           </button>
         )}
       </div>
       {exhausted ? (
-        <p className="footer-note">
-          3 essais atteints : la partition disparaît. Retour à la sélection du morceau.
-        </p>
-      ) : null}
+        <p className="footer-note">3 essais atteints — retour à la sélection du morceau.</p>
+      ) : (
+        <FooterLine withPartition={state.hasPartition === true} />
+      )}
     </section>
   )
 }
@@ -547,7 +585,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(initialState)
 
   const withPartition = state.hasPartition !== false
-  const total = totalSlides(state.hasPartition)
+  const phase = phaseFromSlide(state.slide, state.hasPartition)
 
   const go = (slide: number) => setState((s) => ({ ...s, slide }))
   const patch = (partial: Partial<AppState>) => setState((s) => ({ ...s, ...partial }))
@@ -669,7 +707,6 @@ export default function App() {
   } else if (state.slide === 5 && !withPartition) {
     body = (
       <RecordStage
-        slideLabel="Slide 5 · Enregistrement"
         pieceName={state.pieceName}
         partitionPreview={null}
         hasPartition={false}
@@ -680,7 +717,6 @@ export default function App() {
   } else if (state.slide === 6 && withPartition) {
     body = (
       <RecordStage
-        slideLabel="Slide 6 · Enregistrement"
         pieceName={state.pieceName}
         partitionPreview={state.partitionPreview}
         hasPartition
@@ -702,7 +738,7 @@ export default function App() {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-mark">Sonique</div>
-        {state.slide > 1 ? <Progress slide={state.slide} total={total} /> : <span />}
+        {state.slide > 1 ? <PhaseNav phase={phase} /> : <span />}
       </header>
       {body}
     </div>
