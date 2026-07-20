@@ -8,16 +8,24 @@ App d’entraînement musical avec coach **Aria** : jouer → s’entraîner →
 - **Sans partition (7 slides)** : accueil → inscription → morceau + case « pas de partition » → arrangement/original → enregistrement → Aria analyse → compte rendu
 - **3 takes max** par morceau, puis retour slide 3
 
-## Accéder à la version
+## Accéder à la version (le plus simple)
 
+### Lien démo en ligne
+1. Ouvre : https://tranquil-gumption-f2f806.netlify.app  
+2. Mot de passe : `My-Drop-Site`
+
+(Démo anonyme Netlify — à claimer sous 1h si tu veux la garder.)
+
+### Sur ton ordinateur
 ```bash
+git fetch origin
 git checkout cursor/sonique-mvp-3ac4
 npm install
 npm run dev
 ```
+Puis ouvre l’URL affichée (souvent `http://localhost:5173`).
 
-Ouvre l’URL affichée (souvent `http://localhost:5173`).  
-En bas de l’écran : **sélecteur de couleurs** (Noir or, Poussin, Acrylique, Rose, Turquoise, Arabesque).
+En bas de l’écran : pastilles pour changer les couleurs de fond.
 
 PR : https://github.com/Elodieybs/Sonique-app-/pull/1
 
