@@ -11,7 +11,7 @@ App d’entraînement musical avec coach **Aria** : jouer → s’entraîner →
 ## Accéder à la version (le plus simple)
 
 ### Lien démo en ligne
-1. Ouvre : https://tranquil-gumption-f2f806.netlify.app  
+1. Ouvre : https://sparkly-pixie-4fc795.netlify.app  
 2. Mot de passe : `My-Drop-Site`
 
 (Démo anonyme Netlify — à claimer sous 1h si tu veux la garder.)
