@@ -24,3 +24,8 @@ dist-ssr
 .netlify/
 node_modules/
 dist/
+
+dist
+dist-noir
+dist-colors
+.netlify
