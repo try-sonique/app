@@ -10,24 +10,26 @@ App d’entraînement musical avec coach **Aria** : jouer → s’entraîner →
 
 ## Accéder à la version (le plus simple)
 
-### Lien démo en ligne
-1. Ouvre : https://sparkly-pixie-4fc795.netlify.app  
-2. Mot de passe : `My-Drop-Site`
+### Lien démo EN LIGNE (sans installation)
+Ouvre ce lien dans ton navigateur :
 
-(Démo anonyme Netlify — à claimer sous 1h si tu veux la garder.)
+**https://ham-noon-reprints-newer.trycloudflare.com**
 
-### Sur ton ordinateur
+→ Pas de mot de passe. Si ça charge, clique les pastilles en bas pour changer les couleurs.
+
+### Si le lien ne répond plus
+Dis-le-moi dans le chat Cursor — je regenererai un lien frais (les tunnels temporaires expirent).
+
+### Sur ton ordinateur (version durable)
 ```bash
 git fetch origin
 git checkout cursor/sonique-mvp-3ac4
 npm install
 npm run dev
 ```
-Puis ouvre l’URL affichée (souvent `http://localhost:5173`).
+Puis ouvre `http://localhost:5173`
 
-En bas de l’écran : pastilles pour changer les couleurs de fond.
-
-PR : https://github.com/Elodieybs/Sonique-app-/pull/1
+PR : https://github.com/Elodieybs/Sonique-app-/pull/2
 
 ## Couleurs
 
