@@ -21,3 +21,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+.netlify/
+node_modules/
+dist/
