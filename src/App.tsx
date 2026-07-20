@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react'
+import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues } from './lib/aria'
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
@@ -115,7 +116,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
       <span className="eyebrow">Prêt·e à jouer</span>
       <p className="hero-brand">Sonique</p>
       <p className="hero-tagline">
-        Chante ou joue — Sonique t’écoute. Un enregistrement, un retour honnête, jamais générique.
+        L’app qui te permet de jouer tes morceaux préférés.
       </p>
       <div className="actions">
         <button type="button" className="btn btn-primary" onClick={onNext}>
@@ -314,6 +315,8 @@ function PieceSetup({
   pieceName,
   hasPartition,
   partitionName,
+  partitionPreview,
+  partitionMime,
   onPieceName,
   onToggleNoPartition,
   onUpload,
@@ -322,6 +325,8 @@ function PieceSetup({
   pieceName: string
   hasPartition: boolean | null
   partitionName: string
+  partitionPreview: string | null
+  partitionMime: string | null
   onPieceName: (v: string) => void
   onToggleNoPartition: (checked: boolean) => void
   onUpload: (file: File | null) => void
@@ -371,6 +376,17 @@ function PieceSetup({
             </p>
           ) : null}
         </div>
+
+        {!noPartition && partitionPreview ? (
+          <div className="stage partition-stage">
+            <p className="partition-label">Aperçu de ta partition</p>
+            <PartitionViewer
+              src={partitionPreview}
+              mime={partitionMime}
+              name={partitionName}
+            />
+          </div>
+        ) : null}
 
         <label className="check-row">
           <input
@@ -500,10 +516,14 @@ function NoPartitionQuestions({
 function PracticeStage({
   pieceName,
   partitionPreview,
+  partitionMime,
+  partitionName,
   onNext,
 }: {
   pieceName: string
   partitionPreview: string | null
+  partitionMime: string | null
+  partitionName: string
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
@@ -518,19 +538,11 @@ function PracticeStage({
         <span>{pieceName}</span>
       </div>
       <div className="stage">
-        {partitionPreview ? (
-          <img className="partition-preview" src={partitionPreview} alt="Partition" />
-        ) : (
-          <div className="sheet-scroll">
-            <div className="sheet-scroll-inner">
-              <div className="sheet-lines">
-                {Array.from({ length: 10 }, (_, i) => (
-                  <div className="staff" key={i} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <PartitionViewer
+          src={partitionPreview}
+          mime={partitionMime}
+          name={partitionName}
+        />
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
       <div className="actions">
@@ -549,12 +561,16 @@ function PracticeStage({
 function RecordStage({
   pieceName,
   partitionPreview,
+  partitionMime,
+  partitionName,
   hasPartition,
   takesUsed,
   onFinish,
 }: {
   pieceName: string
   partitionPreview: string | null
+  partitionMime: string | null
+  partitionName: string
   hasPartition: boolean
   takesUsed: number
   onFinish: () => void
@@ -590,11 +606,11 @@ function RecordStage({
           <p className="timer">{formatTime(seconds)}</p>
           {hasPartition && partitionPreview ? (
             <div className="stage" style={{ marginTop: '1.25rem', minHeight: 160 }}>
-              <img
-                className="partition-preview"
-                style={{ height: 160 }}
+              <PartitionViewer
                 src={partitionPreview}
-                alt="Partition"
+                mime={partitionMime}
+                name={partitionName}
+                compact
               />
               {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
             </div>
@@ -818,6 +834,7 @@ export default function App() {
         pieceName: '',
         partitionName: '',
         partitionPreview: null,
+        partitionMime: null,
         hasPartition: null,
         arrangement: null,
         takesUsed: 0,
@@ -830,13 +847,20 @@ export default function App() {
     setState((s) => {
       if (s.partitionPreview) URL.revokeObjectURL(s.partitionPreview)
       if (!file) {
-        return { ...s, partitionName: '', partitionPreview: null, hasPartition: null }
+        return {
+          ...s,
+          partitionName: '',
+          partitionPreview: null,
+          partitionMime: null,
+          hasPartition: null,
+        }
       }
-      const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+      const preview = URL.createObjectURL(file)
       return {
         ...s,
         partitionName: file.name,
         partitionPreview: preview,
+        partitionMime: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*'),
         hasPartition: true,
       }
     })
@@ -862,6 +886,8 @@ export default function App() {
         pieceName={state.pieceName}
         hasPartition={state.hasPartition}
         partitionName={state.partitionName}
+        partitionPreview={state.partitionPreview}
+        partitionMime={state.partitionMime}
         onPieceName={(pieceName) => patch({ pieceName })}
         onToggleNoPartition={(checked) =>
           setState((s) => {
@@ -871,6 +897,7 @@ export default function App() {
               hasPartition: checked ? false : s.partitionName ? true : null,
               partitionName: checked ? '' : s.partitionName,
               partitionPreview: checked ? null : s.partitionPreview,
+              partitionMime: checked ? null : s.partitionMime,
             }
           })
         }
@@ -893,6 +920,8 @@ export default function App() {
       <PracticeStage
         pieceName={state.pieceName}
         partitionPreview={state.partitionPreview}
+        partitionMime={state.partitionMime}
+        partitionName={state.partitionName}
         onNext={() => go(6)}
       />
     )
@@ -901,6 +930,8 @@ export default function App() {
       <RecordStage
         pieceName={state.pieceName}
         partitionPreview={null}
+        partitionMime={null}
+        partitionName=""
         hasPartition={false}
         takesUsed={state.takesUsed}
         onFinish={finishTake}
@@ -911,6 +942,8 @@ export default function App() {
       <RecordStage
         pieceName={state.pieceName}
         partitionPreview={state.partitionPreview}
+        partitionMime={state.partitionMime}
+        partitionName={state.partitionName}
         hasPartition
         takesUsed={state.takesUsed}
         onFinish={finishTake}

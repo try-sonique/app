@@ -27,6 +27,7 @@ export type AppState = {
   pieceName: string
   partitionName: string
   partitionPreview: string | null
+  partitionMime: string | null
   arrangement: ArrangementKind
   takesUsed: number
   isRecording: boolean
@@ -48,6 +49,7 @@ export const initialState: AppState = {
   pieceName: '',
   partitionName: '',
   partitionPreview: null,
+  partitionMime: null,
   arrangement: null,
   takesUsed: 0,
   isRecording: false,
