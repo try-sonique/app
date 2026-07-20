@@ -15,6 +15,41 @@ import {
   type AppState,
 } from './types'
 
+type ThemeId = 'noir' | 'poussin' | 'acrylique' | 'rose' | 'turquoise' | 'arabesque'
+
+const THEMES: { id: ThemeId; label: string }[] = [
+  { id: 'noir', label: 'Noir or' },
+  { id: 'poussin', label: 'Poussin' },
+  { id: 'acrylique', label: 'Acrylique' },
+  { id: 'rose', label: 'Rose' },
+  { id: 'turquoise', label: 'Turquoise' },
+  { id: 'arabesque', label: 'Arabesque' },
+]
+
+function ThemeDock({
+  theme,
+  onChange,
+}: {
+  theme: ThemeId
+  onChange: (id: ThemeId) => void
+}) {
+  return (
+    <div className="theme-dock" role="group" aria-label="Couleurs de fond">
+      {THEMES.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          className={`theme-swatch ${theme === t.id ? 'active' : ''}`}
+          data-swatch={t.id}
+          onClick={() => onChange(t.id)}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 type Phase = 'partition' | 'jouer' | 'retour'
 
 function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
@@ -583,6 +618,15 @@ function Report({
 
 export default function App() {
   const [state, setState] = useState<AppState>(initialState)
+  const [theme, setTheme] = useState<ThemeId>(() => {
+    const saved = localStorage.getItem('sonique-theme') as ThemeId | null
+    return saved && THEMES.some((t) => t.id === saved) ? saved : 'noir'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('sonique-theme', theme)
+  }, [theme])
 
   const withPartition = state.hasPartition !== false
   const phase = phaseFromSlide(state.slide, state.hasPartition)
@@ -741,6 +785,7 @@ export default function App() {
         {state.slide > 1 ? <PhaseNav phase={phase} /> : <span />}
       </header>
       {body}
+      <ThemeDock theme={theme} onChange={setTheme} />
     </div>
   )
 }

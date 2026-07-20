@@ -1,5 +1,6 @@
-:root {
-  /* Identité Lovable Sonique — noir / blanc / jaune doré */
+:root,
+[data-theme='noir'] {
+  /* Lovable actuel — noir / or */
   --bg: #000000;
   --bg-elevated: #141414;
   --bg-card: #1a1a1a;
@@ -13,10 +14,120 @@
   --rec: #e23b3b;
   --good: #6fbf8a;
   --warn: #e0a07a;
+  --btn-primary-bg: #ffffff;
+  --btn-primary-ink: #111111;
+  --atmosphere: radial-gradient(900px 500px at 80% -10%, rgba(232, 192, 74, 0.12), transparent 55%);
+}
 
+/* Jaune poussin */
+[data-theme='poussin'] {
+  --bg: #f6e27a;
+  --bg-elevated: #f0d65c;
+  --bg-card: rgba(255, 255, 255, 0.55);
+  --ink: #2a2408;
+  --ink-muted: rgba(42, 36, 8, 0.72);
+  --ink-faint: rgba(42, 36, 8, 0.45);
+  --gold: #c49212;
+  --gold-soft: rgba(196, 146, 18, 0.18);
+  --gold-glow: rgba(196, 146, 18, 0.28);
+  --line: rgba(42, 36, 8, 0.14);
+  --rec: #d62828;
+  --good: #2f7d4a;
+  --warn: #b85a1a;
+  --btn-primary-bg: #2a2408;
+  --btn-primary-ink: #f6e27a;
+  --atmosphere: radial-gradient(800px 480px at 10% 0%, rgba(255, 255, 255, 0.45), transparent 55%);
+}
+
+/* Vert acrylique */
+[data-theme='acrylique'] {
+  --bg: #1f8f6a;
+  --bg-elevated: #187a5a;
+  --bg-card: rgba(8, 40, 30, 0.28);
+  --ink: #f4fff8;
+  --ink-muted: rgba(244, 255, 248, 0.78);
+  --ink-faint: rgba(244, 255, 248, 0.48);
+  --gold: #d9f56c;
+  --gold-soft: rgba(217, 245, 108, 0.18);
+  --gold-glow: rgba(217, 245, 108, 0.3);
+  --line: rgba(244, 255, 248, 0.18);
+  --rec: #ff5a5a;
+  --good: #b8f5c8;
+  --warn: #ffd59a;
+  --btn-primary-bg: #f4fff8;
+  --btn-primary-ink: #0f3d2e;
+  --atmosphere: radial-gradient(900px 520px at 90% 10%, rgba(217, 245, 108, 0.25), transparent 50%);
+}
+
+/* Rose pastel */
+[data-theme='rose'] {
+  --bg: #f3c6d4;
+  --bg-elevated: #ebb4c6;
+  --bg-card: rgba(255, 255, 255, 0.5);
+  --ink: #3a1a28;
+  --ink-muted: rgba(58, 26, 40, 0.7);
+  --ink-faint: rgba(58, 26, 40, 0.45);
+  --gold: #c45a7a;
+  --gold-soft: rgba(196, 90, 122, 0.16);
+  --gold-glow: rgba(196, 90, 122, 0.28);
+  --line: rgba(58, 26, 40, 0.14);
+  --rec: #d62828;
+  --good: #3d8b6e;
+  --warn: #b85a1a;
+  --btn-primary-bg: #3a1a28;
+  --btn-primary-ink: #fde8ef;
+  --atmosphere: radial-gradient(800px 480px at 80% -5%, rgba(255, 255, 255, 0.55), transparent 55%);
+}
+
+/* Bleu turquoise */
+[data-theme='turquoise'] {
+  --bg: #1aa6b8;
+  --bg-elevated: #148fa0;
+  --bg-card: rgba(6, 40, 48, 0.28);
+  --ink: #f2fcff;
+  --ink-muted: rgba(242, 252, 255, 0.78);
+  --ink-faint: rgba(242, 252, 255, 0.48);
+  --gold: #ffe08a;
+  --gold-soft: rgba(255, 224, 138, 0.18);
+  --gold-glow: rgba(255, 224, 138, 0.32);
+  --line: rgba(242, 252, 255, 0.18);
+  --rec: #ff5a5a;
+  --good: #b6f5d0;
+  --warn: #ffd59a;
+  --btn-primary-bg: #f2fcff;
+  --btn-primary-ink: #0b3d48;
+  --atmosphere: radial-gradient(900px 520px at 15% 0%, rgba(255, 255, 255, 0.22), transparent 50%);
+}
+
+/* Orange arabesque / ciel étoilé — remplace le vert pomme */
+[data-theme='arabesque'] {
+  --bg: #1a1028;
+  --bg-elevated: #241536;
+  --bg-card: rgba(255, 140, 66, 0.1);
+  --ink: #fff4ea;
+  --ink-muted: rgba(255, 244, 234, 0.72);
+  --ink-faint: rgba(255, 244, 234, 0.42);
+  --gold: #ff8c42;
+  --gold-soft: rgba(255, 140, 66, 0.18);
+  --gold-glow: rgba(255, 140, 66, 0.4);
+  --line: rgba(255, 244, 234, 0.14);
+  --rec: #ff5a7a;
+  --good: #7dffb3;
+  --warn: #ffd27a;
+  --btn-primary-bg: #ff8c42;
+  --btn-primary-ink: #1a1028;
+  --atmosphere:
+    radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 70% 20%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 40% 70%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 85% 60%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(700px 420px at 80% 0%, rgba(255, 140, 66, 0.35), transparent 55%),
+    radial-gradient(600px 400px at 10% 90%, rgba(120, 80, 200, 0.25), transparent 50%);
+}
+
+:root {
   --font-display: 'Manrope', system-ui, sans-serif;
   --font-body: 'Manrope', system-ui, sans-serif;
-
   --radius: 16px;
   --radius-sm: 12px;
   --pad: clamp(1.25rem, 4vw, 2.5rem);
@@ -40,7 +151,10 @@ body {
   font-family: var(--font-body);
   color: var(--ink);
   background: var(--bg);
+  background-image: var(--atmosphere);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 button,
@@ -58,7 +172,7 @@ button {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: transparent;
 }
 
 .topbar {
@@ -144,7 +258,7 @@ button {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 1.5rem var(--pad) 2rem;
+  padding: 1.5rem var(--pad) 5rem;
   animation: rise 0.45s ease both;
 }
 
@@ -343,14 +457,55 @@ h2 {
 }
 
 .btn-primary {
-  background: var(--ink);
-  color: #111;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-ink);
 }
 
 .btn-gold {
   background: var(--gold);
-  color: #111;
+  color: var(--btn-primary-ink);
 }
+
+.theme-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 0.85rem;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  max-width: min(96vw, 40rem);
+  padding: 0.45rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.theme-swatch {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.theme-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+.theme-swatch[data-swatch='noir'] { background: #111; color: #e8c04a; }
+.theme-swatch[data-swatch='poussin'] { background: #f6e27a; color: #2a2408; text-shadow: none; }
+.theme-swatch[data-swatch='acrylique'] { background: #1f8f6a; }
+.theme-swatch[data-swatch='rose'] { background: #f3c6d4; color: #3a1a28; text-shadow: none; }
+.theme-swatch[data-swatch='turquoise'] { background: #1aa6b8; }
+.theme-swatch[data-swatch='arabesque'] { background: linear-gradient(135deg, #1a1028, #ff8c42); }
 
 .btn-ghost {
   background: transparent;
@@ -734,5 +889,15 @@ h2 {
 
   .btn {
     width: 100%;
+  }
+
+  .theme-dock {
+    bottom: 0.5rem;
+    border-radius: 18px;
+    padding-bottom: 0.55rem;
+  }
+
+  .slide {
+    padding-bottom: 5.5rem;
   }
 }
