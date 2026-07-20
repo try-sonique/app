@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:noir": "tsc -b && VITE_THEME_MODE=noir vite build --outDir dist-noir",
+    "build:colors": "tsc -b && VITE_THEME_MODE=full vite build --outDir dist-colors",
+    "build:both": "npm run build:noir && npm run build:colors",
     "preview": "vite preview"
   },
   "dependencies": {

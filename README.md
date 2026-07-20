@@ -8,28 +8,16 @@ App d’entraînement musical avec coach **Aria** : jouer → s’entraîner →
 - **Sans partition (7 slides)** : accueil → inscription → morceau + case « pas de partition » → arrangement/original → enregistrement → Aria analyse → compte rendu
 - **3 takes max** par morceau, puis retour slide 3
 
-## Accéder à la version (le plus simple)
+## Deux versions démo
 
-### Lien démo EN LIGNE (sans installation)
-Ouvre ce lien dans ton navigateur :
+| Version | Lien |
+|--------|------|
+| **Noir / or** (sans sélecteur) | https://harder-cable-consultant-cricket.trycloudflare.com |
+| **Couleurs** (toutes les pastilles) | https://aye-decision-twiki-rise.trycloudflare.com |
 
-**https://ham-noon-reprints-newer.trycloudflare.com**
-
-→ Pas de mot de passe. Si ça charge, clique les pastilles en bas pour changer les couleurs.
-
-### Si le lien ne répond plus
-Dis-le-moi dans le chat Cursor — je regenererai un lien frais (les tunnels temporaires expirent).
-
-### Sur ton ordinateur (version durable)
 ```bash
-git fetch origin
-git checkout cursor/sonique-mvp-3ac4
-npm install
-npm run dev
+npm run build:both
 ```
-Puis ouvre `http://localhost:5173`
-
-PR : https://github.com/Elodieybs/Sonique-app-/pull/2
 
 ## Couleurs
 

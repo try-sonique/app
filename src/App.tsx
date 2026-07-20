@@ -30,7 +30,7 @@ import {
 
 type ThemeId = 'noir' | 'noir-rose' | 'poussin' | 'acrylique' | 'rose' | 'turquoise' | 'arabesque'
 
-const THEMES: { id: ThemeId; label: string }[] = [
+const ALL_THEMES: { id: ThemeId; label: string }[] = [
   { id: 'noir', label: 'Noir or' },
   { id: 'noir-rose', label: 'Noir rose' },
   { id: 'poussin', label: 'Poussin' },
@@ -39,6 +39,12 @@ const THEMES: { id: ThemeId; label: string }[] = [
   { id: 'turquoise', label: 'Turquoise' },
   { id: 'arabesque', label: 'Arabesque' },
 ]
+
+/** `noir` = identité figée noir/or ; `full` = sélecteur multi-couleurs */
+const THEME_MODE = (import.meta.env.VITE_THEME_MODE as string) || 'full'
+const THEMES =
+  THEME_MODE === 'noir' ? ALL_THEMES.filter((t) => t.id === 'noir') : ALL_THEMES
+const SHOW_THEME_DOCK = THEME_MODE !== 'noir'
 
 function ThemeDock({
   theme,
@@ -857,6 +863,7 @@ function HistoryView({
 export default function App() {
   const [state, setState] = useState<AppState>(initialState)
   const [theme, setTheme] = useState<ThemeId>(() => {
+    if (THEME_MODE === 'noir') return 'noir'
     const saved = localStorage.getItem('sonique-theme') as ThemeId | null
     return saved && THEMES.some((t) => t.id === saved) ? saved : 'noir'
   })
@@ -864,7 +871,9 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('sonique-theme', theme)
+    if (THEME_MODE !== 'noir') {
+      localStorage.setItem('sonique-theme', theme)
+    }
   }, [theme])
 
   useEffect(() => {
@@ -1081,7 +1090,7 @@ export default function App() {
         </div>
       </header>
       {body}
-      <ThemeDock theme={theme} onChange={setTheme} />
+      {SHOW_THEME_DOCK ? <ThemeDock theme={theme} onChange={setTheme} /> : null}
     </div>
   )
 }
