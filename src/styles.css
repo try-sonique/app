@@ -146,8 +146,8 @@
 }
 
 :root {
-  --font-display: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
   --radius: 16px;
   --radius-sm: 12px;
   --pad: clamp(1.25rem, 4vw, 2.5rem);

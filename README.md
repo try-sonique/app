@@ -8,16 +8,11 @@ App d’entraînement musical avec coach **Aria** : jouer → s’entraîner →
 - **Sans partition (7 slides)** : accueil → inscription → morceau + case « pas de partition » → arrangement/original → enregistrement → Aria analyse → compte rendu
 - **3 takes max** par morceau, puis retour slide 3
 
-## Deux versions démo
+## Démo
 
-| Version | Lien |
-|--------|------|
-| **Noir / or** (sans sélecteur) | https://harder-cable-consultant-cricket.trycloudflare.com |
-| **Couleurs** (toutes les pastilles) | https://aye-decision-twiki-rise.trycloudflare.com |
+https://traditional-hits-biology-reflections.trycloudflare.com
 
-```bash
-npm run build:both
-```
+Noir/or figé · Syne + Plus Jakarta Sans · partition large · timer discret
 
 ## Couleurs
 
