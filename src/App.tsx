@@ -942,7 +942,15 @@ export default function App() {
         onBack={() => setShowHistory(false)}
         onOpenFeedback={(session) => {
           if (session.feedback) {
-            setState((s) => ({ ...s, feedback: session.feedback, slide: s.hasPartition === false ? 7 : 8 }))
+            const feedback = {
+              ...session.feedback,
+              headline: formatSessionHeadline(session.feedback.headline, session.pieceName),
+            }
+            setState((s) => ({
+              ...s,
+              feedback,
+              slide: s.hasPartition === false ? 7 : 8,
+            }))
           }
           setShowHistory(false)
         }}
