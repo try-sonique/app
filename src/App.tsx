@@ -155,11 +155,7 @@ function AuthSlide({
   const [loginEmail, setLoginEmail] = useState(profile.email)
   const [loginError, setLoginError] = useState('')
 
-  const signupValid =
-    profile.firstName.trim() &&
-    profile.lastName.trim() &&
-    profile.email.trim() &&
-    profile.phone.trim()
+  const signupValid = Boolean(profile.firstName.trim() && profile.email.trim())
 
   const submitSignup = (e: FormEvent) => {
     e.preventDefault()
@@ -188,15 +184,15 @@ function AuthSlide({
       <section className="slide">
         <span className="eyebrow">Slide 2 · Accès</span>
         <h1>Tu as déjà un compte Sonique ?</h1>
-        <p className="lead">Comme ça, tu n'as pas à retaper toutes tes infos si tu reviens.</p>
+        <p className="lead">Comme ça, tu n’as pas à tout retaper si tu reviens.</p>
         <div className="choice-grid" style={{ marginInline: 'auto' }}>
           <button type="button" className="choice" onClick={() => setMode('login')}>
             Connexion
-            <small>J'ai déjà un compte — email suffisant pour retrouver mon profil.</small>
+            <small>J’ai déjà un compte — email suffisant.</small>
           </button>
           <button type="button" className="choice" onClick={() => setMode('signup')}>
-            C'est ma première fois
-            <small>Je crée mon espace : prénom, nom, téléphone, email.</small>
+            C’est ma première fois
+            <small>Prénom + email. Le reste est facultatif.</small>
           </button>
         </div>
         <p className="footer-note">
@@ -260,10 +256,7 @@ function AuthSlide({
       <span className="eyebrow">Première fois</span>
       <h1>Crée ton espace Sonique</h1>
       <p className="lead">
-        Ces infos restent sur ton appareil (exportables). Support :{' '}
-        <a className="support" href="mailto:sonique@contact.co">
-          sonique@contact.co
-        </a>
+        Seulement prénom et email sont requis. Le reste est facultatif — tout reste sur ton appareil.
       </p>
       <form className="stack" onSubmit={submitSignup}>
         <label className="field">
@@ -277,27 +270,6 @@ function AuthSlide({
           />
         </label>
         <label className="field">
-          <span>Nom</span>
-          <input
-            type="text"
-            autoComplete="family-name"
-            value={profile.lastName}
-            onChange={(e) => onChange('lastName', e.target.value)}
-            required
-          />
-        </label>
-        <label className="field">
-          <span>Téléphone (indicatif FR / étranger)</span>
-          <input
-            type="tel"
-            autoComplete="tel"
-            placeholder="+33…"
-            value={profile.phone}
-            onChange={(e) => onChange('phone', e.target.value)}
-            required
-          />
-        </label>
-        <label className="field">
           <span>Email</span>
           <input
             type="email"
@@ -305,6 +277,29 @@ function AuthSlide({
             value={profile.email}
             onChange={(e) => onChange('email', e.target.value)}
             required
+          />
+        </label>
+        <label className="field">
+          <span>
+            Nom <em className="optional-tag">facultatif</em>
+          </span>
+          <input
+            type="text"
+            autoComplete="family-name"
+            value={profile.lastName}
+            onChange={(e) => onChange('lastName', e.target.value)}
+          />
+        </label>
+        <label className="field">
+          <span>
+            Téléphone <em className="optional-tag">facultatif</em>
+          </span>
+          <input
+            type="tel"
+            autoComplete="tel"
+            placeholder="+33…"
+            value={profile.phone}
+            onChange={(e) => onChange('phone', e.target.value)}
           />
         </label>
         <div className="actions">
@@ -316,6 +311,12 @@ function AuthSlide({
           </button>
         </div>
       </form>
+      <p className="footer-note">
+        Support :{' '}
+        <a className="support" href="mailto:sonique@contact.co">
+          sonique@contact.co
+        </a>
+      </p>
     </section>
   )
 }
@@ -594,19 +595,29 @@ function RecordStage({
   takesUsed: number
   onFinish: (audioBlob: Blob | null) => void
 }) {
-  const { status, seconds, start, stop } = useMediaRecorder()
+  const { status, seconds, errorMessage, start, stop } = useMediaRecorder()
   const recording = status === 'recording'
   const cue = useAriaCues(recording, 'record')
   const { energy } = usePlayEnergy(recording)
   const takesLeft = MAX_TAKES - takesUsed
+  const [busy, setBusy] = useState(false)
 
   const toggle = async () => {
-    if (recording) {
-      const blob = await stop()
-      onFinish(blob)
-      return
+    if (busy) return
+    setBusy(true)
+    try {
+      if (recording) {
+        const blob = await stop()
+        onFinish(blob)
+        return
+      }
+      const ok = await start()
+      if (!ok) {
+        // stay on screen with error message from hook
+      }
+    } finally {
+      setBusy(false)
     }
-    await start()
   }
 
   return (
@@ -641,7 +652,7 @@ function RecordStage({
             </div>
           ) : null}
           <div className="actions play-actions">
-            <button type="button" className="btn btn-hero" onClick={toggle}>
+            <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
               Terminer et recevoir mon retour
             </button>
           </div>
@@ -656,24 +667,24 @@ function RecordStage({
             <p className="lead">
               {hasPartition
                 ? 'Partition sous les yeux. Lance l’enregistrement quand tu es prêt·e.'
-                : 'Aucune partition — Sonique écoutera à l’oreille.'}
+                : 'Aucune partition — Aria écoute à l’oreille.'}
             </p>
             <div className="actions play-actions">
-              <button type="button" className="btn btn-hero" onClick={toggle}>
+              <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
                 <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
                 Lancer l’enregistrement
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
-                Simuler un essai (démo)
+                Continuer sans micro (démo)
               </button>
             </div>
-            {status === 'denied' || status === 'unsupported' ? (
-              <p className="footer-note" style={{ paddingTop: '1rem' }}>
-                Micro indisponible — utilise « Simuler un essai » pour la démo.
+            {errorMessage ? (
+              <p className="footer-note" style={{ paddingTop: '1rem', color: 'var(--warn)' }}>
+                {errorMessage}
               </p>
             ) : (
               <p className="footer-note" style={{ paddingTop: '1rem' }}>
-                Tu pourras arrêter quand tu veux.
+                Autorise le micro si ton navigateur le demande — tu pourras arrêter quand tu veux.
               </p>
             )}
           </div>
@@ -686,7 +697,7 @@ function RecordStage({
 
 function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => void }) {
   useEffect(() => {
-    const id = window.setTimeout(onDone, 2800)
+    const id = window.setTimeout(onDone, 1800)
     return () => window.clearTimeout(id)
   }, [onDone])
 
@@ -694,9 +705,9 @@ function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => voi
     <section className="slide">
       <div className="analyze">
         <div className="aria-orb" aria-hidden />
-        <h1>Sonique écoute…</h1>
+        <h1>Aria écoute…</h1>
         <p className="lead" style={{ marginInline: 'auto' }}>
-          {firstName}, Aria prépare ton retour — elle prend le temps d’entendre avant de te répondre.
+          {firstName ? `${firstName}, un instant.` : 'Un instant.'}
         </p>
       </div>
       <FooterLine withPartition />
@@ -718,53 +729,45 @@ function Report({
   const feedback = state.feedback
   if (!feedback) return null
   const exhausted = feedback.takesLeft <= 0
+  const strengths = (feedback.strengths || []).slice(0, 2)
+  const improvements = (feedback.improvements || []).slice(0, 2)
 
   return (
     <section className="slide">
-      <span className="eyebrow">Ton retour personnalisé</span>
+      <span className="eyebrow">Retour Aria</span>
       <h1>{feedback.headline}</h1>
       <div className="takes-pill">
         Essais restants : {feedback.takesLeft}/{MAX_TAKES}
       </div>
 
-      <div className="report-card">
-        <p>{feedback.greeting}</p>
-        <div className="report-block">
-          <h3>Vue d'ensemble</h3>
-          <p>{feedback.overview}</p>
-        </div>
-        <div className="report-block">
-          <h3>Atmosphère & intention</h3>
-          <p>{feedback.atmosphere}</p>
-        </div>
-        <div className="report-block">
-          <h3>Technique</h3>
-          <p>{feedback.technique}</p>
-        </div>
-        <div className="report-block">
-          <h3>Rythme & tempo</h3>
-          <p>{feedback.rhythm}</p>
-        </div>
-        <div className="report-block">
-          <h3>Ce qui fonctionne</h3>
-          <ul>
-            {feedback.strengths.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="report-block">
-          <h3>Axes d'amélioration</h3>
-          <ul>
-            {feedback.improvements.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="report-block">
-          <h3>Focus pour la suite</h3>
-          <p>{feedback.nextFocus}</p>
-        </div>
+      <div className="report-card report-card-compact">
+        <p className="report-greeting">{feedback.greeting}</p>
+        {strengths.length > 0 ? (
+          <div className="report-block">
+            <h3>Ce qui marche</h3>
+            <ul>
+              {strengths.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {improvements.length > 0 ? (
+          <div className="report-block">
+            <h3>À travailler</h3>
+            <ul>
+              {improvements.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {feedback.nextFocus ? (
+          <div className="report-block">
+            <h3>Pour la suite</h3>
+            <p>{feedback.nextFocus}</p>
+          </div>
+        ) : null}
       </div>
 
       <div className="actions">
