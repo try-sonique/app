@@ -70,7 +70,7 @@ export function analyzePerformance(input: {
       atmosphere:
         'Le début pose une présence claire. Il y a une chaleur dans le son, même si certains passages cherchent encore leur place. Ce n’est pas “parfait” — et c’est tant mieux : on entend une personne en train de jouer.',
       technique:
-        'Globalement, la tenue du son est crédible. Les attaques sont parfois nettes, parfois un peu précipitées. Sans partition, Aria ne peut pas te parler mesure par mesure — elle te dit plutôt où le geste musical fléchit : souvent juste après les phrases qui demandent du souffle ou du relâchement.',
+        'Globalement, la tenue du son est crédible. Les attaques sont parfois nettes, parfois un peu précipitées. Sans partition, Aria reste à l’oreille : elle te dit où le geste musical fléchit — souvent juste après les phrases qui demandent du souffle ou du relâchement.',
       rhythm:
         'Le tempo global tient, avec de petites accélérations quand l’émotion monte. Ce qui aiderait : choisir un passage court (quelques phrases) et le rejouer plus lent, puis revenir au tempo voulu.',
       strengths: [
