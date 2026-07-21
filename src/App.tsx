@@ -84,7 +84,7 @@ function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
 
 function PhaseNav({ phase }: { phase: Phase }) {
   const items: { id: Phase; n: number; label: string }[] = [
-    { id: 'partition', n: 1, label: 'Partition' },
+    { id: 'partition', n: 1, label: 'Morceau' },
     { id: 'jouer', n: 2, label: 'Jouer' },
     { id: 'retour', n: 3, label: 'Retour' },
   ]
@@ -353,11 +353,10 @@ function PieceSetup({
 
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Étape 1 · Partition</span>
+      <span className="eyebrow">Étape 1 · Morceau</span>
       <h1>Quel morceau vas-tu travailler ?</h1>
       <p className="lead">
-        Dépose la partition que tu comptes jouer — ou continue sans. Sonique écoute pour te faire
-        progresser, jamais pour te juger.
+        Ajoute ta partition si tu l’as — sinon continue sans. Aria s’adapte.
       </p>
 
       <div className="stack">
@@ -1018,7 +1017,12 @@ export default function App() {
         }}
       />
     )
-  } else if (state.slide === 1) body = <Welcome onNext={() => go(2)} />
+  } else if (state.slide === 1)
+    body = (
+      <Welcome
+        onNext={() => go(state.profile.email.trim() ? 3 : 2)}
+      />
+    )
   else if (state.slide === 2) {
     body = (
       <AuthSlide
@@ -1117,9 +1121,15 @@ export default function App() {
           className="brand-mark"
           onClick={() => {
             setShowHistory(false)
-            go(1)
+            // Ne pas renvoyer à l’accueil après connexion (bug ressenti slide 2→1)
+            if (state.profile.email.trim()) go(3)
+            else go(1)
           }}
-          aria-label="Retour à l’accueil Sonique"
+          aria-label={
+            state.profile.email.trim()
+              ? 'Retour au choix du morceau'
+              : 'Retour à l’accueil Sonique'
+          }
         >
           Sonique
         </button>
