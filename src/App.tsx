@@ -387,14 +387,14 @@ function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => vo
       <span className="eyebrow">Avec partition</span>
       <h1>Comment ça marche, {firstName || 'toi'} ?</h1>
       <p className="lead">
-        Aria te guide pas à pas avant l’enregistrement — pour corriger sans te juger.
+        Sur Sonique, Aria t’accompagne pas à pas avant l’enregistrement — pour corriger sans te juger.
       </p>
       <ol className="steps">
         <li>
           <span className="step-num">1</span>
           <div>
             <strong>Choisis le passage travaillé</strong>
-            <p>Aria ne traite pas toute la partition d’un coup.</p>
+            <p>On ne traite pas toute la partition d’un coup.</p>
           </div>
         </li>
         <li>
@@ -407,7 +407,7 @@ function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => vo
         <li>
           <span className="step-num">3</span>
           <div>
-            <strong>Aria corrige en live</strong>
+            <strong>Aria chuchote en live</strong>
             <p>Fausse note, rythme… elle te le dit pendant que tu joues.</p>
           </div>
         </li>
@@ -415,14 +415,14 @@ function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => vo
           <span className="step-num">4</span>
           <div>
             <strong>Enregistre une trace</strong>
-            <p>Pour garder ce que tu as fait aujourd’hui.</p>
+            <p>Pour garder ce que tu as fait aujourd’hui sur Sonique.</p>
           </div>
         </li>
         <li>
           <span className="step-num">5</span>
           <div>
-            <strong>Reçois le compte rendu</strong>
-            <p>Max 3 takes par morceau, pour digérer le feedback.</p>
+            <strong>Reçois ton retour</strong>
+            <p>Max 3 essais par morceau, pour digérer ce qu’Aria t’a dit.</p>
           </div>
         </li>
       </ol>
@@ -448,9 +448,9 @@ function NoPartitionQuestions({
   return (
     <section className="slide slide-left">
       <span className="eyebrow">Sans partition</span>
-      <h1>Aide Aria à t’écouter</h1>
+      <h1>Aide Sonique à t’écouter</h1>
       <p className="lead">
-        Dis-lui si tu joues un arrangement ou la version originale — pour un retour plus juste.
+        Dis si tu joues un arrangement ou la version originale — pour qu’Aria te réponde plus juste.
       </p>
       <div className="choice-grid">
         <button
@@ -503,7 +503,7 @@ function PracticeStage({
       <div className="play-header">
         <span className="eyebrow">Étape 2 · Entraînement</span>
         <h1>Joue sans te soucier de l’app</h1>
-        <p className="lead play-lead">Partition large. Aria chuchote — aucun enregistrement ici.</p>
+        <p className="lead play-lead">Partition large. Aria chuchote dans Sonique — aucun enregistrement ici.</p>
         <div className="meta-row">
           <span>{pieceName}</span>
         </div>
@@ -525,7 +525,7 @@ function PracticeStage({
       ) : null}
       <div className="actions play-actions">
         <button type="button" className="btn btn-ghost" onClick={() => setActive((v) => !v)}>
-          {active ? 'Mettre Aria en pause' : 'Réactiver Aria'}
+          {active ? 'Couper les chuchotements' : 'Réactiver Aria'}
         </button>
         <button type="button" className="btn btn-primary" onClick={onNext}>
           Je suis prêt·e à enregistrer
@@ -623,12 +623,12 @@ function RecordStage({
                 Lancer l’enregistrement
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
-                Simuler un take (démo)
+                Simuler un essai (démo)
               </button>
             </div>
             {status === 'denied' || status === 'unsupported' ? (
               <p className="footer-note" style={{ paddingTop: '1rem' }}>
-                Micro indisponible — utilise « Simuler un take » pour la démo.
+                Micro indisponible — utilise « Simuler un essai » pour la démo.
               </p>
             ) : (
               <p className="footer-note" style={{ paddingTop: '1rem' }}>
@@ -653,9 +653,9 @@ function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => voi
     <section className="slide">
       <div className="analyze">
         <div className="aria-orb" aria-hidden />
-        <h1>Aria écoute ta performance…</h1>
+        <h1>Sonique écoute…</h1>
         <p className="lead" style={{ marginInline: 'auto' }}>
-          {firstName}, Aria prend le temps de bien entendre avant de te répondre.
+          {firstName}, Aria prépare ton retour — elle prend le temps d’entendre avant de te répondre.
         </p>
       </div>
       <FooterLine withPartition />
@@ -683,7 +683,7 @@ function Report({
       <span className="eyebrow">Ton retour personnalisé</span>
       <h1>{feedback.headline}</h1>
       <div className="takes-pill">
-        Takes restants : {feedback.takesLeft}/{MAX_TAKES}
+        Essais restants : {feedback.takesLeft}/{MAX_TAKES}
       </div>
 
       <div className="report-card">
@@ -786,17 +786,17 @@ function HistoryView({
       <span className="eyebrow">Mon compte · Sessions</span>
       <h1>Historique de travail</h1>
       <p className="lead">
-        Rejoue tes takes et relis tes comptes rendus. Tout reste sur ton appareil (interne).
+        Rejoue tes sessions et relis tes retours. Tout reste sur ton appareil (interne).
       </p>
       {sessions.length === 0 ? (
-        <p className="lead">Aucun take enregistré pour l’instant.</p>
+        <p className="lead">Aucune session enregistrée pour l’instant.</p>
       ) : (
         <div className="history-list">
           {sessions.map((s) => (
             <article key={s.id} className="history-item">
               <h3>{s.pieceName}</h3>
               <div className="meta">
-                {new Date(s.createdAt).toLocaleString('fr-FR')} · Take {s.takeNumber}
+                {new Date(s.createdAt).toLocaleString('fr-FR')} · Essai {s.takeNumber}
                 {s.hasPartition ? ' · avec partition' : ' · à l’oreille'}
               </div>
               <p className="lead" style={{ margin: 0 }}>
@@ -805,7 +805,7 @@ function HistoryView({
               {audioUrls[s.id] ? <audio controls src={audioUrls[s.id]} /> : null}
               <div className="actions" style={{ marginTop: '0.85rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => onOpenFeedback(s)}>
-                  Voir le compte rendu
+                  Voir le retour
                 </button>
               </div>
             </article>
