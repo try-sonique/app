@@ -750,6 +750,16 @@ function Report({
 }
 
 
+function formatSessionHeadline(headline: string, pieceName: string) {
+  const cleaned = headline
+    .replace(/^Compte\s*rendu\s*[—–-]\s*/i, '')
+    .replace(/^Retour\s*[—–-]\s*/i, '')
+    .replace(/\btakes?\b/gi, 'essai')
+    .trim()
+  const title = cleaned || pieceName
+  return `Retour — ${title}`
+}
+
 function HistoryView({
   email,
   onBack,
@@ -800,7 +810,7 @@ function HistoryView({
                 {s.hasPartition ? ' · avec partition' : ' · à l’oreille'}
               </div>
               <p className="lead" style={{ margin: 0 }}>
-                {s.feedbackHeadline}
+                {formatSessionHeadline(s.feedbackHeadline, s.pieceName)}
               </p>
               {audioUrls[s.id] ? <audio controls src={audioUrls[s.id]} /> : null}
               <div className="actions" style={{ marginTop: '0.85rem' }}>
