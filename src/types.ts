@@ -14,7 +14,11 @@ export type AriaFeedback = {
   atmosphere: string
   technique: string
   rhythm: string
+  /** Points positifs */
   strengths: string[]
+  /** Points fragiles / à corriger */
+  weaknesses?: string[]
+  /** Axes d'amélioration avec pistes de travail */
   improvements: string[]
   nextFocus: string
   takesLeft: number

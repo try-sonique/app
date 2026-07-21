@@ -729,8 +729,9 @@ function Report({
   const feedback = state.feedback
   if (!feedback) return null
   const exhausted = feedback.takesLeft <= 0
-  const strengths = (feedback.strengths || []).slice(0, 2)
-  const improvements = (feedback.improvements || []).slice(0, 2)
+  const strengths = (feedback.strengths || []).slice(0, 3)
+  const weaknesses = (feedback.weaknesses || []).slice(0, 3)
+  const improvements = (feedback.improvements || []).slice(0, 3)
 
   return (
     <section className="slide">
@@ -744,7 +745,7 @@ function Report({
         <p className="report-greeting">{feedback.greeting}</p>
         {strengths.length > 0 ? (
           <div className="report-block">
-            <h3>Ce qui marche</h3>
+            <h3>Points positifs</h3>
             <ul>
               {strengths.map((s) => (
                 <li key={s}>{s}</li>
@@ -752,9 +753,19 @@ function Report({
             </ul>
           </div>
         ) : null}
+        {weaknesses.length > 0 ? (
+          <div className="report-block">
+            <h3>Points à corriger</h3>
+            <ul>
+              {weaknesses.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {improvements.length > 0 ? (
           <div className="report-block">
-            <h3>À travailler</h3>
+            <h3>Axes & pistes de travail</h3>
             <ul>
               {improvements.map((s) => (
                 <li key={s}>{s}</li>
@@ -764,7 +775,7 @@ function Report({
         ) : null}
         {feedback.nextFocus ? (
           <div className="report-block">
-            <h3>Pour la suite</h3>
+            <h3>Consigne pour le prochain essai</h3>
             <p>{feedback.nextFocus}</p>
           </div>
         ) : null}
