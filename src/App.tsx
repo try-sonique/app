@@ -80,14 +80,14 @@ function FooterLine({ withPartition }: { withPartition?: boolean }) {
 
 function Welcome({ onNext }: { onNext: () => void }) {
   return (
-    <section className="slide">
-      <span className="eyebrow">Prêt·e à jouer</span>
-      <p className="hero-brand">Sonique</p>
-      <p className="hero-tagline">
-        L’app qui te permet de jouer tes morceaux préférés.
-      </p>
-      <div className="actions">
-        <button type="button" className="btn btn-primary" onClick={onNext}>
+    <section className="slide slide-welcome">
+      <div className="welcome-core">
+        <span className="eyebrow">Prêt·e à jouer</span>
+        <p className="hero-brand">Sonique</p>
+        <p className="hero-tagline">
+          L’app qui te permet de jouer tes morceaux préférés.
+        </p>
+        <button type="button" className="btn btn-hero" onClick={onNext}>
           Commencer
         </button>
       </div>
@@ -499,14 +499,16 @@ function PracticeStage({
   const { energy, denied } = usePlayEnergy(active)
 
   return (
-    <section className="slide">
-      <span className="eyebrow">Étape 2 · Entraînement</span>
-      <h1>Joue sans te soucier de l’app</h1>
-      <p className="lead">Partition qui défile. Aria chuchote — aucun enregistrement ici.</p>
-      <div className="meta-row">
-        <span>{pieceName}</span>
+    <section className="slide slide-play">
+      <div className="play-header">
+        <span className="eyebrow">Étape 2 · Entraînement</span>
+        <h1>Joue sans te soucier de l’app</h1>
+        <p className="lead play-lead">Partition large. Aria chuchote — aucun enregistrement ici.</p>
+        <div className="meta-row">
+          <span>{pieceName}</span>
+        </div>
       </div>
-      <div className="stage">
+      <div className="stage stage-score">
         <PartitionViewer
           src={partitionPreview}
           mime={partitionMime}
@@ -521,7 +523,7 @@ function PracticeStage({
           Micro refusé : la partition ne peut pas suivre ton jeu. Autorise le micro pour synchroniser.
         </p>
       ) : null}
-      <div className="actions">
+      <div className="actions play-actions">
         <button type="button" className="btn btn-ghost" onClick={() => setActive((v) => !v)}>
           {active ? 'Mettre Aria en pause' : 'Réactiver Aria'}
         </button>
@@ -567,72 +569,73 @@ function RecordStage({
   }
 
   return (
-    <section className="slide">
+    <section className="slide slide-play">
       <span className="eyebrow">Étape 2 · Jouer</span>
       {recording ? (
         <>
-          <div className="listen-status">
-            <span className="rec-dot" />
-            En écoute — vas-y tranquillement
+          <div className="play-rec-bar">
+            <div className="listen-status">
+              <span className="rec-dot" />
+              En écoute — vas-y tranquillement
+            </div>
+            <p className="timer">{formatTime(seconds)}</p>
           </div>
-          <div className={`dot-wave live`} aria-hidden>
-            {Array.from({ length: 24 }, (_, i) => (
-              <span key={i} />
-            ))}
-          </div>
-          <p className="timer">{formatTime(seconds)}</p>
           {hasPartition && partitionPreview ? (
-            <div className="stage" style={{ marginTop: '1.25rem', minHeight: 160 }}>
+            <div className="stage stage-score">
               <PartitionViewer
                 src={partitionPreview}
                 mime={partitionMime}
                 name={partitionName}
-                compact
                 autoScroll={recording}
                 energy={energy}
               />
               {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
             </div>
           ) : cue ? (
-            <div className={`cue-bubble good`} style={{ position: 'relative', left: 'auto', transform: 'none', marginTop: '1rem' }}>
+            <div
+              className={`cue-bubble good`}
+              style={{ position: 'relative', left: 'auto', transform: 'none', marginTop: '1rem' }}
+            >
               {cue.text}
             </div>
           ) : null}
-          <div className="actions">
-            <button type="button" className="btn btn-primary" onClick={toggle}>
+          <div className="actions play-actions">
+            <button type="button" className="btn btn-hero" onClick={toggle}>
               Terminer et recevoir mon retour
             </button>
           </div>
         </>
       ) : (
         <>
-          <h1>Prêt·e à jouer ?</h1>
-          <p className="lead">
-            {pieceName} · essais restants : {takesLeft}/{MAX_TAKES}
-          </p>
-          <p className="lead">
-            {hasPartition
-              ? 'Partition sous les yeux. Lance l’enregistrement quand tu es prêt·e.'
-              : 'Aucune partition — Sonique écoutera à l’oreille.'}
-          </p>
-          <div className="actions">
-            <button type="button" className="btn btn-primary" onClick={toggle}>
-              <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
-              Lancer l’enregistrement
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
-              Simuler un take (démo)
-            </button>
+          <div className="welcome-core">
+            <h1>Prêt·e à jouer ?</h1>
+            <p className="lead">
+              {pieceName} · essais restants : {takesLeft}/{MAX_TAKES}
+            </p>
+            <p className="lead">
+              {hasPartition
+                ? 'Partition sous les yeux. Lance l’enregistrement quand tu es prêt·e.'
+                : 'Aucune partition — Sonique écoutera à l’oreille.'}
+            </p>
+            <div className="actions play-actions">
+              <button type="button" className="btn btn-hero" onClick={toggle}>
+                <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
+                Lancer l’enregistrement
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
+                Simuler un take (démo)
+              </button>
+            </div>
+            {status === 'denied' || status === 'unsupported' ? (
+              <p className="footer-note" style={{ paddingTop: '1rem' }}>
+                Micro indisponible — utilise « Simuler un take » pour la démo.
+              </p>
+            ) : (
+              <p className="footer-note" style={{ paddingTop: '1rem' }}>
+                Tu pourras arrêter quand tu veux.
+              </p>
+            )}
           </div>
-          {status === 'denied' || status === 'unsupported' ? (
-            <p className="footer-note" style={{ paddingTop: '1rem' }}>
-              Micro indisponible — utilise « Simuler un take » pour la démo.
-            </p>
-          ) : (
-            <p className="footer-note" style={{ paddingTop: '1rem' }}>
-              Tu pourras arrêter quand tu veux.
-            </p>
-          )}
         </>
       )}
       <FooterLine withPartition={hasPartition} />
