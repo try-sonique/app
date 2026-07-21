@@ -1032,7 +1032,17 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand-mark">Sonique</div>
+        <button
+          type="button"
+          className="brand-mark"
+          onClick={() => {
+            setShowHistory(false)
+            go(1)
+          }}
+          aria-label="Retour à l’accueil Sonique"
+        >
+          Sonique
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {state.profile.email ? (
             <button type="button" className="top-link" onClick={() => setShowHistory(true)}>

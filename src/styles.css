@@ -213,6 +213,14 @@ button {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink);
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  cursor: pointer;
+}
+
+.brand-mark:hover {
+  color: var(--gold);
 }
 
 .brand-mark::before {
