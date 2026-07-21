@@ -291,6 +291,10 @@ button {
   animation: rise 0.45s ease both;
 }
 
+html[data-themes='full'] .slide {
+  padding-bottom: 5.5rem;
+}
+
 .slide-welcome {
   justify-content: space-between;
   min-height: 0;

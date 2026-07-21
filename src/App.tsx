@@ -28,6 +28,47 @@ import {
   type UserProfile,
 } from './types'
 
+type ThemeId = 'noir' | 'noir-rose' | 'poussin' | 'acrylique' | 'rose' | 'turquoise' | 'arabesque'
+
+const ALL_THEMES: { id: ThemeId; label: string }[] = [
+  { id: 'noir', label: 'Noir or' },
+  { id: 'noir-rose', label: 'Noir rose' },
+  { id: 'poussin', label: 'Poussin' },
+  { id: 'acrylique', label: 'Acrylique' },
+  { id: 'rose', label: 'Rose' },
+  { id: 'turquoise', label: 'Turquoise' },
+  { id: 'arabesque', label: 'Arabesque' },
+]
+
+/** `full` = sélecteur multi-couleurs ; sinon noir/or figé */
+const THEME_MODE = (import.meta.env.VITE_THEME_MODE as string) || 'noir'
+const SHOW_THEME_DOCK = THEME_MODE === 'full'
+const THEMES = SHOW_THEME_DOCK ? ALL_THEMES : ALL_THEMES.filter((t) => t.id === 'noir')
+
+function ThemeDock({
+  theme,
+  onChange,
+}: {
+  theme: ThemeId
+  onChange: (id: ThemeId) => void
+}) {
+  return (
+    <div className="theme-dock" role="group" aria-label="Couleurs de fond">
+      {THEMES.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          className={`theme-swatch ${theme === t.id ? 'active' : ''}`}
+          data-swatch={t.id}
+          onClick={() => onChange(t.id)}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 type Phase = 'partition' | 'jouer' | 'retour'
 
 function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
@@ -833,11 +874,18 @@ function HistoryView({
 
 export default function App() {
   const [state, setState] = useState<AppState>(initialState)
+  const [theme, setTheme] = useState<ThemeId>(() => {
+    if (!SHOW_THEME_DOCK) return 'noir'
+    const saved = localStorage.getItem('sonique-theme') as ThemeId | null
+    return saved && THEMES.some((t) => t.id === saved) ? saved : 'noir'
+  })
   const [showHistory, setShowHistory] = useState(false)
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'noir')
-  }, [])
+    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.setAttribute('data-themes', SHOW_THEME_DOCK ? 'full' : 'noir')
+    if (SHOW_THEME_DOCK) localStorage.setItem('sonique-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const existing = getCurrentProfile()
@@ -1071,6 +1119,7 @@ export default function App() {
         </div>
       </header>
       {body}
+      {SHOW_THEME_DOCK ? <ThemeDock theme={theme} onChange={setTheme} /> : null}
     </div>
   )
 }
