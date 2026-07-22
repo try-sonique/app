@@ -36,6 +36,8 @@ export type AppState = {
   selectedPresetId: string | null
   /** Extrait audio à écouter à l’entraînement */
   previewAudio: string | null
+  scrollCapRatio: number | null
+  repeatEverySec: number | null
   arrangement: ArrangementKind
   takesUsed: number
   isRecording: boolean
@@ -60,6 +62,8 @@ export const initialState: AppState = {
   partitionMime: null,
   selectedPresetId: null,
   previewAudio: null,
+  scrollCapRatio: null,
+  repeatEverySec: null,
   arrangement: null,
   takesUsed: 0,
   isRecording: false,

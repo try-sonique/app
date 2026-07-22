@@ -476,6 +476,8 @@ function PracticeStage({
   partitionMime,
   partitionName,
   previewAudio,
+  scrollCapRatio,
+  repeatEverySec,
   onNext,
 }: {
   pieceName: string
@@ -483,10 +485,13 @@ function PracticeStage({
   partitionMime: string | null
   partitionName: string
   previewAudio: string | null
+  scrollCapRatio?: number
+  repeatEverySec?: number
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
   const [refPlaying, setRefPlaying] = useState(false)
+  const [refProgress, setRefProgress] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const cue = useAriaCues(active && !refPlaying, 'practice')
   const { energy, denied } = usePlayEnergy(active && !refPlaying)
@@ -495,18 +500,23 @@ function PracticeStage({
     audioRef.current?.pause()
     if (audioRef.current) audioRef.current.currentTime = 0
     setRefPlaying(false)
+    setRefProgress(null)
   }
 
   const startRef = async () => {
     if (!previewAudio) return
     const audio = audioRef.current ?? new Audio(previewAudio)
     audioRef.current = audio
-    audio.onended = () => setRefPlaying(false)
+    audio.onended = () => {
+      setRefPlaying(false)
+      setRefProgress(null)
+    }
     try {
       await audio.play()
       setRefPlaying(true)
     } catch {
       setRefPlaying(false)
+      setRefProgress(null)
     }
   }
 
@@ -520,6 +530,19 @@ function PracticeStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewAudio])
 
+  // Suit la timeline audio : avance jusqu’à la reprise, puis revient en haut
+  useEffect(() => {
+    if (!refPlaying) return
+    const cycle = Math.max(4, repeatEverySec ?? 999)
+    const id = window.setInterval(() => {
+      const audio = audioRef.current
+      if (!audio) return
+      const local = audio.currentTime % cycle
+      setRefProgress(Math.min(1, local / cycle))
+    }, 80)
+    return () => window.clearInterval(id)
+  }, [refPlaying, repeatEverySec])
+
   return (
     <section className="slide slide-play">
       <div className="play-header">
@@ -527,7 +550,7 @@ function PracticeStage({
         <h1>{refPlaying ? 'Suis la référence' : 'À toi de jouer'}</h1>
         <p className="lead play-lead">
           {refPlaying
-            ? 'Un pianiste joue — la partition défile. Écoute, puis reprends par-dessus ou juste après.'
+            ? 'Un pianiste joue — la partition suit jusqu’à la reprise, puis revient. Écoute, puis reprends.'
             : 'Joue ou chante maintenant. Aria chuchote — rien n’est enregistré ici.'}
         </p>
         <div className="meta-row">
@@ -541,7 +564,9 @@ function PracticeStage({
           mime={partitionMime}
           name={partitionName}
           autoScroll={active}
-          energy={refPlaying ? 0.42 : energy}
+          energy={refPlaying ? 0 : energy}
+          scrollProgress={refPlaying ? refProgress : null}
+          scrollCapRatio={scrollCapRatio ?? 1}
         />
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
@@ -971,6 +996,8 @@ export default function App() {
         partitionMime: null,
         selectedPresetId: null,
         previewAudio: null,
+        scrollCapRatio: null,
+        repeatEverySec: null,
         hasPartition: null,
         arrangement: null,
         takesUsed: 0,
@@ -992,6 +1019,8 @@ export default function App() {
         partitionMime: piece.mime,
         selectedPresetId: piece.id,
         previewAudio: piece.audioSrc,
+        scrollCapRatio: piece.scrollCapRatio ?? null,
+        repeatEverySec: piece.repeatEverySec ?? null,
         hasPartition: true,
       }
     })
@@ -1063,6 +1092,8 @@ export default function App() {
         partitionMime={state.partitionMime}
         partitionName={state.partitionName}
         previewAudio={state.previewAudio}
+        scrollCapRatio={state.scrollCapRatio ?? undefined}
+        repeatEverySec={state.repeatEverySec ?? undefined}
         onNext={() => go(6)}
       />
     )
