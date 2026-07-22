@@ -7,14 +7,14 @@ export type DemoPiece = {
   mime: string
 }
 
-/** Morceaux démo — connus des adultes, domaine public (audio + partition). */
+/** Morceaux démo — connus des adultes (partitions + ref audio légale). */
 export const DEMO_PIECES: DemoPiece[] = [
   {
     id: 'elise',
     title: 'Lettre à Élise',
-    blurb: 'Beethoven — partition réelle (1ʳᵉ page)',
+    blurb: 'Beethoven — tout le monde le reconnaît',
     partitionSrc: './presets/lettre-a-elise.png',
-    audioSrc: './presets/lettre-a-elise.wav',
+    audioSrc: './presets/lettre-a-elise.mp3',
     mime: 'image/png',
   },
   {

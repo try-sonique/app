@@ -486,76 +486,91 @@ function PracticeStage({
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
-  const [listening, setListening] = useState(false)
+  const [refPlaying, setRefPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const cue = useAriaCues(active && !listening, 'practice')
-  const { energy, denied } = usePlayEnergy(active && !listening)
+  const cue = useAriaCues(active && !refPlaying, 'practice')
+  const { energy, denied } = usePlayEnergy(active && !refPlaying)
 
+  const stopRef = () => {
+    audioRef.current?.pause()
+    if (audioRef.current) audioRef.current.currentTime = 0
+    setRefPlaying(false)
+  }
+
+  const startRef = async () => {
+    if (!previewAudio) return
+    const audio = audioRef.current ?? new Audio(previewAudio)
+    audioRef.current = audio
+    audio.onended = () => setRefPlaying(false)
+    try {
+      await audio.play()
+      setRefPlaying(true)
+    } catch {
+      setRefPlaying(false)
+    }
+  }
+
+  // Continuer (slide précédente) = geste utilisateur → on lance la référence
   useEffect(() => {
+    void startRef()
     return () => {
       audioRef.current?.pause()
       audioRef.current = null
     }
-  }, [])
-
-  const toggleListen = async () => {
-    if (!previewAudio) return
-    if (listening) {
-      audioRef.current?.pause()
-      if (audioRef.current) audioRef.current.currentTime = 0
-      setListening(false)
-      return
-    }
-    const audio = audioRef.current ?? new Audio(previewAudio)
-    audioRef.current = audio
-    audio.onended = () => setListening(false)
-    try {
-      await audio.play()
-      setListening(true)
-    } catch {
-      setListening(false)
-    }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewAudio])
 
   return (
     <section className="slide slide-play">
       <div className="play-header">
         <span className="eyebrow">Étape 2 · Entraînement</span>
-        <h1>Écoute, puis joue</h1>
+        <h1>{refPlaying ? 'Suis la référence' : 'À toi de jouer'}</h1>
         <p className="lead play-lead">
-          Entends l’extrait, puis joue ou chante — Aria chuchote, rien n’est enregistré ici.
+          {refPlaying
+            ? 'Un pianiste joue — la partition défile. Écoute, puis reprends par-dessus ou juste après.'
+            : 'Joue ou chante maintenant. Aria chuchote — rien n’est enregistré ici.'}
         </p>
         <div className="meta-row">
           <span>{pieceName}</span>
+          {refPlaying ? <span className="ref-pill">Référence en cours</span> : null}
         </div>
       </div>
-      {previewAudio ? (
-        <div className="actions play-actions" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-          <button type="button" className="btn btn-gold" onClick={toggleListen}>
-            {listening ? 'Stopper l’extrait' : 'Écouter l’extrait'}
-          </button>
-        </div>
-      ) : null}
       <div className="stage stage-score">
         <PartitionViewer
           src={partitionPreview}
           mime={partitionMime}
           name={partitionName}
-          autoScroll={active && !listening}
-          energy={listening ? 0.35 : energy}
+          autoScroll={active}
+          energy={refPlaying ? 0.42 : energy}
         />
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
-      {denied ? (
+      {denied && !refPlaying ? (
         <p className="footer-note" style={{ paddingTop: '0.75rem' }}>
           Micro refusé : la partition ne peut pas suivre ton jeu. Autorise le micro pour synchroniser.
         </p>
       ) : null}
       <div className="actions play-actions">
+        {previewAudio ? (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => (refPlaying ? stopRef() : void startRef())}
+          >
+            {refPlaying ? 'Couper la référence' : 'Relancer la référence'}
+          </button>
+        ) : null}
         <button type="button" className="btn btn-ghost" onClick={() => setActive((v) => !v)}>
           {active ? 'Couper les chuchotements' : 'Réactiver Aria'}
         </button>
-        <button type="button" className="btn btn-primary" onClick={onNext}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            stopRef()
+            onNext()
+          }}
+        >
           Je suis prêt·e à enregistrer
         </button>
       </div>
@@ -646,19 +661,19 @@ function RecordStage({
       ) : (
         <>
           <div className="welcome-core">
-            <h1>Prêt·e à jouer ?</h1>
+            <h1>Ta performance</h1>
             <p className="lead">
               {pieceName} · essais restants : {takesLeft}/{MAX_TAKES}
             </p>
             <p className="lead">
               {hasPartition
-                ? 'Partition sous les yeux. Lance l’enregistrement quand tu es prêt·e.'
-                : 'Aucune partition — Aria écoute à l’oreille.'}
+                ? 'C’est ta prise — pas la référence. Aria se base sur ce que tu joues maintenant.'
+                : 'C’est ta prise. Aria écoute à l’oreille ce que tu joues ou chantes.'}
             </p>
             <div className="actions play-actions">
               <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
                 <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
-                Lancer l’enregistrement
+                Lancer mon enregistrement
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
                 Continuer sans micro (démo)
