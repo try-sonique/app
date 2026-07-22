@@ -12,10 +12,10 @@ export const DEMO_PIECES: DemoPiece[] = [
   {
     id: 'elise',
     title: 'Lettre à Élise',
-    blurb: 'Beethoven — tout le monde le reconnaît',
-    partitionSrc: './presets/lettre-a-elise.svg',
+    blurb: 'Beethoven — partition réelle (1ʳᵉ page)',
+    partitionSrc: './presets/lettre-a-elise.png',
     audioSrc: './presets/lettre-a-elise.wav',
-    mime: 'image/svg+xml',
+    mime: 'image/png',
   },
   {
     id: 'clair',
