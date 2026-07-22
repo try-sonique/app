@@ -9,6 +9,7 @@ import {
 import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues } from './lib/aria'
 import { usePlayEnergy } from './lib/playEnergy'
+import { DEMO_PIECES } from './lib/presets'
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
   findProfileByEmail,
@@ -327,9 +328,11 @@ function PieceSetup({
   partitionName,
   partitionPreview,
   partitionMime,
+  selectedPresetId,
   onPieceName,
   onToggleNoPartition,
   onUpload,
+  onSelectPreset,
   onNext,
 }: {
   pieceName: string
@@ -337,9 +340,11 @@ function PieceSetup({
   partitionName: string
   partitionPreview: string | null
   partitionMime: string | null
+  selectedPresetId: string | null
   onPieceName: (v: string) => void
   onToggleNoPartition: (checked: boolean) => void
   onUpload: (file: File | null) => void
+  onSelectPreset: (id: string) => void
   onNext: () => void
 }) {
   const noPartition = hasPartition === false
@@ -356,10 +361,30 @@ function PieceSetup({
       <span className="eyebrow">Étape 1 · Morceau</span>
       <h1>Quel morceau vas-tu travailler ?</h1>
       <p className="lead">
-        Ajoute ta partition si tu l’as — sinon continue sans. Aria s’adapte.
+        Choisis un morceau prêt (recommandé pour la démo), ou importe ta partition. Tu peux jouer ou
+        chanter.
       </p>
 
       <div className="stack">
+        <div className="preset-grid" role="list">
+          {DEMO_PIECES.map((p) => {
+            const active = selectedPresetId === p.id
+            return (
+              <button
+                key={p.id}
+                type="button"
+                role="listitem"
+                className={`preset-card ${active ? 'active' : ''}`}
+                onClick={() => onSelectPreset(p.id)}
+                disabled={noPartition}
+              >
+                <strong>{p.title}</strong>
+                <span>{p.blurb}</span>
+              </button>
+            )
+          })}
+        </div>
+
         <label className="field">
           <span>Nom du morceau</span>
           <input
@@ -374,9 +399,9 @@ function PieceSetup({
           <div className="upload-icon" aria-hidden>
             ♫
           </div>
-          <strong>Glisse ta partition ici, ou choisis un fichier</strong>
+          <strong>Ou importe ta propre partition</strong>
           <p className="lead" style={{ margin: 0 }}>
-            Image (JPG, PNG) ou PDF — 8 Mo max
+            Image / PDF — préfère un fichier sans page de couverture pour le défilement
           </p>
           <input type="file" accept="image/*,.pdf" disabled={noPartition} onChange={onFile} />
           {partitionName && !noPartition ? (
@@ -406,7 +431,7 @@ function PieceSetup({
           <div>
             <strong>Je n’ai pas de partition — continuer quand même</strong>
             <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-              Sonique écoutera à l’oreille.
+              Aria écoutera à l’oreille.
             </p>
           </div>
         </label>
@@ -953,9 +978,13 @@ export default function App() {
     }))
   }
 
+  const revokeIfBlob = (url: string | null) => {
+    if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+  }
+
   const newPiece = () => {
     setState((s) => {
-      if (s.partitionPreview) URL.revokeObjectURL(s.partitionPreview)
+      revokeIfBlob(s.partitionPreview)
       return {
         ...s,
         slide: 3,
@@ -963,6 +992,7 @@ export default function App() {
         partitionName: '',
         partitionPreview: null,
         partitionMime: null,
+        selectedPresetId: null,
         hasPartition: null,
         arrangement: null,
         takesUsed: 0,
@@ -973,22 +1003,44 @@ export default function App() {
 
   const onUpload = (file: File | null) => {
     setState((s) => {
-      if (s.partitionPreview) URL.revokeObjectURL(s.partitionPreview)
+      revokeIfBlob(s.partitionPreview)
       if (!file) {
         return {
           ...s,
           partitionName: '',
           partitionPreview: null,
           partitionMime: null,
+          selectedPresetId: null,
           hasPartition: null,
         }
       }
       const preview = URL.createObjectURL(file)
       return {
         ...s,
+        pieceName: s.pieceName || file.name.replace(/\.[^.]+$/, ''),
         partitionName: file.name,
         partitionPreview: preview,
-        partitionMime: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*'),
+        partitionMime:
+          file.type ||
+          (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*'),
+        selectedPresetId: null,
+        hasPartition: true,
+      }
+    })
+  }
+
+  const onSelectPreset = (id: string) => {
+    const piece = DEMO_PIECES.find((p) => p.id === id)
+    if (!piece) return
+    setState((s) => {
+      revokeIfBlob(s.partitionPreview)
+      return {
+        ...s,
+        pieceName: piece.title,
+        partitionName: `${piece.title}.svg`,
+        partitionPreview: piece.partitionSrc,
+        partitionMime: piece.mime,
+        selectedPresetId: piece.id,
         hasPartition: true,
       }
     })
@@ -1042,20 +1094,23 @@ export default function App() {
         partitionName={state.partitionName}
         partitionPreview={state.partitionPreview}
         partitionMime={state.partitionMime}
+        selectedPresetId={state.selectedPresetId}
         onPieceName={(pieceName) => patch({ pieceName })}
         onToggleNoPartition={(checked) =>
           setState((s) => {
-            if (checked && s.partitionPreview) URL.revokeObjectURL(s.partitionPreview)
+            if (checked) revokeIfBlob(s.partitionPreview)
             return {
               ...s,
               hasPartition: checked ? false : s.partitionName ? true : null,
               partitionName: checked ? '' : s.partitionName,
               partitionPreview: checked ? null : s.partitionPreview,
               partitionMime: checked ? null : s.partitionMime,
+              selectedPresetId: checked ? null : s.selectedPresetId,
             }
           })
         }
         onUpload={onUpload}
+        onSelectPreset={onSelectPreset}
         onNext={() => go(4)}
       />
     )

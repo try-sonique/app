@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="990" viewBox="0 0 800 990">
+<rect width="100%" height="100%" fill="#f7f4ef"/>
+<text x="400" y="48" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-weight="700" fill="#111">Ode to Joy</text>
+<text x="400" y="74" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#555">Beethoven — extrait simple (démo)</text>
+<text x="400" y="96" text-anchor="middle" font-family="Manrope, sans-serif" font-size="11" fill="#888">Partition démo Sonique — page musicale (sans couverture)</text>
+<text x="48" y="116" font-family="Georgia, serif" font-size="13" fill="#333">syst. 1</text>
+<line x1="40" y1="130" x2="760" y2="130" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="140" x2="760" y2="140" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="150" x2="760" y2="150" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="160" x2="760" y2="160" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="170" x2="760" y2="170" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="150" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="150" x2="86" y2="114" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="140" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="140" x2="126" y2="104" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="160" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="160" x2="166" y2="124" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="150" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="150" x2="206" y2="114" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="130" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="130" x2="246" y2="94" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="140" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="140" x2="286" y2="104" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="150" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="150" x2="326" y2="114" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="170" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="170" x2="366" y2="134" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="160" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="160" x2="426" y2="124" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="150" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="150" x2="466" y2="114" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="140" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="140" x2="506" y2="104" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="150" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="150" x2="546" y2="114" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="160" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="160" x2="586" y2="124" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="140" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="140" x2="626" y2="104" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="150" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="150" x2="686" y2="114" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="130" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="130" x2="726" y2="94" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="204" font-family="Georgia, serif" font-size="13" fill="#333">syst. 2</text>
+<line x1="40" y1="218" x2="760" y2="218" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="228" x2="760" y2="228" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="238" x2="760" y2="238" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="248" x2="760" y2="248" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="258" x2="760" y2="258" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="238" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="238" x2="86" y2="202" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="228" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="228" x2="126" y2="192" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="248" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="248" x2="166" y2="212" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="238" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="238" x2="206" y2="202" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="218" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="218" x2="246" y2="182" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="228" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="228" x2="286" y2="192" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="238" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="238" x2="326" y2="202" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="258" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="258" x2="366" y2="222" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="248" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="248" x2="426" y2="212" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="238" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="238" x2="466" y2="202" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="228" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="228" x2="506" y2="192" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="238" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="238" x2="546" y2="202" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="248" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="248" x2="586" y2="212" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="228" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="228" x2="626" y2="192" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="238" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="238" x2="686" y2="202" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="218" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="218" x2="726" y2="182" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="292" font-family="Georgia, serif" font-size="13" fill="#333">syst. 3</text>
+<line x1="40" y1="306" x2="760" y2="306" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="316" x2="760" y2="316" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="326" x2="760" y2="326" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="336" x2="760" y2="336" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="346" x2="760" y2="346" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="326" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="326" x2="86" y2="290" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="316" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="316" x2="126" y2="280" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="336" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="336" x2="166" y2="300" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="326" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="326" x2="206" y2="290" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="306" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="306" x2="246" y2="270" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="316" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="316" x2="286" y2="280" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="326" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="326" x2="326" y2="290" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="346" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="346" x2="366" y2="310" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="336" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="336" x2="426" y2="300" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="326" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="326" x2="466" y2="290" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="316" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="316" x2="506" y2="280" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="326" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="326" x2="546" y2="290" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="336" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="336" x2="586" y2="300" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="316" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="316" x2="626" y2="280" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="326" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="326" x2="686" y2="290" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="306" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="306" x2="726" y2="270" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="380" font-family="Georgia, serif" font-size="13" fill="#333">syst. 4</text>
+<line x1="40" y1="394" x2="760" y2="394" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="404" x2="760" y2="404" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="414" x2="760" y2="414" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="424" x2="760" y2="424" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="434" x2="760" y2="434" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="414" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="414" x2="86" y2="378" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="404" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="404" x2="126" y2="368" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="424" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="424" x2="166" y2="388" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="414" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="414" x2="206" y2="378" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="394" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="394" x2="246" y2="358" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="404" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="404" x2="286" y2="368" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="414" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="414" x2="326" y2="378" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="434" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="434" x2="366" y2="398" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="424" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="424" x2="426" y2="388" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="414" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="414" x2="466" y2="378" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="404" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="404" x2="506" y2="368" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="414" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="414" x2="546" y2="378" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="424" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="424" x2="586" y2="388" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="404" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="404" x2="626" y2="368" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="414" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="414" x2="686" y2="378" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="394" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="394" x2="726" y2="358" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="468" font-family="Georgia, serif" font-size="13" fill="#333">syst. 5</text>
+<line x1="40" y1="482" x2="760" y2="482" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="492" x2="760" y2="492" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="502" x2="760" y2="502" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="512" x2="760" y2="512" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="522" x2="760" y2="522" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="502" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="502" x2="86" y2="466" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="492" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="492" x2="126" y2="456" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="512" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="512" x2="166" y2="476" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="502" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="502" x2="206" y2="466" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="482" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="482" x2="246" y2="446" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="492" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="492" x2="286" y2="456" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="502" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="502" x2="326" y2="466" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="522" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="522" x2="366" y2="486" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="512" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="512" x2="426" y2="476" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="502" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="502" x2="466" y2="466" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="492" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="492" x2="506" y2="456" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="502" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="502" x2="546" y2="466" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="512" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="512" x2="586" y2="476" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="492" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="492" x2="626" y2="456" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="502" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="502" x2="686" y2="466" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="482" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="482" x2="726" y2="446" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="556" font-family="Georgia, serif" font-size="13" fill="#333">syst. 6</text>
+<line x1="40" y1="570" x2="760" y2="570" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="580" x2="760" y2="580" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="590" x2="760" y2="590" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="600" x2="760" y2="600" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="610" x2="760" y2="610" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="590" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="590" x2="86" y2="554" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="580" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="580" x2="126" y2="544" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="600" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="600" x2="166" y2="564" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="590" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="590" x2="206" y2="554" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="570" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="570" x2="246" y2="534" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="580" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="580" x2="286" y2="544" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="590" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="590" x2="326" y2="554" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="610" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="610" x2="366" y2="574" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="600" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="600" x2="426" y2="564" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="590" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="590" x2="466" y2="554" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="580" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="580" x2="506" y2="544" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="590" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="590" x2="546" y2="554" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="600" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="600" x2="586" y2="564" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="580" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="580" x2="626" y2="544" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="590" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="590" x2="686" y2="554" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="570" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="570" x2="726" y2="534" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="644" font-family="Georgia, serif" font-size="13" fill="#333">syst. 7</text>
+<line x1="40" y1="658" x2="760" y2="658" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="668" x2="760" y2="668" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="678" x2="760" y2="678" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="688" x2="760" y2="688" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="698" x2="760" y2="698" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="678" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="678" x2="86" y2="642" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="668" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="668" x2="126" y2="632" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="688" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="688" x2="166" y2="652" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="678" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="678" x2="206" y2="642" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="658" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="658" x2="246" y2="622" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="668" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="668" x2="286" y2="632" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="678" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="678" x2="326" y2="642" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="698" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="698" x2="366" y2="662" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="688" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="688" x2="426" y2="652" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="678" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="678" x2="466" y2="642" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="668" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="668" x2="506" y2="632" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="678" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="678" x2="546" y2="642" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="688" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="688" x2="586" y2="652" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="668" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="668" x2="626" y2="632" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="678" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="678" x2="686" y2="642" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="658" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="658" x2="726" y2="622" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="732" font-family="Georgia, serif" font-size="13" fill="#333">syst. 8</text>
+<line x1="40" y1="746" x2="760" y2="746" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="756" x2="760" y2="756" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="766" x2="760" y2="766" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="776" x2="760" y2="776" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="786" x2="760" y2="786" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="766" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="766" x2="86" y2="730" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="756" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="756" x2="126" y2="720" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="776" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="776" x2="166" y2="740" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="766" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="766" x2="206" y2="730" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="746" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="746" x2="246" y2="710" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="756" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="756" x2="286" y2="720" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="766" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="766" x2="326" y2="730" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="786" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="786" x2="366" y2="750" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="776" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="776" x2="426" y2="740" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="766" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="766" x2="466" y2="730" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="756" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="756" x2="506" y2="720" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="766" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="766" x2="546" y2="730" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="776" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="776" x2="586" y2="740" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="756" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="756" x2="626" y2="720" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="766" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="766" x2="686" y2="730" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="746" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="746" x2="726" y2="710" stroke="#111" stroke-width="1.5"/>
+<text x="48" y="820" font-family="Georgia, serif" font-size="13" fill="#333">syst. 9</text>
+<line x1="40" y1="834" x2="760" y2="834" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="844" x2="760" y2="844" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="854" x2="760" y2="854" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="864" x2="760" y2="864" stroke="#222" stroke-width="1.2"/>
+<line x1="40" y1="874" x2="760" y2="874" stroke="#222" stroke-width="1.2"/>
+<ellipse cx="80" cy="854" rx="7" ry="5" fill="#111"/>
+<line x1="86" y1="854" x2="86" y2="818" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="120" cy="844" rx="7" ry="5" fill="#111"/>
+<line x1="126" y1="844" x2="126" y2="808" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="160" cy="864" rx="7" ry="5" fill="#111"/>
+<line x1="166" y1="864" x2="166" y2="828" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="200" cy="854" rx="7" ry="5" fill="#111"/>
+<line x1="206" y1="854" x2="206" y2="818" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="240" cy="834" rx="7" ry="5" fill="#111"/>
+<line x1="246" y1="834" x2="246" y2="798" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="280" cy="844" rx="7" ry="5" fill="#111"/>
+<line x1="286" y1="844" x2="286" y2="808" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="320" cy="854" rx="7" ry="5" fill="#111"/>
+<line x1="326" y1="854" x2="326" y2="818" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="360" cy="874" rx="7" ry="5" fill="#111"/>
+<line x1="366" y1="874" x2="366" y2="838" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="420" cy="864" rx="7" ry="5" fill="#111"/>
+<line x1="426" y1="864" x2="426" y2="828" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="460" cy="854" rx="7" ry="5" fill="#111"/>
+<line x1="466" y1="854" x2="466" y2="818" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="500" cy="844" rx="7" ry="5" fill="#111"/>
+<line x1="506" y1="844" x2="506" y2="808" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="540" cy="854" rx="7" ry="5" fill="#111"/>
+<line x1="546" y1="854" x2="546" y2="818" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="580" cy="864" rx="7" ry="5" fill="#111"/>
+<line x1="586" y1="864" x2="586" y2="828" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="620" cy="844" rx="7" ry="5" fill="#111"/>
+<line x1="626" y1="844" x2="626" y2="808" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="680" cy="854" rx="7" ry="5" fill="#111"/>
+<line x1="686" y1="854" x2="686" y2="818" stroke="#111" stroke-width="1.5"/>
+<ellipse cx="720" cy="834" rx="7" ry="5" fill="#111"/>
+<line x1="726" y1="834" x2="726" y2="798" stroke="#111" stroke-width="1.5"/>
+</svg>
