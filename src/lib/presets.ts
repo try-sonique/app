@@ -2,32 +2,35 @@ export type DemoPiece = {
   id: string
   title: string
   blurb: string
-  /** Path under public/ */
   partitionSrc: string
+  audioSrc: string
   mime: string
 }
 
-/** Morceaux prêts pour la démo — partitions sans page de couverture. */
+/** Morceaux démo — connus des adultes, domaine public (audio + partition). */
 export const DEMO_PIECES: DemoPiece[] = [
   {
-    id: 'ode',
-    title: 'Ode to Joy',
-    blurb: 'Extrait simple — idéal pour tester vite',
-    partitionSrc: './presets/ode-to-joy.svg',
-    mime: 'image/svg+xml',
-  },
-  {
-    id: 'twinkle',
-    title: 'Twinkle Twinkle',
-    blurb: 'Très accessible — voix ou instrument',
-    partitionSrc: './presets/twinkle.svg',
+    id: 'elise',
+    title: 'Lettre à Élise',
+    blurb: 'Beethoven — tout le monde le reconnaît',
+    partitionSrc: './presets/lettre-a-elise.svg',
+    audioSrc: './presets/lettre-a-elise.wav',
     mime: 'image/svg+xml',
   },
   {
     id: 'clair',
-    title: 'Au clair de la lune',
-    blurb: 'Classique débutant — tu peux aussi chanter',
+    title: 'Clair de lune',
+    blurb: 'Debussy — ambiance, idéal à chanter doucement',
     partitionSrc: './presets/clair-de-lune.svg',
+    audioSrc: './presets/clair-de-lune.wav',
+    mime: 'image/svg+xml',
+  },
+  {
+    id: 'ode',
+    title: 'Ode to Joy',
+    blurb: 'Beethoven — hymne connu, simple à suivre',
+    partitionSrc: './presets/ode-to-joy.svg',
+    audioSrc: './presets/ode-to-joy.wav',
     mime: 'image/svg+xml',
   },
 ]

@@ -34,6 +34,8 @@ export type AppState = {
   partitionMime: string | null
   /** Id d’un morceau démo préchargé, si choisi */
   selectedPresetId: string | null
+  /** Extrait audio à écouter à l’entraînement */
+  previewAudio: string | null
   arrangement: ArrangementKind
   takesUsed: number
   isRecording: boolean
@@ -57,6 +59,7 @@ export const initialState: AppState = {
   partitionPreview: null,
   partitionMime: null,
   selectedPresetId: null,
+  previewAudio: null,
   arrangement: null,
   takesUsed: 0,
   isRecording: false,

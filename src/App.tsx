@@ -1,8 +1,8 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
-  type ChangeEvent,
   type FormEvent,
   type ReactNode,
 } from 'react'
@@ -323,118 +323,41 @@ function AuthSlide({
 }
 
 function PieceSetup({
-  pieceName,
-  hasPartition,
-  partitionName,
-  partitionPreview,
-  partitionMime,
   selectedPresetId,
-  onPieceName,
-  onToggleNoPartition,
-  onUpload,
   onSelectPreset,
   onNext,
 }: {
-  pieceName: string
-  hasPartition: boolean | null
-  partitionName: string
-  partitionPreview: string | null
-  partitionMime: string | null
   selectedPresetId: string | null
-  onPieceName: (v: string) => void
-  onToggleNoPartition: (checked: boolean) => void
-  onUpload: (file: File | null) => void
   onSelectPreset: (id: string) => void
   onNext: () => void
 }) {
-  const noPartition = hasPartition === false
-  const canContinue =
-    pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
-
-  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null
-    onUpload(file)
-  }
+  const canContinue = Boolean(selectedPresetId)
 
   return (
     <section className="slide slide-left">
       <span className="eyebrow">Étape 1 · Morceau</span>
-      <h1>Quel morceau vas-tu travailler ?</h1>
+      <h1>Choisis un morceau</h1>
       <p className="lead">
-        Choisis un morceau prêt (recommandé pour la démo), ou importe ta partition. Tu peux jouer ou
-        chanter.
+        Trois titres connus — partition prête, tu pourras écouter l’extrait à l’entraînement. Joue ou
+        chante.
       </p>
 
-      <div className="stack">
-        <div className="preset-grid" role="list">
-          {DEMO_PIECES.map((p) => {
-            const active = selectedPresetId === p.id
-            return (
-              <button
-                key={p.id}
-                type="button"
-                role="listitem"
-                className={`preset-card ${active ? 'active' : ''}`}
-                onClick={() => onSelectPreset(p.id)}
-                disabled={noPartition}
-              >
-                <strong>{p.title}</strong>
-                <span>{p.blurb}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        <label className="field">
-          <span>Nom du morceau</span>
-          <input
-            type="text"
-            value={pieceName}
-            onChange={(e) => onPieceName(e.target.value)}
-            placeholder="Ex. Clair de Lune"
-          />
-        </label>
-
-        <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
-          <div className="upload-icon" aria-hidden>
-            ♫
-          </div>
-          <strong>Ou importe ta propre partition</strong>
-          <p className="lead" style={{ margin: 0 }}>
-            Image / PDF — préfère un fichier sans page de couverture pour le défilement
-          </p>
-          <input type="file" accept="image/*,.pdf" disabled={noPartition} onChange={onFile} />
-          {partitionName && !noPartition ? (
-            <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
-              Fichier : {partitionName}
-            </p>
-          ) : null}
-        </div>
-
-        {!noPartition && partitionPreview ? (
-          <div className="stage partition-stage">
-            <p className="partition-label">Aperçu de ta partition</p>
-            <PartitionViewer
-              src={partitionPreview}
-              mime={partitionMime}
-              name={partitionName}
-            />
-          </div>
-        ) : null}
-
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={noPartition}
-            onChange={(e) => onToggleNoPartition(e.target.checked)}
-          />
-          <div>
-            <strong>Je n’ai pas de partition — continuer quand même</strong>
-            <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-              Aria écoutera à l’oreille.
-            </p>
-          </div>
-        </label>
+      <div className="preset-grid" role="list">
+        {DEMO_PIECES.map((p) => {
+          const active = selectedPresetId === p.id
+          return (
+            <button
+              key={p.id}
+              type="button"
+              role="listitem"
+              className={`preset-card ${active ? 'active' : ''}`}
+              onClick={() => onSelectPreset(p.id)}
+            >
+              <strong>{p.title}</strong>
+              <span>{p.blurb}</span>
+            </button>
+          )
+        })}
       </div>
 
       <div className="actions">
@@ -442,7 +365,7 @@ function PieceSetup({
           Continuer
         </button>
       </div>
-      <FooterLine withPartition={!noPartition} />
+      <FooterLine withPartition />
     </section>
   )
 }
@@ -552,35 +475,74 @@ function PracticeStage({
   partitionPreview,
   partitionMime,
   partitionName,
+  previewAudio,
   onNext,
 }: {
   pieceName: string
   partitionPreview: string | null
   partitionMime: string | null
   partitionName: string
+  previewAudio: string | null
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
-  const cue = useAriaCues(active, 'practice')
-  const { energy, denied } = usePlayEnergy(active)
+  const [listening, setListening] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const cue = useAriaCues(active && !listening, 'practice')
+  const { energy, denied } = usePlayEnergy(active && !listening)
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause()
+      audioRef.current = null
+    }
+  }, [])
+
+  const toggleListen = async () => {
+    if (!previewAudio) return
+    if (listening) {
+      audioRef.current?.pause()
+      if (audioRef.current) audioRef.current.currentTime = 0
+      setListening(false)
+      return
+    }
+    const audio = audioRef.current ?? new Audio(previewAudio)
+    audioRef.current = audio
+    audio.onended = () => setListening(false)
+    try {
+      await audio.play()
+      setListening(true)
+    } catch {
+      setListening(false)
+    }
+  }
 
   return (
     <section className="slide slide-play">
       <div className="play-header">
         <span className="eyebrow">Étape 2 · Entraînement</span>
-        <h1>Joue sans te soucier de l’app</h1>
-        <p className="lead play-lead">Partition large. Aria chuchote dans Sonique — aucun enregistrement ici.</p>
+        <h1>Écoute, puis joue</h1>
+        <p className="lead play-lead">
+          Entends l’extrait, puis joue ou chante — Aria chuchote, rien n’est enregistré ici.
+        </p>
         <div className="meta-row">
           <span>{pieceName}</span>
         </div>
       </div>
+      {previewAudio ? (
+        <div className="actions play-actions" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+          <button type="button" className="btn btn-gold" onClick={toggleListen}>
+            {listening ? 'Stopper l’extrait' : 'Écouter l’extrait'}
+          </button>
+        </div>
+      ) : null}
       <div className="stage stage-score">
         <PartitionViewer
           src={partitionPreview}
           mime={partitionMime}
           name={partitionName}
-          autoScroll={active}
-          energy={energy}
+          autoScroll={active && !listening}
+          energy={listening ? 0.35 : energy}
         />
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
@@ -993,38 +955,11 @@ export default function App() {
         partitionPreview: null,
         partitionMime: null,
         selectedPresetId: null,
+        previewAudio: null,
         hasPartition: null,
         arrangement: null,
         takesUsed: 0,
         feedback: null,
-      }
-    })
-  }
-
-  const onUpload = (file: File | null) => {
-    setState((s) => {
-      revokeIfBlob(s.partitionPreview)
-      if (!file) {
-        return {
-          ...s,
-          partitionName: '',
-          partitionPreview: null,
-          partitionMime: null,
-          selectedPresetId: null,
-          hasPartition: null,
-        }
-      }
-      const preview = URL.createObjectURL(file)
-      return {
-        ...s,
-        pieceName: s.pieceName || file.name.replace(/\.[^.]+$/, ''),
-        partitionName: file.name,
-        partitionPreview: preview,
-        partitionMime:
-          file.type ||
-          (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*'),
-        selectedPresetId: null,
-        hasPartition: true,
       }
     })
   }
@@ -1041,6 +976,7 @@ export default function App() {
         partitionPreview: piece.partitionSrc,
         partitionMime: piece.mime,
         selectedPresetId: piece.id,
+        previewAudio: piece.audioSrc,
         hasPartition: true,
       }
     })
@@ -1089,27 +1025,7 @@ export default function App() {
   } else if (state.slide === 3) {
     body = (
       <PieceSetup
-        pieceName={state.pieceName}
-        hasPartition={state.hasPartition}
-        partitionName={state.partitionName}
-        partitionPreview={state.partitionPreview}
-        partitionMime={state.partitionMime}
         selectedPresetId={state.selectedPresetId}
-        onPieceName={(pieceName) => patch({ pieceName })}
-        onToggleNoPartition={(checked) =>
-          setState((s) => {
-            if (checked) revokeIfBlob(s.partitionPreview)
-            return {
-              ...s,
-              hasPartition: checked ? false : s.partitionName ? true : null,
-              partitionName: checked ? '' : s.partitionName,
-              partitionPreview: checked ? null : s.partitionPreview,
-              partitionMime: checked ? null : s.partitionMime,
-              selectedPresetId: checked ? null : s.selectedPresetId,
-            }
-          })
-        }
-        onUpload={onUpload}
         onSelectPreset={onSelectPreset}
         onNext={() => go(4)}
       />
@@ -1131,6 +1047,7 @@ export default function App() {
         partitionPreview={state.partitionPreview}
         partitionMime={state.partitionMime}
         partitionName={state.partitionName}
+        previewAudio={state.previewAudio}
         onNext={() => go(6)}
       />
     )
