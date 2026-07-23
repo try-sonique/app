@@ -9,7 +9,7 @@ import {
 import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues } from './lib/aria'
 import { usePlayEnergy } from './lib/playEnergy'
-import { DEMO_PIECES } from './lib/presets'
+import { DEMO_PIECES, getLocale, pieceBlurb, t } from './lib/presets'
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
   findProfileByEmail,
@@ -435,14 +435,13 @@ function PieceSetupYC({
   onNext: () => void
 }) {
   const canContinue = Boolean(selectedPresetId)
+  const copy = t()
 
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Étape 1 · Morceau</span>
-      <h1>Choisis un morceau</h1>
-      <p className="lead">
-        Trois titres connus, partitions prêtes. Joue ou chante — idéal pour une démo rapide.
-      </p>
+      <span className="eyebrow">{copy.stepPiece}</span>
+      <h1>{copy.choosePiece}</h1>
+      <p className="lead">{copy.chooseLead}</p>
 
       <div className="preset-grid" role="list">
         {DEMO_PIECES.map((p) => {
@@ -456,7 +455,7 @@ function PieceSetupYC({
               onClick={() => onSelectPreset(p.id)}
             >
               <strong>{p.title}</strong>
-              <span>{p.blurb}</span>
+              <span>{pieceBlurb(p)}</span>
             </button>
           )
         })}
@@ -464,7 +463,7 @@ function PieceSetupYC({
 
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!canContinue} onClick={onNext}>
-          Continuer
+          {copy.continue}
         </button>
       </div>
       <FooterLine withPartition />
@@ -713,6 +712,11 @@ function RecordStage({
   partitionName,
   hasPartition,
   takesUsed,
+  performanceAudio,
+  scrollCapRatio,
+  repeatEverySec,
+  scrollDurationSec,
+  demoSync,
   onFinish,
 }: {
   pieceName: string
@@ -721,28 +725,105 @@ function RecordStage({
   partitionName: string
   hasPartition: boolean
   takesUsed: number
+  performanceAudio?: string | null
+  scrollCapRatio?: number | null
+  repeatEverySec?: number | null
+  scrollDurationSec?: number | null
+  /** V2 YC : joue l’audio + scroll sync au lieu d’un micro silencieux */
+  demoSync?: boolean
   onFinish: (audioBlob: Blob | null) => void
 }) {
+  const copy = t()
   const { status, seconds, errorMessage, start, stop } = useMediaRecorder()
-  const recording = status === 'recording'
-  const cue = useAriaCues(recording, 'record')
-  const { energy } = usePlayEnergy(recording)
-  const takesLeft = MAX_TAKES - takesUsed
+  const micRecording = status === 'recording'
+  const [demoPlaying, setDemoPlaying] = useState(false)
+  const [demoSeconds, setDemoSeconds] = useState(0)
+  const [scrollProgress, setScrollProgress] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const recording = demoSync ? demoPlaying : micRecording
+  const cue = useAriaCues(recording, 'record')
+  const { energy } = usePlayEnergy(!demoSync && micRecording)
+  const takesLeft = MAX_TAKES - takesUsed
+
+  const stopDemo = () => {
+    audioRef.current?.pause()
+    audioRef.current = null
+    setDemoPlaying(false)
+    setScrollProgress(null)
+  }
+
+  useEffect(() => {
+    return () => stopDemo()
+  }, [])
+
+  useEffect(() => {
+    if (!demoPlaying) return
+    const cycle = repeatEverySec ?? null
+    const dur = Math.max(8, scrollDurationSec ?? 55)
+    const id = window.setInterval(() => {
+      const audio = audioRef.current
+      if (!audio) return
+      setDemoSeconds(Math.floor(audio.currentTime))
+      if (cycle && cycle > 0) {
+        const local = audio.currentTime % cycle
+        setScrollProgress(Math.min(1, local / cycle))
+      } else {
+        setScrollProgress(Math.min(1, audio.currentTime / dur))
+      }
+    }, 80)
+    return () => window.clearInterval(id)
+  }, [demoPlaying, repeatEverySec, scrollDurationSec])
 
   const toggle = async () => {
     if (busy) return
     setBusy(true)
     try {
-      if (recording) {
+      if (demoSync) {
+        if (demoPlaying) {
+          // Prefer finishing with the performance track as the "take"
+          let blob: Blob | null = null
+          if (performanceAudio) {
+            try {
+              const res = await fetch(performanceAudio)
+              blob = await res.blob()
+            } catch {
+              blob = null
+            }
+          }
+          stopDemo()
+          onFinish(blob)
+          return
+        }
+        if (!performanceAudio) {
+          onFinish(null)
+          return
+        }
+        const audio = new Audio(performanceAudio)
+        audioRef.current = audio
+        audio.onended = async () => {
+          let blob: Blob | null = null
+          try {
+            const res = await fetch(performanceAudio)
+            blob = await res.blob()
+          } catch {
+            blob = null
+          }
+          stopDemo()
+          onFinish(blob)
+        }
+        await audio.play()
+        setDemoPlaying(true)
+        setDemoSeconds(0)
+        return
+      }
+
+      if (micRecording) {
         const blob = await stop()
         onFinish(blob)
         return
       }
-      const ok = await start()
-      if (!ok) {
-        // stay on screen with error message from hook
-      }
+      await start()
     } finally {
       setBusy(false)
     }
@@ -750,15 +831,15 @@ function RecordStage({
 
   return (
     <section className="slide slide-play">
-      <span className="eyebrow">Étape 2 · Jouer</span>
+      <span className="eyebrow">{getLocale() === 'en' ? 'Step 2 · Play' : 'Étape 2 · Jouer'}</span>
       {recording ? (
         <>
           <div className="play-rec-bar">
             <div className="listen-status">
               <span className="rec-dot" />
-              En écoute — vas-y tranquillement
+              {copy.listening}
             </div>
-            <p className="timer">{formatTime(seconds)}</p>
+            <p className="timer">{formatTime(demoSync ? demoSeconds : seconds)}</p>
           </div>
           {hasPartition && partitionPreview ? (
             <div className="stage stage-score">
@@ -767,7 +848,9 @@ function RecordStage({
                 mime={partitionMime}
                 name={partitionName}
                 autoScroll={recording}
-                energy={energy}
+                energy={demoSync ? 0 : energy}
+                scrollProgress={demoSync ? scrollProgress : null}
+                scrollCapRatio={scrollCapRatio ?? 1}
               />
               {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
             </div>
@@ -781,38 +864,50 @@ function RecordStage({
           ) : null}
           <div className="actions play-actions">
             <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
-              Terminer et recevoir mon retour
+              {copy.finishPerf}
             </button>
           </div>
         </>
       ) : (
         <>
           <div className="welcome-core">
-            <h1>Ta performance</h1>
+            <h1>{copy.performance}</h1>
             <p className="lead">
-              {pieceName} · essais restants : {takesLeft}/{MAX_TAKES}
+              {pieceName} · {takesLeft}/{MAX_TAKES}
             </p>
             <p className="lead">
-              {hasPartition
-                ? 'C’est ta prise — pas la référence. Aria se base sur ce que tu joues maintenant.'
-                : 'C’est ta prise. Aria écoute à l’oreille ce que tu joues ou chantes.'}
+              {demoSync
+                ? copy.perfLead
+                : hasPartition
+                  ? getLocale() === 'en'
+                    ? 'This is your take — not the reference. Aria bases feedback on what you play now.'
+                    : 'C’est ta prise — pas la référence. Aria se base sur ce que tu joues maintenant.'
+                  : getLocale() === 'en'
+                    ? 'This is your take. Aria listens by ear.'
+                    : 'C’est ta prise. Aria écoute à l’oreille ce que tu joues ou chantes.'}
             </p>
             <div className="actions play-actions">
               <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
                 <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
-                Lancer mon enregistrement
+                {demoSync ? copy.startPerf : copy.startMic}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
-                Continuer sans micro (démo)
-              </button>
+              {!demoSync ? (
+                <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
+                  {getLocale() === 'en' ? 'Continue without mic (demo)' : 'Continuer sans micro (démo)'}
+                </button>
+              ) : null}
             </div>
-            {errorMessage ? (
+            {errorMessage && !demoSync ? (
               <p className="footer-note" style={{ paddingTop: '1rem', color: 'var(--warn)' }}>
                 {errorMessage}
               </p>
             ) : (
               <p className="footer-note" style={{ paddingTop: '1rem' }}>
-                Autorise le micro si ton navigateur le demande — tu pourras arrêter quand tu veux.
+                {demoSync
+                  ? copy.demoNote
+                  : getLocale() === 'en'
+                    ? 'Allow the microphone if asked — you can stop anytime.'
+                    : 'Autorise le micro si ton navigateur le demande — tu pourras arrêter quand tu veux.'}
               </p>
             )}
           </div>
@@ -1098,8 +1193,10 @@ export default function App() {
         partitionMime: null,
         selectedPresetId: null,
         previewAudio: null,
+        performanceAudio: null,
         scrollCapRatio: null,
         repeatEverySec: null,
+        scrollDurationSec: null,
         hasPartition: null,
         arrangement: null,
         takesUsed: 0,
@@ -1121,8 +1218,10 @@ export default function App() {
         partitionMime: piece.mime,
         selectedPresetId: piece.id,
         previewAudio: piece.audioSrc ?? null,
+        performanceAudio: piece.performanceAudioSrc ?? piece.audioSrc ?? null,
         scrollCapRatio: piece.scrollCapRatio ?? null,
         repeatEverySec: piece.repeatEverySec ?? null,
+        scrollDurationSec: piece.scrollDurationSec ?? null,
         hasPartition: true,
       }
     })
@@ -1139,6 +1238,7 @@ export default function App() {
           partitionMime: null,
           selectedPresetId: null,
           previewAudio: null,
+          performanceAudio: null,
           hasPartition: null,
         }
       }
@@ -1153,8 +1253,10 @@ export default function App() {
           (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*'),
         selectedPresetId: null,
         previewAudio: null,
+        performanceAudio: null,
         scrollCapRatio: null,
         repeatEverySec: null,
+        scrollDurationSec: null,
         hasPartition: true,
       }
     })
@@ -1265,6 +1367,7 @@ export default function App() {
         partitionName=""
         hasPartition={false}
         takesUsed={state.takesUsed}
+        demoSync={false}
         onFinish={finishTake}
       />
     )
@@ -1277,6 +1380,11 @@ export default function App() {
         partitionName={state.partitionName}
         hasPartition
         takesUsed={state.takesUsed}
+        performanceAudio={state.performanceAudio}
+        scrollCapRatio={state.scrollCapRatio}
+        repeatEverySec={state.repeatEverySec}
+        scrollDurationSec={state.scrollDurationSec}
+        demoSync={IS_YC_FLOW}
         onFinish={finishTake}
       />
     )
