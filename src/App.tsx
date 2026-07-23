@@ -654,7 +654,7 @@ function PracticeStage({
         setRefProgress(Math.min(1, local / Math.min(cycle, peekSec)))
       } else {
         const tNorm = Math.min(1, audio.currentTime / peekSec)
-        setRefProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined))
+        setRefProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined, 0.04))
       }
     }, 80)
     return () => window.clearInterval(id)
@@ -765,7 +765,6 @@ function RecordStage({
   const recording = demoSync ? demoPlaying : micRecording
   const cue = useAriaCues(recording, 'record', pieceId)
   const { energy } = usePlayEnergy(!demoSync && micRecording)
-  const takesLeft = MAX_TAKES - takesUsed
 
   const stopDemo = () => {
     audioRef.current?.pause()
@@ -789,12 +788,12 @@ function RecordStage({
       if (cycle && cycle > 0) {
         const local = audio.currentTime % cycle
         const tNorm = Math.min(1, local / cycle)
-        setScrollProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined))
+        setScrollProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined, 0.045))
       } else {
         const dur =
           Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : fallbackDur
         const tNorm = Math.min(1, audio.currentTime / dur)
-        setScrollProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined))
+        setScrollProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined, 0.05))
       }
     }, 80)
     return () => window.clearInterval(id)
@@ -867,8 +866,7 @@ function RecordStage({
   }
 
   return (
-    <section className="slide slide-play">
-      <span className="eyebrow">{copy.stepPlay}</span>
+    <section className={`slide slide-play ${recording ? '' : 'slide-perf-ready'}`}>
       {recording ? (
         <>
           <div className="play-rec-bar">
@@ -877,18 +875,18 @@ function RecordStage({
               <p className="timer">{formatTime(demoSync ? demoSeconds : seconds)}</p>
               <span>{copy.listening}</span>
             </div>
-            {takesLeft > 0 ? (
-              <span className="takes-pill">
-                {copy.takesLeft} {takesLeft}/{MAX_TAKES}
-              </span>
-            ) : null}
+            <span className="takes-pill">
+              {copy.takeOf} {takesUsed + 1}/{MAX_TAKES}
+            </span>
           </div>
-          <div className="stage stage-score">
+          <div className="stage stage-score stage-score-live">
             <PartitionViewer
               src={partitionPreview}
               mime={partitionMime}
               name={partitionName}
               autoScroll
+              tall
+              showReadingLine={Boolean(demoSync)}
               energy={demoSync ? 0 : energy}
               scrollProgress={demoSync ? scrollProgress : null}
               scrollCapRatio={scrollCapRatio ?? 1}
@@ -902,44 +900,63 @@ function RecordStage({
           </div>
         </>
       ) : (
-        <>
-          <div className="play-header">
+        <div className="perf-ready">
+          <div className="perf-ready-copy">
+            <span className="eyebrow">{copy.stepPlay}</span>
+            <p className="perf-ready-kicker">{copy.perfReadyEyebrow}</p>
             <h1>{copy.performance}</h1>
-            <p className="lead">
-              {pieceName} · {takesLeft}/{MAX_TAKES}
+            <p className="perf-piece-meta">
+              <span className="perf-piece-name">{pieceName}</span>
+              <span className="perf-take-chip">
+                {copy.takeOf} {takesUsed + 1}/{MAX_TAKES}
+              </span>
             </p>
-            <p className="lead">
+            <p className="lead perf-ready-lead">
               {demoSync
                 ? copy.perfLead
                 : hasPartition
                   ? copy.perfLeadMic
                   : copy.perfLeadEar}
             </p>
-          </div>
-          <div className="actions">
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void toggle()}>
-              {demoSync ? copy.startPerf : copy.startMic}
-            </button>
-            {!demoSync ? (
+            <div className="perf-ready-actions">
               <button
                 type="button"
-                className="btn btn-ghost"
-                onClick={() => onFinish(null, buildMeta(0, null))}
+                className="btn btn-primary btn-perf-cta"
+                disabled={busy}
+                onClick={() => void toggle()}
               >
-                {copy.continueWithoutMic}
+                {demoSync ? copy.startPerf : copy.startMic}
               </button>
-            ) : null}
+              {!demoSync ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => onFinish(null, buildMeta(0, null))}
+                >
+                  {copy.continueWithoutMic}
+                </button>
+              ) : null}
+            </div>
             {errorMessage && !demoSync ? (
-              <p className="footer-note" style={{ paddingTop: '1rem', color: 'var(--warn)' }}>
+              <p className="footer-note" style={{ color: 'var(--warn)' }}>
                 {errorMessage}
               </p>
             ) : (
-              <p className="footer-note" style={{ paddingTop: '1rem' }}>
-                {demoSync ? copy.demoNote : copy.micHint}
-              </p>
+              <p className="perf-ready-note">{demoSync ? copy.demoNote : copy.micHint}</p>
             )}
           </div>
-        </>
+          {partitionPreview ? (
+            <div className="perf-ready-score" aria-label={copy.perfScoreLabel}>
+              <p className="perf-score-label">{copy.perfScoreLabel}</p>
+              <PartitionViewer
+                src={partitionPreview}
+                mime={partitionMime}
+                name={partitionName}
+                compact
+              />
+            </div>
+          ) : null}
+        </div>
       )}
       <FooterLine withPartition={hasPartition} />
     </section>

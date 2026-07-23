@@ -17,6 +17,10 @@ type PartitionViewerProps = {
   scrollProgress?: number | null
   /** Plafond de descente (0–1 de la hauteur scrollable). Utile si reprise. */
   scrollCapRatio?: number
+  /** Affiche un repère de lecture pour anticiper les mesures. */
+  showReadingLine?: boolean
+  /** Viewport plus haut (performance) pour voir plus de mesures. */
+  tall?: boolean
 }
 
 export function PartitionViewer({
@@ -28,6 +32,8 @@ export function PartitionViewer({
   energy = 0,
   scrollProgress = null,
   scrollCapRatio = 1,
+  showReadingLine = false,
+  tall = false,
 }: PartitionViewerProps) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
@@ -62,12 +68,17 @@ export function PartitionViewer({
       const guided = progressRef.current
 
       if (guided != null && maxScroll > 0) {
-        // Mode référence : position calée sur la timeline (avec reprise = sawtooth)
-        offset = Math.min(cap, Math.max(0, guided) * cap)
-        viewport.scrollTop = offset
+        // Ligne de lecture ~28% du viewport → on décale le scroll pour anticiper
+        const leadPx = showReadingLine ? viewport.clientHeight * 0.12 : 0
+        const target = Math.min(cap, Math.max(0, guided) * cap)
+        offset = Math.min(cap, target + leadPx)
+        // Lerp léger pour éviter les sauts
+        const cur = viewport.scrollTop
+        viewport.scrollTop = cur + (offset - cur) * 0.35
       } else {
         const e = energyRef.current
-        const pxPerSec = e < 0.05 ? 0 : 6 + e * 38
+        // Plus doux : suit le jeu sans filer sur la partition
+        const pxPerSec = e < 0.05 ? 0 : 3.5 + e * 22
         if (cap > 0 && pxPerSec > 0) {
           offset = Math.min(cap, offset + pxPerSec * dt)
           viewport.scrollTop = offset
@@ -78,12 +89,12 @@ export function PartitionViewer({
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [autoScroll, src, compact])
+  }, [autoScroll, src, compact, showReadingLine, tall])
 
   return (
     <div
       ref={viewportRef}
-      className={`partition-viewport ${compact ? 'is-compact' : ''} ${autoScroll ? 'is-scrolling' : ''}`}
+      className={`partition-viewport ${compact ? 'is-compact' : ''} ${tall ? 'is-tall' : ''} ${autoScroll ? 'is-scrolling' : ''}`}
       aria-label="Partition"
     >
       <div ref={innerRef} className="partition-scroll-inner">
@@ -110,6 +121,7 @@ export function PartitionViewer({
           />
         )}
       </div>
+      {showReadingLine && autoScroll ? <div className="reading-line" aria-hidden /> : null}
       {autoScroll ? (
         <div className="scroll-hint">
           {scrollProgress != null ? t().scrollHintRef : t().scrollHintPlay}

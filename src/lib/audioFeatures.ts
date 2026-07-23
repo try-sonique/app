@@ -84,8 +84,13 @@ export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeat
 export type ScrollKeyframe = { t: number; p: number }
 
 /** Map normalized audio time (0–1) through easing keyframes → scroll progress 0–1. */
-export function mapScrollProgress(tNorm: number, keyframes?: ScrollKeyframe[]): number {
-  const t = Math.min(1, Math.max(0, tNorm))
+export function mapScrollProgress(
+  tNorm: number,
+  keyframes?: ScrollKeyframe[],
+  /** Advance slightly so upcoming measures stay visible (anticipation). */
+  lookahead = 0,
+): number {
+  const t = Math.min(1, Math.max(0, tNorm + Math.max(0, lookahead)))
   if (!keyframes || keyframes.length < 2) return t
 
   const kfs = [...keyframes].sort((a, b) => a.t - b.t)
@@ -97,8 +102,8 @@ export function mapScrollProgress(tNorm: number, keyframes?: ScrollKeyframe[]): 
     const b = kfs[i + 1]
     if (t >= a.t && t <= b.t) {
       const u = (t - a.t) / Math.max(1e-6, b.t - a.t)
-      // smoothstep for less mechanical scrolling
-      const s = u * u * (3 - 2 * u)
+      // smootherstep — less sudden acceleration between sections
+      const s = u * u * u * (u * (u * 6 - 15) + 10)
       return a.p + (b.p - a.p) * s
     }
   }
