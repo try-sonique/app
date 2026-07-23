@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { getLocale } from './presets'
+
+function recMsg(fr: string, en: string) {
+  return getLocale() === 'en' ? en : fr
+}
 
 type RecorderStatus = 'idle' | 'recording' | 'denied' | 'unsupported' | 'error'
 
@@ -44,14 +49,24 @@ export function useMediaRecorder() {
   const start = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setStatus('unsupported')
-      setErrorMessage('Ce navigateur ne permet pas d’enregistrer le micro.')
+      setErrorMessage(
+        recMsg(
+          'Ce navigateur ne permet pas d’enregistrer le micro.',
+          'This browser can’t record from the microphone.',
+        ),
+      )
       return false
     }
 
     // Secure context required (HTTPS or localhost)
     if (typeof window.isSecureContext === 'boolean' && !window.isSecureContext) {
       setStatus('unsupported')
-      setErrorMessage('L’enregistrement nécessite une connexion sécurisée (HTTPS).')
+      setErrorMessage(
+        recMsg(
+          'L’enregistrement nécessite une connexion sécurisée (HTTPS).',
+          'Recording needs a secure connection (HTTPS).',
+        ),
+      )
       return false
     }
 
@@ -86,7 +101,9 @@ export function useMediaRecorder() {
 
       recorder.onerror = () => {
         setStatus('error')
-        setErrorMessage('L’enregistrement s’est interrompu. Réessaie.')
+        setErrorMessage(
+          recMsg('L’enregistrement s’est interrompu. Réessaie.', 'Recording stopped unexpectedly. Try again.'),
+        )
         stopStream()
       }
 
@@ -120,14 +137,24 @@ export function useMediaRecorder() {
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
         setStatus('denied')
         setErrorMessage(
-          'Micro refusé. Autorise le micro dans ton navigateur, puis réessaie.',
+          recMsg(
+            'Micro refusé. Autorise le micro dans ton navigateur, puis réessaie.',
+            'Microphone denied. Allow the mic in your browser, then try again.',
+          ),
         )
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
         setStatus('error')
-        setErrorMessage('Aucun micro détecté sur cet appareil.')
+        setErrorMessage(
+          recMsg('Aucun micro détecté sur cet appareil.', 'No microphone found on this device.'),
+        )
       } else {
         setStatus('error')
-        setErrorMessage('Impossible de démarrer l’enregistrement. Réessaie.')
+        setErrorMessage(
+          recMsg(
+            'Impossible de démarrer l’enregistrement. Réessaie.',
+            'Couldn’t start recording. Try again.',
+          ),
+        )
       }
       return false
     }

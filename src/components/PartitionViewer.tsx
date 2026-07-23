@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { t } from '../lib/presets'
 
 type PartitionViewerProps = {
   src: string | null
@@ -111,9 +112,7 @@ export function PartitionViewer({
       </div>
       {autoScroll ? (
         <div className="scroll-hint">
-          {scrollProgress != null
-            ? 'Défilement calé sur la référence — reprise = retour en haut'
-            : 'Défilement calé sur ton jeu — silence = pause, tu joues = la partition s’abaisse'}
+          {scrollProgress != null ? t().scrollHintRef : t().scrollHintPlay}
         </div>
       ) : null}
     </div>

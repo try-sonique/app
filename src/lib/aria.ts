@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AriaFeedback } from '../types'
+import { getLocale, t } from './presets'
 
-const PRACTICE_CUES = [
+const PRACTICE_CUES_FR = [
   { text: 'Bien — le phrasé respire.', tone: 'good' as const },
   { text: 'Attention au rythme ici.', tone: 'warn' as const },
   { text: 'Tiens la tenue jusqu’au bout.', tone: 'good' as const },
@@ -9,11 +10,21 @@ const PRACTICE_CUES = [
   { text: 'Ça sonne juste ici.', tone: 'good' as const },
 ]
 
-const RECORD_CUES = ['Continue.', 'Belle présence.', 'Tu y es.', 'Nice.']
+const PRACTICE_CUES_EN = [
+  { text: 'Nice — the phrasing breathes.', tone: 'good' as const },
+  { text: 'Watch the rhythm here.', tone: 'warn' as const },
+  { text: 'Hold the sustain all the way through.', tone: 'good' as const },
+  { text: 'Steady the tempo a little.', tone: 'warn' as const },
+  { text: 'That sounds right here.', tone: 'good' as const },
+]
+
+const RECORD_CUES_FR = ['Continue.', 'Belle présence.', 'Tu y es.', 'Nice.']
+const RECORD_CUES_EN = ['Keep going.', 'Nice presence.', 'You’ve got this.', 'Nice.']
 
 export function useAriaCues(active: boolean, mode: 'practice' | 'record') {
   const [cue, setCue] = useState<{ text: string; tone: 'good' | 'warn' | 'neutral' } | null>(null)
   const index = useRef(0)
+  const locale = getLocale()
 
   useEffect(() => {
     if (!active) {
@@ -21,11 +32,14 @@ export function useAriaCues(active: boolean, mode: 'practice' | 'record') {
       return
     }
 
+    const practice = locale === 'en' ? PRACTICE_CUES_EN : PRACTICE_CUES_FR
+    const record = locale === 'en' ? RECORD_CUES_EN : RECORD_CUES_FR
     const pool =
       mode === 'practice'
-        ? PRACTICE_CUES
-        : RECORD_CUES.map((text) => ({ text, tone: 'good' as const }))
+        ? practice
+        : record.map((text) => ({ text, tone: 'good' as const }))
 
+    index.current = 0
     const tick = () => {
       const item = pool[index.current % pool.length]
       index.current += 1
@@ -35,7 +49,7 @@ export function useAriaCues(active: boolean, mode: 'practice' | 'record') {
     tick()
     const id = window.setInterval(tick, mode === 'practice' ? 4500 : 3200)
     return () => window.clearInterval(id)
-  }, [active, mode])
+  }, [active, mode, locale])
 
   return cue
 }
@@ -52,12 +66,52 @@ export function analyzePerformance(input: {
   takesUsed: number
   maxTakes: number
 }): AriaFeedback {
+  const copy = t()
+  const en = getLocale() === 'en'
   const takesLeft = Math.max(0, input.maxTakes - input.takesUsed)
-  const name = input.firstName.trim() || 'toi'
-  const piece = input.pieceName.trim() || 'ton morceau'
+  const name = input.firstName.trim() || copy.you
+  const piece = input.pieceName.trim() || (en ? 'your piece' : 'ton morceau')
   const take = input.takesUsed
 
   if (!input.hasPartition) {
+    if (en) {
+      const greetings = [
+        `${name}, I listened to “${piece}”. It already feels like someone playing for real.`,
+        `${name}, thank you for that take. The intention is clear — now we refine.`,
+        `${name}, solid foundation on “${piece}”. Let’s see what holds and what drifts.`,
+      ]
+      return {
+        headline: piece,
+        greeting: greetings[(take - 1) % greetings.length],
+        overview: '',
+        atmosphere: '',
+        technique: '',
+        rhythm: '',
+        strengths: [
+          'You commit from the first notes — the presence is there',
+          'The sound has warmth: this isn’t a cold reading',
+          take >= 2
+            ? 'Compared to the last take, you hold phrase endings better'
+            : 'You see the gesture through without dropping it',
+        ],
+        weaknesses: [
+          'Tempo pushes a little when emotion rises',
+          'Some sustained notes thin out at the end of the phrase',
+          'Without a score, transitions between phrases are still finding their place',
+        ],
+        improvements: [
+          'Tempo tip: pick 20–30 seconds, play slower, count out loud, then speed up',
+          'Sustain tip: one long note a day, steady release all the way through',
+          'Structure tip: split the piece into 3 mini-sections and link them one by one',
+        ],
+        nextFocus:
+          takesLeft > 0
+            ? `Take ${take + 1}: one goal only — steady tempo on a short passage. Nothing else.`
+            : '3 takes done. Keep one cue (tempo or sustains), switch pieces, come back tomorrow.',
+        takesLeft,
+      }
+    }
+
     const greetings = [
       `${name}, j’ai écouté « ${piece} ». On sent déjà quelqu’un qui joue pour de vrai.`,
       `${name}, merci pour cette prise. L’intention est claire — maintenant on affine.`,
@@ -91,6 +145,46 @@ export function analyzePerformance(input: {
         takesLeft > 0
           ? `Essai ${take + 1} : un seul objectif — tempo stable sur un passage court. Rien d’autre.`
           : '3 essais faits. Garde une consigne (tempo ou tenues), change de morceau, reviens demain.',
+      takesLeft,
+    }
+  }
+
+  if (en) {
+    const greetings = [
+      `${name}, nice take on “${piece}”. Reading and intention are already talking to each other.`,
+      `${name}, I followed along with the score. There’s real work here — you can feel it.`,
+      `${name}, “${piece}” sounds committed. We refine the joints, not the whole page.`,
+    ]
+    return {
+      headline: piece,
+      greeting: greetings[(take - 1) % greetings.length],
+      overview: '',
+      atmosphere: '',
+      technique: '',
+      rhythm: '',
+      strengths: [
+        'You prepare before recording — you can hear it in the stable opening',
+        'The phrasing has natural breaths: it sounds human',
+        input.arrangement === 'arrangement'
+          ? 'You framed the version (arrangement): the listening is more accurate'
+          : input.arrangement === 'original'
+            ? 'You’re aiming for the original: good instinct for precise work'
+            : 'Score reading and gesture stay aligned on the chosen passage',
+      ],
+      weaknesses: [
+        'At density changes, the rhythm floats for a moment',
+        'Sustained notes lose a bit of body at phrase endings',
+        'Transitions (jumps / slurs) still rush in places',
+      ],
+      improvements: [
+        'Rhythm tip: isolate 2 fragile measures, slow metronome, 3 clean reps, then speed up',
+        'Tone tip: work sustains piano → mezzo, without dropping at the end',
+        'Reading tip: one hard passage, slow, hands settled, then one “real” take',
+      ],
+      nextFocus:
+        takesLeft > 0
+          ? `Take ${take + 1}: only the fragile passage. Short. One cue. Then we listen.`
+          : '3 takes done. New piece, one cue in mind (rhythm or sustains).',
       takesLeft,
     }
   }

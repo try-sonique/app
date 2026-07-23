@@ -86,16 +86,17 @@ function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
 }
 
 function PhaseNav({ phase }: { phase: Phase }) {
+  const copy = t()
   const items: { id: Phase; n: number; label: string }[] = [
-    { id: 'partition', n: 1, label: 'Morceau' },
-    { id: 'jouer', n: 2, label: 'Jouer' },
-    { id: 'retour', n: 3, label: 'Retour' },
+    { id: 'partition', n: 1, label: copy.phasePiece },
+    { id: 'jouer', n: 2, label: copy.phasePlay },
+    { id: 'retour', n: 3, label: copy.phaseFeedback },
   ]
   const order: Phase[] = ['partition', 'jouer', 'retour']
   const current = order.indexOf(phase)
 
   return (
-    <nav className="phase-nav" aria-label="Étapes">
+    <nav className="phase-nav" aria-label={copy.phaseFeedback}>
       {items.map((item, i) => {
         const state = i < current ? 'done' : i === current ? 'active' : ''
         return (
@@ -113,26 +114,22 @@ function PhaseNav({ phase }: { phase: Phase }) {
 }
 
 function FooterLine({ withPartition }: { withPartition?: boolean }) {
+  const copy = t()
   return (
-    <p className="footer-note">
-      {withPartition
-        ? 'Sonique écoute ce que tu joues et le compare à ta partition — pour te faire progresser, jamais pour te juger.'
-        : 'Sonique écoute ce que tu joues ou chantes — et te répond fidèlement.'}
-    </p>
+    <p className="footer-note">{withPartition ? copy.footerWithScore : copy.footerNoScore}</p>
   )
 }
 
 function Welcome({ onNext }: { onNext: () => void }) {
+  const copy = t()
   return (
     <section className="slide slide-welcome">
       <div className="welcome-core">
-        <span className="eyebrow">Prêt·e à jouer</span>
+        <span className="eyebrow">{copy.readyToPlay}</span>
         <p className="hero-brand">Sonique</p>
-        <p className="hero-tagline">
-          L’app qui te permet de jouer tes morceaux préférés.
-        </p>
+        <p className="hero-tagline">{copy.heroTagline}</p>
         <button type="button" className="btn btn-hero" onClick={onNext}>
-          Commencer
+          {copy.start}
         </button>
       </div>
       <FooterLine />
@@ -154,6 +151,7 @@ function AuthSlide({
   onProfileLoaded: (profile: UserProfile) => void
   onNext: () => void
 }) {
+  const copy = t()
   const [mode, setMode] = useState<AuthMode>('choose')
   const [loginEmail, setLoginEmail] = useState(profile.email)
   const [loginError, setLoginError] = useState('')
@@ -171,9 +169,7 @@ function AuthSlide({
     e.preventDefault()
     const found = findProfileByEmail(loginEmail)
     if (!found) {
-      setLoginError(
-        "Aucun compte trouvé avec cet email. Choisis « C'est ma première fois » pour t'inscrire.",
-      )
+      setLoginError(copy.loginNotFound)
       return
     }
     setLoginError('')
@@ -185,17 +181,17 @@ function AuthSlide({
   if (mode === 'choose') {
     return (
       <section className="slide">
-        <span className="eyebrow">Slide 2 · Accès</span>
-        <h1>Tu as déjà un compte Sonique ?</h1>
-        <p className="lead">Comme ça, tu n’as pas à tout retaper si tu reviens.</p>
+        <span className="eyebrow">{copy.accessEyebrow}</span>
+        <h1>{copy.haveAccount}</h1>
+        <p className="lead">{copy.haveAccountLead}</p>
         <div className="choice-grid" style={{ marginInline: 'auto' }}>
           <button type="button" className="choice" onClick={() => setMode('login')}>
-            Connexion
-            <small>J’ai déjà un compte — email suffisant.</small>
+            {copy.login}
+            <small>{copy.loginHint}</small>
           </button>
           <button type="button" className="choice" onClick={() => setMode('signup')}>
-            C’est ma première fois
-            <small>Prénom + email. Le reste est facultatif.</small>
+            {copy.firstTime}
+            <small>{copy.firstTimeHint}</small>
           </button>
         </div>
         <p className="footer-note">
@@ -211,12 +207,12 @@ function AuthSlide({
   if (mode === 'login') {
     return (
       <section className="slide slide-left">
-        <span className="eyebrow">Connexion</span>
-        <h1>Bon retour</h1>
-        <p className="lead">Entre l'email utilisé à l'inscription. On retrouve ton profil sur cet appareil.</p>
+        <span className="eyebrow">{copy.loginEyebrow}</span>
+        <h1>{copy.welcomeBack}</h1>
+        <p className="lead">{copy.loginLead}</p>
         <form className="stack" onSubmit={submitLogin}>
           <label className="field">
-            <span>Email</span>
+            <span>{copy.email}</span>
             <input
               type="email"
               autoComplete="email"
@@ -235,10 +231,10 @@ function AuthSlide({
           ) : null}
           <div className="actions">
             <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
-              Retour
+              {copy.back}
             </button>
             <button type="submit" className="btn btn-primary" disabled={!loginEmail.trim()}>
-              Continuer
+              {copy.continue}
             </button>
           </div>
         </form>
@@ -248,7 +244,7 @@ function AuthSlide({
           style={{ marginTop: '1rem' }}
           onClick={() => setMode('signup')}
         >
-          Première fois ? Créer un compte
+          {copy.createAccountLink}
         </button>
       </section>
     )
@@ -256,14 +252,12 @@ function AuthSlide({
 
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Première fois</span>
-      <h1>Crée ton espace Sonique</h1>
-      <p className="lead">
-        Seulement prénom et email sont requis. Le reste est facultatif — tout reste sur ton appareil.
-      </p>
+      <span className="eyebrow">{copy.signupEyebrow}</span>
+      <h1>{copy.createSpace}</h1>
+      <p className="lead">{copy.signupLead}</p>
       <form className="stack" onSubmit={submitSignup}>
         <label className="field">
-          <span>Prénom</span>
+          <span>{copy.firstName}</span>
           <input
             type="text"
             autoComplete="given-name"
@@ -273,7 +267,7 @@ function AuthSlide({
           />
         </label>
         <label className="field">
-          <span>Email</span>
+          <span>{copy.email}</span>
           <input
             type="email"
             autoComplete="email"
@@ -284,7 +278,7 @@ function AuthSlide({
         </label>
         <label className="field">
           <span>
-            Nom <em className="optional-tag">facultatif</em>
+            {copy.lastName} <em className="optional-tag">{copy.optional}</em>
           </span>
           <input
             type="text"
@@ -295,22 +289,22 @@ function AuthSlide({
         </label>
         <label className="field">
           <span>
-            Téléphone <em className="optional-tag">facultatif</em>
+            {copy.phoneOptional} <em className="optional-tag">{copy.optional}</em>
           </span>
           <input
             type="tel"
             autoComplete="tel"
-            placeholder="+33…"
+            placeholder="+1…"
             value={profile.phone}
             onChange={(e) => onChange('phone', e.target.value)}
           />
         </label>
         <div className="actions">
           <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
-            Retour
+            {copy.back}
           </button>
           <button type="submit" className="btn btn-primary" disabled={!signupValid}>
-            Continuer
+            {copy.continue}
           </button>
         </div>
       </form>
@@ -349,22 +343,22 @@ function PieceSetupClassic({
   const canContinue =
     pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
 
+  const copy = t()
+
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Étape 1 · Morceau</span>
-      <h1>Quel morceau vas-tu travailler ?</h1>
-      <p className="lead">
-        Importe ta partition, ou continue sans — Aria s’adapte. Tu peux jouer ou chanter.
-      </p>
+      <span className="eyebrow">{copy.stepPiece}</span>
+      <h1>{copy.classicTitle}</h1>
+      <p className="lead">{copy.classicLead}</p>
 
       <div className="stack">
         <label className="field">
-          <span>Nom du morceau</span>
+          <span>{copy.pieceNameLabel}</span>
           <input
             type="text"
             value={pieceName}
             onChange={(e) => onPieceName(e.target.value)}
-            placeholder="Ex. Clair de Lune"
+            placeholder={copy.pieceNamePlaceholder}
           />
         </label>
 
@@ -372,9 +366,9 @@ function PieceSetupClassic({
           <div className="upload-icon" aria-hidden>
             ♫
           </div>
-          <strong>Glisse ta partition ici, ou choisis un fichier</strong>
+          <strong>{copy.dropScore}</strong>
           <p className="lead" style={{ margin: 0 }}>
-            Image / PDF — préfère un fichier sans page de couverture pour le défilement
+            {copy.uploadHint}
           </p>
           <input
             type="file"
@@ -384,14 +378,14 @@ function PieceSetupClassic({
           />
           {partitionName && !noPartition ? (
             <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
-              Fichier : {partitionName}
+              {copy.fileLabel} : {partitionName}
             </p>
           ) : null}
         </div>
 
         {!noPartition && partitionPreview ? (
           <div className="stage partition-stage">
-            <p className="partition-label">Aperçu de ta partition</p>
+            <p className="partition-label">{copy.previewLabel}</p>
             <PartitionViewer
               src={partitionPreview}
               mime={partitionMime}
@@ -407,9 +401,9 @@ function PieceSetupClassic({
             onChange={(e) => onToggleNoPartition(e.target.checked)}
           />
           <div>
-            <strong>Je n’ai pas de partition — continuer quand même</strong>
+            <strong>{copy.noScoreContinue}</strong>
             <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-              Aria écoutera à l’oreille.
+              {copy.noScoreContinueHint}
             </p>
           </div>
         </label>
@@ -417,7 +411,7 @@ function PieceSetupClassic({
 
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!canContinue} onClick={onNext}>
-          Continuer
+          {copy.continue}
         </button>
       </div>
       <FooterLine withPartition={!noPartition} />
@@ -472,53 +466,55 @@ function PieceSetupYC({
 }
 
 function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => void }) {
+  const copy = t()
+  const name = firstName || copy.you
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Avec partition</span>
-      <h1>Comment ça marche, {firstName || 'toi'} ?</h1>
-      <p className="lead">
-        Sur Sonique, Aria t’accompagne pas à pas avant l’enregistrement — pour corriger sans te juger.
-      </p>
+      <span className="eyebrow">{copy.withScore}</span>
+      <h1>
+        {copy.howTitle}, {name} ?
+      </h1>
+      <p className="lead">{copy.howLead}</p>
       <ol className="steps">
         <li>
           <span className="step-num">1</span>
           <div>
-            <strong>Choisis le passage travaillé</strong>
-            <p>On ne traite pas toute la partition d’un coup.</p>
+            <strong>{copy.howStep1Title}</strong>
+            <p>{copy.howStep1Body}</p>
           </div>
         </li>
         <li>
           <span className="step-num">2</span>
           <div>
-            <strong>Entraîne-toi librement</strong>
-            <p>Aussi longtemps que tu veux — sans enregistrer.</p>
+            <strong>{copy.howStep2Title}</strong>
+            <p>{copy.howStep2Body}</p>
           </div>
         </li>
         <li>
           <span className="step-num">3</span>
           <div>
-            <strong>Aria chuchote en live</strong>
-            <p>Fausse note, rythme… elle te le dit pendant que tu joues.</p>
+            <strong>{copy.howStep3Title}</strong>
+            <p>{copy.howStep3Body}</p>
           </div>
         </li>
         <li>
           <span className="step-num">4</span>
           <div>
-            <strong>Enregistre une trace</strong>
-            <p>Pour garder ce que tu as fait aujourd’hui sur Sonique.</p>
+            <strong>{copy.howStep4Title}</strong>
+            <p>{copy.howStep4Body}</p>
           </div>
         </li>
         <li>
           <span className="step-num">5</span>
           <div>
-            <strong>Reçois ton retour</strong>
-            <p>Max 3 essais par morceau, pour digérer ce qu’Aria t’a dit.</p>
+            <strong>{copy.howStep5Title}</strong>
+            <p>{copy.howStep5Body}</p>
           </div>
         </li>
       </ol>
       <div className="actions">
         <button type="button" className="btn btn-primary" onClick={onNext}>
-          Passer à l’entraînement
+          {copy.goToPractice}
         </button>
       </div>
       <FooterLine withPartition />
@@ -535,35 +531,34 @@ function NoPartitionQuestions({
   onSelect: (v: ArrangementKind) => void
   onNext: () => void
 }) {
+  const copy = t()
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">Sans partition</span>
-      <h1>Aide Sonique à t’écouter</h1>
-      <p className="lead">
-        Dis si tu joues un arrangement ou la version originale — pour qu’Aria te réponde plus juste.
-      </p>
+      <span className="eyebrow">{copy.noScoreEyebrow}</span>
+      <h1>{copy.noScoreTitle}</h1>
+      <p className="lead">{copy.noScoreLead}</p>
       <div className="choice-grid">
         <button
           type="button"
           className={`choice ${arrangement === 'original' ? 'active' : ''}`}
           onClick={() => onSelect('original')}
         >
-          Version originale
-          <small>Je vise la version connue / standard.</small>
+          {copy.originalVersion}
+          <small>{copy.originalHint}</small>
         </button>
         <button
           type="button"
           className={`choice ${arrangement === 'arrangement' ? 'active' : ''}`}
           onClick={() => onSelect('arrangement')}
         >
-          Arrangement
-          <small>C’est une version adaptée / arrangée.</small>
+          {copy.arrangement}
+          <small>{copy.arrangementHint}</small>
         </button>
       </div>
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!arrangement} onClick={onNext}>
           <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
-          Lancer l’enregistrement
+          {copy.startRecording}
         </button>
       </div>
       <FooterLine />
@@ -634,29 +629,33 @@ function PracticeStage({
   // Suit la timeline audio : avance jusqu’à la reprise, puis revient en haut
   useEffect(() => {
     if (!refPlaying) return
-    const cycle = Math.max(4, repeatEverySec ?? 999)
+    const cycle = repeatEverySec ?? null
     const id = window.setInterval(() => {
       const audio = audioRef.current
       if (!audio) return
-      const local = audio.currentTime % cycle
-      setRefProgress(Math.min(1, local / cycle))
+      if (cycle && cycle > 0) {
+        const local = audio.currentTime % cycle
+        setRefProgress(Math.min(1, local / cycle))
+      } else {
+        const dur =
+          Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 55
+        setRefProgress(Math.min(1, audio.currentTime / dur))
+      }
     }, 80)
     return () => window.clearInterval(id)
   }, [refPlaying, repeatEverySec])
 
+  const copy = t()
+
   return (
     <section className="slide slide-play">
       <div className="play-header">
-        <span className="eyebrow">Étape 2 · Entraînement</span>
-        <h1>{refPlaying ? 'Suis la référence' : 'À toi de jouer'}</h1>
-        <p className="lead play-lead">
-          {refPlaying
-            ? 'Un pianiste joue — la partition suit jusqu’à la reprise, puis revient. Écoute, puis reprends.'
-            : 'Joue ou chante maintenant. Aria chuchote — rien n’est enregistré ici.'}
-        </p>
+        <span className="eyebrow">{copy.training}</span>
+        <h1>{refPlaying ? copy.followRef : copy.yourTurn}</h1>
+        <p className="lead play-lead">{refPlaying ? copy.refPlaying : copy.yourTurnLead}</p>
         <div className="meta-row">
           <span>{pieceName}</span>
-          {refPlaying ? <span className="ref-pill">Référence en cours</span> : null}
+          {refPlaying ? <span className="ref-pill">{copy.refOn}</span> : null}
         </div>
       </div>
       <div className="stage stage-score">
@@ -673,7 +672,7 @@ function PracticeStage({
       </div>
       {denied && !refPlaying ? (
         <p className="footer-note" style={{ paddingTop: '0.75rem' }}>
-          Micro refusé : la partition ne peut pas suivre ton jeu. Autorise le micro pour synchroniser.
+          {copy.micDeniedPractice}
         </p>
       ) : null}
       <div className="actions play-actions">
@@ -683,11 +682,11 @@ function PracticeStage({
             className="btn btn-ghost"
             onClick={() => (refPlaying ? stopRef() : void startRef())}
           >
-            {refPlaying ? 'Couper la référence' : 'Relancer la référence'}
+            {refPlaying ? copy.cutRef : copy.restartRef}
           </button>
         ) : null}
         <button type="button" className="btn btn-ghost" onClick={() => setActive((v) => !v)}>
-          {active ? 'Couper les chuchotements' : 'Réactiver Aria'}
+          {active ? copy.cutWhispers : copy.reviveAria}
         </button>
         <button
           type="button"
@@ -697,7 +696,7 @@ function PracticeStage({
             onNext()
           }}
         >
-          Je suis prêt·e à enregistrer
+          {copy.readyRecord}
         </button>
       </div>
       <FooterLine withPartition />
@@ -760,7 +759,7 @@ function RecordStage({
   useEffect(() => {
     if (!demoPlaying) return
     const cycle = repeatEverySec ?? null
-    const dur = Math.max(8, scrollDurationSec ?? 55)
+    const fallbackDur = Math.max(8, scrollDurationSec ?? 55)
     const id = window.setInterval(() => {
       const audio = audioRef.current
       if (!audio) return
@@ -769,6 +768,8 @@ function RecordStage({
         const local = audio.currentTime % cycle
         setScrollProgress(Math.min(1, local / cycle))
       } else {
+        const dur =
+          Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : fallbackDur
         setScrollProgress(Math.min(1, audio.currentTime / dur))
       }
     }, 80)
@@ -831,7 +832,7 @@ function RecordStage({
 
   return (
     <section className="slide slide-play">
-      <span className="eyebrow">{getLocale() === 'en' ? 'Step 2 · Play' : 'Étape 2 · Jouer'}</span>
+      <span className="eyebrow">{copy.stepPlay}</span>
       {recording ? (
         <>
           <div className="play-rec-bar">
@@ -879,12 +880,8 @@ function RecordStage({
               {demoSync
                 ? copy.perfLead
                 : hasPartition
-                  ? getLocale() === 'en'
-                    ? 'This is your take — not the reference. Aria bases feedback on what you play now.'
-                    : 'C’est ta prise — pas la référence. Aria se base sur ce que tu joues maintenant.'
-                  : getLocale() === 'en'
-                    ? 'This is your take. Aria listens by ear.'
-                    : 'C’est ta prise. Aria écoute à l’oreille ce que tu joues ou chantes.'}
+                  ? copy.perfLeadMic
+                  : copy.perfLeadEar}
             </p>
             <div className="actions play-actions">
               <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
@@ -893,7 +890,7 @@ function RecordStage({
               </button>
               {!demoSync ? (
                 <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
-                  {getLocale() === 'en' ? 'Continue without mic (demo)' : 'Continuer sans micro (démo)'}
+                  {copy.continueWithoutMic}
                 </button>
               ) : null}
             </div>
@@ -903,11 +900,7 @@ function RecordStage({
               </p>
             ) : (
               <p className="footer-note" style={{ paddingTop: '1rem' }}>
-                {demoSync
-                  ? copy.demoNote
-                  : getLocale() === 'en'
-                    ? 'Allow the microphone if asked — you can stop anytime.'
-                    : 'Autorise le micro si ton navigateur le demande — tu pourras arrêter quand tu veux.'}
+                {demoSync ? copy.demoNote : copy.micHint}
               </p>
             )}
           </div>
@@ -919,6 +912,7 @@ function RecordStage({
 }
 
 function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => void }) {
+  const copy = t()
   useEffect(() => {
     const id = window.setTimeout(onDone, 1800)
     return () => window.clearTimeout(id)
@@ -928,9 +922,9 @@ function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => voi
     <section className="slide">
       <div className="analyze">
         <div className="aria-orb" aria-hidden />
-        <h1>Aria écoute…</h1>
+        <h1>{copy.ariaListening}</h1>
         <p className="lead" style={{ marginInline: 'auto' }}>
-          {firstName ? `${firstName}, un instant.` : 'Un instant.'}
+          {firstName ? `${firstName}, ${copy.oneMoment}` : copy.oneMoment}
         </p>
       </div>
       <FooterLine withPartition />
@@ -952,23 +946,24 @@ function Report({
   const feedback = state.feedback
   if (!feedback) return null
   const exhausted = feedback.takesLeft <= 0
+  const copy = t()
   const strengths = (feedback.strengths || []).slice(0, 3)
   const weaknesses = (feedback.weaknesses || []).slice(0, 3)
   const improvements = (feedback.improvements || []).slice(0, 3)
 
   return (
     <section className="slide">
-      <span className="eyebrow">Retour Aria</span>
+      <span className="eyebrow">{copy.reportEyebrow}</span>
       <h1>{feedback.headline}</h1>
       <div className="takes-pill">
-        Essais restants : {feedback.takesLeft}/{MAX_TAKES}
+        {copy.takesLeft} : {feedback.takesLeft}/{MAX_TAKES}
       </div>
 
       <div className="report-card report-card-compact">
         <p className="report-greeting">{feedback.greeting}</p>
         {strengths.length > 0 ? (
           <div className="report-block">
-            <h3>Points positifs</h3>
+            <h3>{copy.strengths}</h3>
             <ul>
               {strengths.map((s) => (
                 <li key={s}>{s}</li>
@@ -978,7 +973,7 @@ function Report({
         ) : null}
         {weaknesses.length > 0 ? (
           <div className="report-block">
-            <h3>Points à corriger</h3>
+            <h3>{copy.weaknesses}</h3>
             <ul>
               {weaknesses.map((s) => (
                 <li key={s}>{s}</li>
@@ -988,7 +983,7 @@ function Report({
         ) : null}
         {improvements.length > 0 ? (
           <div className="report-block">
-            <h3>Axes & pistes de travail</h3>
+            <h3>{copy.improvements}</h3>
             <ul>
               {improvements.map((s) => (
                 <li key={s}>{s}</li>
@@ -998,7 +993,7 @@ function Report({
         ) : null}
         {feedback.nextFocus ? (
           <div className="report-block">
-            <h3>Consigne pour le prochain essai</h3>
+            <h3>{copy.nextFocus}</h3>
             <p>{feedback.nextFocus}</p>
           </div>
         ) : null}
@@ -1007,19 +1002,19 @@ function Report({
       <div className="actions">
         {!exhausted ? (
           <button type="button" className="btn btn-gold" onClick={onReplay}>
-            Rejouer le morceau
+            {copy.replayPiece}
           </button>
         ) : (
           <button type="button" className="btn btn-gold" onClick={onNewPiece}>
-            Choisir un autre morceau
+            {copy.chooseOther}
           </button>
         )}
         <button type="button" className="btn btn-ghost" onClick={onOpenHistory}>
-          Voir mes sessions
+          {copy.viewSessions}
         </button>
       </div>
       {exhausted ? (
-        <p className="footer-note">3 essais atteints — retour à la sélection du morceau.</p>
+        <p className="footer-note">{copy.takesExhausted}</p>
       ) : (
         <FooterLine withPartition={state.hasPartition === true} />
       )}
@@ -1029,13 +1024,14 @@ function Report({
 
 
 function formatSessionHeadline(headline: string, pieceName: string) {
+  const copy = t()
   const cleaned = headline
     .replace(/^Compte\s*rendu\s*[—–-]\s*/i, '')
     .replace(/^Retour\s*[—–-]\s*/i, '')
-    .replace(/\btakes?\b/gi, 'essai')
+    .replace(/^Feedback\s*[—–-]\s*/i, '')
     .trim()
   const title = cleaned || pieceName
-  return `Retour — ${title}`
+  return `${copy.feedbackPrefix} — ${title}`
 }
 
 function HistoryView({
@@ -1069,23 +1065,25 @@ function HistoryView({
     }
   }, [email])
 
+  const copy = t()
+  const dateLocale = getLocale() === 'en' ? 'en-US' : 'fr-FR'
+
   return (
     <section className="slide">
-      <span className="eyebrow">Mon compte · Sessions</span>
-      <h1>Historique de travail</h1>
-      <p className="lead">
-        Rejoue tes sessions et relis tes retours. Tout reste sur ton appareil (interne).
-      </p>
+      <span className="eyebrow">{copy.historyEyebrow}</span>
+      <h1>{copy.historyTitle}</h1>
+      <p className="lead">{copy.historyLead}</p>
       {sessions.length === 0 ? (
-        <p className="lead">Aucune session enregistrée pour l’instant.</p>
+        <p className="lead">{copy.noSessions}</p>
       ) : (
         <div className="history-list">
           {sessions.map((s) => (
             <article key={s.id} className="history-item">
               <h3>{s.pieceName}</h3>
               <div className="meta">
-                {new Date(s.createdAt).toLocaleString('fr-FR')} · Essai {s.takeNumber}
-                {s.hasPartition ? ' · avec partition' : ' · à l’oreille'}
+                {new Date(s.createdAt).toLocaleString(dateLocale)} · {copy.takeLabel}{' '}
+                {s.takeNumber}
+                {s.hasPartition ? ` · ${copy.withPartition}` : ` · ${copy.byEar}`}
               </div>
               <p className="lead" style={{ margin: 0 }}>
                 {formatSessionHeadline(s.feedbackHeadline, s.pieceName)}
@@ -1093,7 +1091,7 @@ function HistoryView({
               {audioUrls[s.id] ? <audio controls src={audioUrls[s.id]} /> : null}
               <div className="actions" style={{ marginTop: '0.85rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => onOpenFeedback(s)}>
-                  Voir le retour
+                  {copy.viewFeedback}
                 </button>
               </div>
             </article>
@@ -1102,7 +1100,7 @@ function HistoryView({
       )}
       <div className="actions">
         <button type="button" className="btn btn-primary" onClick={onBack}>
-          Retour
+          {copy.historyBack}
         </button>
       </div>
     </section>
@@ -1410,18 +1408,14 @@ export default function App() {
             if (state.profile.email.trim()) go(3)
             else go(1)
           }}
-          aria-label={
-            state.profile.email.trim()
-              ? 'Retour au choix du morceau'
-              : 'Retour à l’accueil Sonique'
-          }
+          aria-label={state.profile.email.trim() ? t().backToPiece : t().backHome}
         >
           Sonique
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {state.profile.email ? (
             <button type="button" className="top-link" onClick={() => setShowHistory(true)}>
-              Mes sessions
+              {t().sessions}
             </button>
           ) : null}
           {!showHistory && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
