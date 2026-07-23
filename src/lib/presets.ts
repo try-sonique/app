@@ -3,7 +3,8 @@ export type DemoPiece = {
   title: string
   blurb: string
   partitionSrc: string
-  audioSrc: string
+  /** Ref audio optionnelle (entraînement). Absente = silence / jeu live. */
+  audioSrc?: string
   mime: string
   /**
    * Pendant la référence : ne pas scroller au-delà de ce ratio de la page
@@ -38,11 +39,11 @@ export const DEMO_PIECES: DemoPiece[] = [
     scrollCapRatio: 0.22,
   },
   {
-    id: 'ode',
-    title: 'Ode to Joy',
-    blurb: 'Beethoven — hymne connu, niveau accessible',
-    partitionSrc: './presets/ode-to-joy.svg',
-    audioSrc: './presets/ode-to-joy.wav',
-    mime: 'image/svg+xml',
+    id: 'entertainer',
+    title: 'The Entertainer',
+    blurb: 'Scott Joplin — classique US, parfait pour YC',
+    partitionSrc: './presets/the-entertainer.jpg',
+    mime: 'image/jpeg',
+    scrollCapRatio: 0.28,
   },
 ]

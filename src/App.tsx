@@ -1018,7 +1018,7 @@ export default function App() {
         partitionPreview: piece.partitionSrc,
         partitionMime: piece.mime,
         selectedPresetId: piece.id,
-        previewAudio: piece.audioSrc,
+        previewAudio: piece.audioSrc ?? null,
         scrollCapRatio: piece.scrollCapRatio ?? null,
         repeatEverySec: piece.repeatEverySec ?? null,
         hasPartition: true,
