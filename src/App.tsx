@@ -43,6 +43,8 @@ const ALL_THEMES: { id: ThemeId; label: string }[] = [
 
 /** `full` = sélecteur multi-couleurs ; sinon noir/or figé */
 const THEME_MODE = (import.meta.env.VITE_THEME_MODE as string) || 'noir'
+const FLOW_MODE = (import.meta.env.VITE_FLOW_MODE as string) || 'yc'
+const IS_YC_FLOW = FLOW_MODE !== 'original'
 const SHOW_THEME_DOCK = THEME_MODE === 'full'
 const THEMES = SHOW_THEME_DOCK ? ALL_THEMES : ALL_THEMES.filter((t) => t.id === 'noir')
 
@@ -322,7 +324,108 @@ function AuthSlide({
   )
 }
 
-function PieceSetup({
+function PieceSetupClassic({
+  pieceName,
+  hasPartition,
+  partitionName,
+  partitionPreview,
+  partitionMime,
+  onPieceName,
+  onToggleNoPartition,
+  onUpload,
+  onNext,
+}: {
+  pieceName: string
+  hasPartition: boolean | null
+  partitionName: string
+  partitionPreview: string | null
+  partitionMime: string | null
+  onPieceName: (v: string) => void
+  onToggleNoPartition: (checked: boolean) => void
+  onUpload: (file: File | null) => void
+  onNext: () => void
+}) {
+  const noPartition = hasPartition === false
+  const canContinue =
+    pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
+
+  return (
+    <section className="slide slide-left">
+      <span className="eyebrow">Étape 1 · Morceau</span>
+      <h1>Quel morceau vas-tu travailler ?</h1>
+      <p className="lead">
+        Importe ta partition, ou continue sans — Aria s’adapte. Tu peux jouer ou chanter.
+      </p>
+
+      <div className="stack">
+        <label className="field">
+          <span>Nom du morceau</span>
+          <input
+            type="text"
+            value={pieceName}
+            onChange={(e) => onPieceName(e.target.value)}
+            placeholder="Ex. Clair de Lune"
+          />
+        </label>
+
+        <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
+          <div className="upload-icon" aria-hidden>
+            ♫
+          </div>
+          <strong>Glisse ta partition ici, ou choisis un fichier</strong>
+          <p className="lead" style={{ margin: 0 }}>
+            Image / PDF — préfère un fichier sans page de couverture pour le défilement
+          </p>
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            disabled={noPartition}
+            onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
+          />
+          {partitionName && !noPartition ? (
+            <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
+              Fichier : {partitionName}
+            </p>
+          ) : null}
+        </div>
+
+        {!noPartition && partitionPreview ? (
+          <div className="stage partition-stage">
+            <p className="partition-label">Aperçu de ta partition</p>
+            <PartitionViewer
+              src={partitionPreview}
+              mime={partitionMime}
+              name={partitionName}
+            />
+          </div>
+        ) : null}
+
+        <label className="check-row">
+          <input
+            type="checkbox"
+            checked={noPartition}
+            onChange={(e) => onToggleNoPartition(e.target.checked)}
+          />
+          <div>
+            <strong>Je n’ai pas de partition — continuer quand même</strong>
+            <p className="lead" style={{ margin: '0.25rem 0 0' }}>
+              Aria écoutera à l’oreille.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div className="actions">
+        <button type="button" className="btn btn-primary" disabled={!canContinue} onClick={onNext}>
+          Continuer
+        </button>
+      </div>
+      <FooterLine withPartition={!noPartition} />
+    </section>
+  )
+}
+
+function PieceSetupYC({
   selectedPresetId,
   onSelectPreset,
   onNext,
@@ -338,8 +441,7 @@ function PieceSetup({
       <span className="eyebrow">Étape 1 · Morceau</span>
       <h1>Choisis un morceau</h1>
       <p className="lead">
-        Trois titres connus — partition prête, tu pourras écouter l’extrait à l’entraînement. Joue ou
-        chante.
+        Trois titres connus, partitions prêtes. Joue ou chante — idéal pour une démo rapide.
       </p>
 
       <div className="preset-grid" role="list">
@@ -1014,13 +1116,45 @@ export default function App() {
       return {
         ...s,
         pieceName: piece.title,
-        partitionName: `${piece.title}.svg`,
+        partitionName: `${piece.title}`,
         partitionPreview: piece.partitionSrc,
         partitionMime: piece.mime,
         selectedPresetId: piece.id,
         previewAudio: piece.audioSrc ?? null,
         scrollCapRatio: piece.scrollCapRatio ?? null,
         repeatEverySec: piece.repeatEverySec ?? null,
+        hasPartition: true,
+      }
+    })
+  }
+
+  const onUpload = (file: File | null) => {
+    setState((s) => {
+      revokeIfBlob(s.partitionPreview)
+      if (!file) {
+        return {
+          ...s,
+          partitionName: '',
+          partitionPreview: null,
+          partitionMime: null,
+          selectedPresetId: null,
+          previewAudio: null,
+          hasPartition: null,
+        }
+      }
+      const preview = URL.createObjectURL(file)
+      return {
+        ...s,
+        pieceName: s.pieceName || file.name.replace(/\.[^.]+$/, ''),
+        partitionName: file.name,
+        partitionPreview: preview,
+        partitionMime:
+          file.type ||
+          (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*'),
+        selectedPresetId: null,
+        previewAudio: null,
+        scrollCapRatio: null,
+        repeatEverySec: null,
         hasPartition: true,
       }
     })
@@ -1067,10 +1201,35 @@ export default function App() {
       />
     )
   } else if (state.slide === 3) {
-    body = (
-      <PieceSetup
+    body = IS_YC_FLOW ? (
+      <PieceSetupYC
         selectedPresetId={state.selectedPresetId}
         onSelectPreset={onSelectPreset}
+        onNext={() => go(4)}
+      />
+    ) : (
+      <PieceSetupClassic
+        pieceName={state.pieceName}
+        hasPartition={state.hasPartition}
+        partitionName={state.partitionName}
+        partitionPreview={state.partitionPreview}
+        partitionMime={state.partitionMime}
+        onPieceName={(pieceName) => patch({ pieceName })}
+        onToggleNoPartition={(checked) =>
+          setState((s) => {
+            if (checked) revokeIfBlob(s.partitionPreview)
+            return {
+              ...s,
+              hasPartition: checked ? false : s.partitionName ? true : null,
+              partitionName: checked ? '' : s.partitionName,
+              partitionPreview: checked ? null : s.partitionPreview,
+              partitionMime: checked ? null : s.partitionMime,
+              selectedPresetId: null,
+              previewAudio: null,
+            }
+          })
+        }
+        onUpload={onUpload}
         onNext={() => go(4)}
       />
     )

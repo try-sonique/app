@@ -8,6 +8,9 @@
     "build": "tsc -b && vite build",
     "build:noir": "tsc -b && VITE_THEME_MODE=noir vite build --outDir dist-noir",
     "build:colors": "tsc -b && VITE_THEME_MODE=full vite build --outDir dist-colors",
+    "build:v1": "tsc -b && VITE_THEME_MODE=noir VITE_FLOW_MODE=original vite build --outDir dist-v1",
+    "build:v2": "tsc -b && VITE_THEME_MODE=noir VITE_FLOW_MODE=yc vite build --outDir dist-v2",
+    "build:flows": "npm run build:v1 && npm run build:v2",
     "build:both": "npm run build:noir && npm run build:colors",
     "preview": "vite preview"
   },
