@@ -1,3 +1,5 @@
+import type { ScrollKeyframe } from './audioFeatures'
+
 export type Locale = 'fr' | 'en'
 
 export type DemoPiece = {
@@ -5,15 +7,18 @@ export type DemoPiece = {
   title: string
   blurb: { fr: string; en: string }
   partitionSrc: string
-  /** Ref audio optionnelle (entraînement). */
+  /** Court repère optionnel (entraînement) — pas la prise complète. */
   audioSrc?: string
   /** Audio joué pendant la performance démo (V2). */
   performanceAudioSrc?: string
+  /** Secondes max du repère entraînement. */
+  practicePeekSec?: number
   mime: string
   scrollCapRatio?: number
   repeatEverySec?: number
-  /** Durée de sync scroll sur la perf (secondes), si pas de reprise. */
   scrollDurationSec?: number
+  /** Courbe temps→scroll (0–1) pour caler le tempo perçu. */
+  scrollKeyframes?: ScrollKeyframe[]
 }
 
 export const DEMO_PIECES: DemoPiece[] = [
@@ -27,10 +32,17 @@ export const DEMO_PIECES: DemoPiece[] = [
     partitionSrc: './presets/lettre-a-elise.png',
     audioSrc: './presets/lettre-a-elise.mp3',
     performanceAudioSrc: './presets/lettre-a-elise.mp3',
+    practicePeekSec: 12,
     mime: 'image/png',
     scrollCapRatio: 0.4,
     repeatEverySec: 17,
     scrollDurationSec: 38,
+    scrollKeyframes: [
+      { t: 0, p: 0 },
+      { t: 0.3, p: 0.28 },
+      { t: 0.6, p: 0.62 },
+      { t: 1, p: 1 },
+    ],
   },
   {
     id: 'clair',
@@ -40,12 +52,19 @@ export const DEMO_PIECES: DemoPiece[] = [
       en: 'Debussy — French elegance',
     },
     partitionSrc: './presets/clair-de-lune.jpg',
-    audioSrc: './presets/clair-de-lune.mp3',
+    // Pas d’audioSrc plein : l’entraînement n’est pas une redite de la perf
     performanceAudioSrc: './presets/clair-de-lune.mp3',
+    practicePeekSec: 12,
     mime: 'image/jpeg',
-    // Extrait ~55s : ouverture lente → peu de systèmes sur une partition très haute
-    scrollCapRatio: 0.1,
+    scrollCapRatio: 0.11,
     scrollDurationSec: 55,
+    scrollKeyframes: [
+      { t: 0, p: 0 },
+      { t: 0.22, p: 0.08 },
+      { t: 0.45, p: 0.28 },
+      { t: 0.7, p: 0.58 },
+      { t: 1, p: 1 },
+    ],
   },
   {
     id: 'entertainer',
@@ -55,11 +74,18 @@ export const DEMO_PIECES: DemoPiece[] = [
       en: 'Scott Joplin — the American dance classic everyone knows',
     },
     partitionSrc: './presets/the-entertainer.jpg',
-    audioSrc: './presets/the-entertainer.mp3',
     performanceAudioSrc: './presets/the-entertainer.mp3',
+    practicePeekSec: 12,
     mime: 'image/jpeg',
-    scrollCapRatio: 0.16,
+    scrollCapRatio: 0.17,
     scrollDurationSec: 55,
+    scrollKeyframes: [
+      { t: 0, p: 0 },
+      { t: 0.15, p: 0.18 },
+      { t: 0.4, p: 0.42 },
+      { t: 0.7, p: 0.72 },
+      { t: 1, p: 1 },
+    ],
   },
 ]
 
@@ -157,18 +183,21 @@ const FR = {
 
   // Practice
   training: 'Étape 2 · Entraînement',
-  followRef: 'Suis la référence',
-  yourTurn: 'À toi de jouer',
+  followRef: 'Repère court',
+  yourTurn: 'Salle d’entraînement',
   refPlaying:
-    'Un pianiste joue — la partition suit la musique. Écoute, puis reprends au piano.',
+    'Repère court (quelques secondes) — juste pour te placer. Ce n’est pas ta prise.',
   yourTurnLead:
-    'Prends ton instrument et entraîne-toi. Aria chuchote — rien n’est enregistré ici. Quand tu es prêt·e, passe à l’enregistrement.',
-  refOn: 'Référence en cours',
-  cutRef: 'Couper la référence',
-  restartRef: 'Relancer la référence',
+    'Prends ton instrument et entraîne-toi librement. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, tu passes à la performance.',
+  practiceNote: 'Ici : entraînement. La musique complète + partition sync = l’étape suivante.',
+  refOn: 'Repère en cours',
+  cutRef: 'Arrêter le repère',
+  restartRef: 'Écouter 12s de repère',
   cutWhispers: 'Couper les chuchotements',
   reviveAria: 'Réactiver Aria',
-  readyRecord: 'Je suis prêt·e — passer à l’enregistrement',
+  readyRecord: 'Je suis prêt·e — passer à la performance',
+  accessReturning: 'Content de te revoir',
+  accessReturningLead: 'Connecte-toi ou crée un espace — puis on choisit un morceau.',
   micDeniedPractice:
     'Micro refusé : la partition ne peut pas suivre ton jeu. Autorise le micro pour synchroniser.',
   scrollHintRef: 'Défilement calé sur la référence — reprise = retour en haut',
@@ -178,7 +207,7 @@ const FR = {
   stepPlay: 'Étape 2 · Jouer',
   performance: 'Ta performance',
   perfLead:
-    'Lance la prise : la musique joue, la partition défile au tempo. Aria se base sur cette performance.',
+    'C’est ta prise : la musique joue, la partition suit le tempo. Différent de l’entraînement — Aria juge cette performance.',
   perfLeadMic:
     'C’est ta prise — pas la référence. Aria se base sur ce que tu joues maintenant.',
   perfLeadEar: 'C’est ta prise. Aria écoute à l’oreille ce que tu joues au piano.',
@@ -297,17 +326,20 @@ const EN: { [K in keyof typeof FR]: string } = {
   historyBack: 'Back',
 
   training: 'Step 2 · Practice',
-  followRef: 'Follow the reference',
-  yourTurn: 'Your turn to play',
-  refPlaying: 'A pianist is playing — the score follows the music. Listen, then join in on the piano.',
+  followRef: 'Short cue',
+  yourTurn: 'Practice room',
+  refPlaying: 'Short cue (a few seconds) — just to get oriented. This is not your take.',
   yourTurnLead:
-    'Pick up your instrument and practice. Aria whispers tips — nothing is recorded here. When you’re ready, move on to recording.',
-  refOn: 'Reference playing',
-  cutRef: 'Stop reference',
-  restartRef: 'Replay reference',
+    'Pick up your instrument and practice freely. Aria whispers — nothing is recorded. When you’re ready, move on to the performance.',
+  practiceNote: 'This is practice. Full music + synced score = the next step.',
+  refOn: 'Cue playing',
+  cutRef: 'Stop cue',
+  restartRef: 'Hear a 12s cue',
   cutWhispers: 'Mute whispers',
   reviveAria: 'Bring Aria back',
-  readyRecord: "I'm ready — go to recording",
+  readyRecord: "I'm ready — go to performance",
+  accessReturning: 'Good to see you again',
+  accessReturningLead: 'Log in or create a space — then we pick a piece.',
   micDeniedPractice:
     'Mic denied: the score can’t follow your playing. Allow the microphone to sync.',
   scrollHintRef: 'Scrolling locked to the reference — repeat = back to top',
@@ -315,7 +347,7 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   stepPlay: 'Step 2 · Play',
   performance: 'Your performance',
-  perfLead: 'Start the take: music plays and the score scrolls in time. Aria reviews this performance.',
+  perfLead: 'This is your take: music plays, the score follows tempo. Different from practice — Aria reviews this performance.',
   perfLeadMic: 'This is your take — not the reference. Aria reviews what you play now.',
   perfLeadEar: 'This is your take. Aria listens by ear to what you play on the piano.',
   startPerf: 'Start performance',

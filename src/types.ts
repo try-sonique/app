@@ -38,9 +38,12 @@ export type AppState = {
   previewAudio: string | null
   /** Audio de performance démo (V2) */
   performanceAudio: string | null
+  /** Secondes max du repère entraînement */
+  practicePeekSec: number | null
   scrollCapRatio: number | null
   repeatEverySec: number | null
   scrollDurationSec: number | null
+  scrollKeyframes: { t: number; p: number }[] | null
   arrangement: ArrangementKind
   takesUsed: number
   isRecording: boolean
@@ -66,9 +69,11 @@ export const initialState: AppState = {
   selectedPresetId: null,
   previewAudio: null,
   performanceAudio: null,
+  practicePeekSec: null,
   scrollCapRatio: null,
   repeatEverySec: null,
   scrollDurationSec: null,
+  scrollKeyframes: null,
   arrangement: null,
   takesUsed: 0,
   isRecording: false,

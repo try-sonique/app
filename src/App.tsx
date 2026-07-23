@@ -7,7 +7,8 @@ import {
   type ReactNode,
 } from 'react'
 import { PartitionViewer } from './components/PartitionViewer'
-import { analyzePerformance, useAriaCues } from './lib/aria'
+import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
+import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
 import { DEMO_PIECES, getLocale, pieceBlurb, t } from './lib/presets'
 import { formatTime, useMediaRecorder } from './lib/recorder'
@@ -179,11 +180,16 @@ function AuthSlide({
   }
 
   if (mode === 'choose') {
+    const returning = Boolean(profile.firstName.trim() || profile.email.trim())
     return (
       <section className="slide">
         <span className="eyebrow">{copy.accessEyebrow}</span>
-        <h1>{copy.haveAccount}</h1>
-        <p className="lead">{copy.haveAccountLead}</p>
+        <h1>
+          {returning
+            ? `${copy.accessReturning}${profile.firstName.trim() ? `, ${profile.firstName.trim()}` : ''}`
+            : copy.haveAccount}
+        </h1>
+        <p className="lead">{returning ? copy.accessReturningLead : copy.haveAccountLead}</p>
         <div className="choice-grid" style={{ marginInline: 'auto' }}>
           <button type="button" className="choice" onClick={() => setMode('login')}>
             {copy.login}
@@ -568,29 +574,36 @@ function NoPartitionQuestions({
 
 function PracticeStage({
   pieceName,
+  pieceId,
   partitionPreview,
   partitionMime,
   partitionName,
   previewAudio,
+  practicePeekSec,
   scrollCapRatio,
   repeatEverySec,
+  scrollKeyframes,
   onNext,
 }: {
   pieceName: string
+  pieceId: string | null
   partitionPreview: string | null
   partitionMime: string | null
   partitionName: string
   previewAudio: string | null
+  practicePeekSec?: number | null
   scrollCapRatio?: number
   repeatEverySec?: number
+  scrollKeyframes?: { t: number; p: number }[] | null
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
   const [refPlaying, setRefPlaying] = useState(false)
   const [refProgress, setRefProgress] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const cue = useAriaCues(active && !refPlaying, 'practice')
+  const cue = useAriaCues(active && !refPlaying, 'practice', pieceId)
   const { energy, denied } = usePlayEnergy(active && !refPlaying)
+  const peekSec = Math.max(6, practicePeekSec ?? 12)
 
   const stopRef = () => {
     audioRef.current?.pause()
@@ -601,7 +614,8 @@ function PracticeStage({
 
   const startRef = async () => {
     if (!previewAudio) return
-    const audio = audioRef.current ?? new Audio(previewAudio)
+    stopRef()
+    const audio = new Audio(previewAudio)
     audioRef.current = audio
     audio.onended = () => {
       setRefPlaying(false)
@@ -616,34 +630,35 @@ function PracticeStage({
     }
   }
 
-  // Continuer (slide précédente) = geste utilisateur → on lance la référence
+  // Cleanup only — no autoplay (practice ≠ performance replay)
   useEffect(() => {
-    void startRef()
     return () => {
       audioRef.current?.pause()
       audioRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewAudio])
+  }, [])
 
-  // Suit la timeline audio : avance jusqu’à la reprise, puis revient en haut
   useEffect(() => {
     if (!refPlaying) return
     const cycle = repeatEverySec ?? null
     const id = window.setInterval(() => {
       const audio = audioRef.current
       if (!audio) return
+      // Court repère : stop avant de rejouer toute la perf
+      if (audio.currentTime >= peekSec) {
+        stopRef()
+        return
+      }
       if (cycle && cycle > 0) {
-        const local = audio.currentTime % cycle
-        setRefProgress(Math.min(1, local / cycle))
+        const local = audio.currentTime % Math.min(cycle, peekSec)
+        setRefProgress(Math.min(1, local / Math.min(cycle, peekSec)))
       } else {
-        const dur =
-          Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 55
-        setRefProgress(Math.min(1, audio.currentTime / dur))
+        const tNorm = Math.min(1, audio.currentTime / peekSec)
+        setRefProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined))
       }
     }, 80)
     return () => window.clearInterval(id)
-  }, [refPlaying, repeatEverySec])
+  }, [refPlaying, repeatEverySec, peekSec, scrollKeyframes])
 
   const copy = t()
 
@@ -653,6 +668,9 @@ function PracticeStage({
         <span className="eyebrow">{copy.training}</span>
         <h1>{refPlaying ? copy.followRef : copy.yourTurn}</h1>
         <p className="lead play-lead">{refPlaying ? copy.refPlaying : copy.yourTurnLead}</p>
+        <p className="footer-note" style={{ paddingTop: 0 }}>
+          {copy.practiceNote}
+        </p>
         <div className="meta-row">
           <span>{pieceName}</span>
           {refPlaying ? <span className="ref-pill">{copy.refOn}</span> : null}
@@ -706,6 +724,7 @@ function PracticeStage({
 
 function RecordStage({
   pieceName,
+  pieceId,
   partitionPreview,
   partitionMime,
   partitionName,
@@ -715,10 +734,12 @@ function RecordStage({
   scrollCapRatio,
   repeatEverySec,
   scrollDurationSec,
+  scrollKeyframes,
   demoSync,
   onFinish,
 }: {
   pieceName: string
+  pieceId: string | null
   partitionPreview: string | null
   partitionMime: string | null
   partitionName: string
@@ -728,9 +749,10 @@ function RecordStage({
   scrollCapRatio?: number | null
   repeatEverySec?: number | null
   scrollDurationSec?: number | null
+  scrollKeyframes?: { t: number; p: number }[] | null
   /** V2 YC : joue l’audio + scroll sync au lieu d’un micro silencieux */
   demoSync?: boolean
-  onFinish: (audioBlob: Blob | null) => void
+  onFinish: (audioBlob: Blob | null, meta?: Omit<PerformanceMeta, 'features'>) => void
 }) {
   const copy = t()
   const { status, seconds, errorMessage, start, stop } = useMediaRecorder()
@@ -741,7 +763,7 @@ function RecordStage({
   const [busy, setBusy] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const recording = demoSync ? demoPlaying : micRecording
-  const cue = useAriaCues(recording, 'record')
+  const cue = useAriaCues(recording, 'record', pieceId)
   const { energy } = usePlayEnergy(!demoSync && micRecording)
   const takesLeft = MAX_TAKES - takesUsed
 
@@ -766,15 +788,24 @@ function RecordStage({
       setDemoSeconds(Math.floor(audio.currentTime))
       if (cycle && cycle > 0) {
         const local = audio.currentTime % cycle
-        setScrollProgress(Math.min(1, local / cycle))
+        const tNorm = Math.min(1, local / cycle)
+        setScrollProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined))
       } else {
         const dur =
           Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : fallbackDur
-        setScrollProgress(Math.min(1, audio.currentTime / dur))
+        const tNorm = Math.min(1, audio.currentTime / dur)
+        setScrollProgress(mapScrollProgress(tNorm, scrollKeyframes ?? undefined))
       }
     }, 80)
     return () => window.clearInterval(id)
-  }, [demoPlaying, repeatEverySec, scrollDurationSec])
+  }, [demoPlaying, repeatEverySec, scrollDurationSec, scrollKeyframes])
+
+  const buildMeta = (playedSec: number, totalSec: number | null): Omit<PerformanceMeta, 'features'> => ({
+    playedSec,
+    totalSec,
+    demoSync: Boolean(demoSync),
+    pieceId,
+  })
 
   const toggle = async () => {
     if (busy) return
@@ -782,7 +813,10 @@ function RecordStage({
     try {
       if (demoSync) {
         if (demoPlaying) {
-          // Prefer finishing with the performance track as the "take"
+          const audio = audioRef.current
+          const playedSec = audio?.currentTime ?? demoSeconds
+          const totalSec =
+            audio && Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : null
           let blob: Blob | null = null
           if (performanceAudio) {
             try {
@@ -793,16 +827,18 @@ function RecordStage({
             }
           }
           stopDemo()
-          onFinish(blob)
+          onFinish(blob, buildMeta(playedSec, totalSec))
           return
         }
         if (!performanceAudio) {
-          onFinish(null)
+          onFinish(null, buildMeta(0, null))
           return
         }
         const audio = new Audio(performanceAudio)
         audioRef.current = audio
         audio.onended = async () => {
+          const totalSec =
+            Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : null
           let blob: Blob | null = null
           try {
             const res = await fetch(performanceAudio)
@@ -811,7 +847,7 @@ function RecordStage({
             blob = null
           }
           stopDemo()
-          onFinish(blob)
+          onFinish(blob, buildMeta(totalSec ?? demoSeconds, totalSec))
         }
         await audio.play()
         setDemoPlaying(true)
@@ -821,7 +857,7 @@ function RecordStage({
 
       if (micRecording) {
         const blob = await stop()
-        onFinish(blob)
+        onFinish(blob, buildMeta(seconds, null))
         return
       }
       await start()
@@ -837,41 +873,37 @@ function RecordStage({
         <>
           <div className="play-rec-bar">
             <div className="listen-status">
-              <span className="rec-dot" />
-              {copy.listening}
+              <span className="rec-dot" aria-hidden />
+              <p className="timer">{formatTime(demoSync ? demoSeconds : seconds)}</p>
+              <span>{copy.listening}</span>
             </div>
-            <p className="timer">{formatTime(demoSync ? demoSeconds : seconds)}</p>
+            {takesLeft > 0 ? (
+              <span className="takes-pill">
+                {copy.takesLeft} {takesLeft}/{MAX_TAKES}
+              </span>
+            ) : null}
           </div>
-          {hasPartition && partitionPreview ? (
-            <div className="stage stage-score">
-              <PartitionViewer
-                src={partitionPreview}
-                mime={partitionMime}
-                name={partitionName}
-                autoScroll={recording}
-                energy={demoSync ? 0 : energy}
-                scrollProgress={demoSync ? scrollProgress : null}
-                scrollCapRatio={scrollCapRatio ?? 1}
-              />
-              {cue ? <div className={`cue-bubble good`}>{cue.text}</div> : null}
-            </div>
-          ) : cue ? (
-            <div
-              className={`cue-bubble good`}
-              style={{ position: 'relative', left: 'auto', transform: 'none', marginTop: '1rem' }}
-            >
-              {cue.text}
-            </div>
-          ) : null}
+          <div className="stage stage-score">
+            <PartitionViewer
+              src={partitionPreview}
+              mime={partitionMime}
+              name={partitionName}
+              autoScroll
+              energy={demoSync ? 0 : energy}
+              scrollProgress={demoSync ? scrollProgress : null}
+              scrollCapRatio={scrollCapRatio ?? 1}
+            />
+            {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
+          </div>
           <div className="actions play-actions">
-            <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void toggle()}>
               {copy.finishPerf}
             </button>
           </div>
         </>
       ) : (
         <>
-          <div className="welcome-core">
+          <div className="play-header">
             <h1>{copy.performance}</h1>
             <p className="lead">
               {pieceName} · {takesLeft}/{MAX_TAKES}
@@ -883,17 +915,20 @@ function RecordStage({
                   ? copy.perfLeadMic
                   : copy.perfLeadEar}
             </p>
-            <div className="actions play-actions">
-              <button type="button" className="btn btn-hero" onClick={toggle} disabled={busy}>
-                <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
-                {demoSync ? copy.startPerf : copy.startMic}
+          </div>
+          <div className="actions">
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void toggle()}>
+              {demoSync ? copy.startPerf : copy.startMic}
+            </button>
+            {!demoSync ? (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => onFinish(null, buildMeta(0, null))}
+              >
+                {copy.continueWithoutMic}
               </button>
-              {!demoSync ? (
-                <button type="button" className="btn btn-ghost" onClick={() => onFinish(null)}>
-                  {copy.continueWithoutMic}
-                </button>
-              ) : null}
-            </div>
+            ) : null}
             {errorMessage && !demoSync ? (
               <p className="footer-note" style={{ paddingTop: '1rem', color: 'var(--warn)' }}>
                 {errorMessage}
@@ -911,12 +946,21 @@ function RecordStage({
   )
 }
 
-function Analyzing({ firstName, onDone }: { firstName: string; onDone: () => void }) {
+function Analyzing({
+  firstName,
+  ready,
+  onDone,
+}: {
+  firstName: string
+  ready: boolean
+  onDone: () => void
+}) {
   const copy = t()
   useEffect(() => {
-    const id = window.setTimeout(onDone, 1800)
+    if (!ready) return
+    const id = window.setTimeout(onDone, 900)
     return () => window.clearTimeout(id)
-  }, [onDone])
+  }, [onDone, ready])
 
   return (
     <section className="slide">
@@ -1135,32 +1179,47 @@ export default function App() {
   const go = (slide: number) => setState((s) => ({ ...s, slide }))
   const patch = (partial: Partial<AppState>) => setState((s) => ({ ...s, ...partial }))
 
-  const finishTake = (audioBlob: Blob | null) => {
-    setState((s) => {
-      const takesUsed = s.takesUsed + 1
-      const feedback = analyzePerformance({
-        pieceName: s.pieceName,
-        hasPartition: s.hasPartition === true,
-        firstName: s.profile.firstName,
-        arrangement: s.arrangement,
-        takesUsed,
-        maxTakes: MAX_TAKES,
+  const finishTake = (
+    audioBlob: Blob | null,
+    meta?: Omit<PerformanceMeta, 'features'>,
+  ) => {
+    const analyzeSlide = state.hasPartition === false ? 6 : 7
+    setState((s) => ({ ...s, slide: analyzeSlide, isRecording: false, feedback: null }))
+    void (async () => {
+      const features = await extractAudioFeatures(audioBlob)
+      setState((s) => {
+        const takesUsed = s.takesUsed + 1
+        const fullMeta: PerformanceMeta = {
+          playedSec: meta?.playedSec ?? 0,
+          totalSec: meta?.totalSec ?? null,
+          demoSync: meta?.demoSync ?? false,
+          pieceId: meta?.pieceId ?? s.selectedPresetId,
+          features,
+        }
+        const feedback = analyzePerformance({
+          pieceName: s.pieceName,
+          hasPartition: s.hasPartition === true,
+          firstName: s.profile.firstName,
+          arrangement: s.arrangement,
+          takesUsed,
+          maxTakes: MAX_TAKES,
+          meta: fullMeta,
+        })
+        const saved = saveSession({
+          email: s.profile.email,
+          pieceName: s.pieceName,
+          hasPartition: s.hasPartition === true,
+          feedbackHeadline: feedback.headline,
+          takeNumber: takesUsed,
+          feedback,
+          hasAudio: Boolean(audioBlob),
+        })
+        if (audioBlob) {
+          void saveRecordingBlob(saved.id, audioBlob)
+        }
+        return { ...s, takesUsed, feedback }
       })
-      const saved = saveSession({
-        email: s.profile.email,
-        pieceName: s.pieceName,
-        hasPartition: s.hasPartition === true,
-        feedbackHeadline: feedback.headline,
-        takeNumber: takesUsed,
-        feedback,
-        hasAudio: Boolean(audioBlob),
-      })
-      if (audioBlob) {
-        void saveRecordingBlob(saved.id, audioBlob)
-      }
-      const analyzeSlide = s.hasPartition === false ? 6 : 7
-      return { ...s, takesUsed, feedback, slide: analyzeSlide, isRecording: false }
-    })
+    })()
   }
 
   const afterAnalyze = useCallback(() => {
@@ -1192,9 +1251,11 @@ export default function App() {
         selectedPresetId: null,
         previewAudio: null,
         performanceAudio: null,
+        practicePeekSec: null,
         scrollCapRatio: null,
         repeatEverySec: null,
         scrollDurationSec: null,
+        scrollKeyframes: null,
         hasPartition: null,
         arrangement: null,
         takesUsed: 0,
@@ -1215,11 +1276,14 @@ export default function App() {
         partitionPreview: piece.partitionSrc,
         partitionMime: piece.mime,
         selectedPresetId: piece.id,
-        previewAudio: piece.audioSrc ?? null,
+        // Peek source only (short cue) — full track reserved for performance
+        previewAudio: piece.audioSrc ?? piece.performanceAudioSrc ?? null,
         performanceAudio: piece.performanceAudioSrc ?? piece.audioSrc ?? null,
+        practicePeekSec: piece.practicePeekSec ?? 12,
         scrollCapRatio: piece.scrollCapRatio ?? null,
         repeatEverySec: piece.repeatEverySec ?? null,
         scrollDurationSec: piece.scrollDurationSec ?? null,
+        scrollKeyframes: piece.scrollKeyframes ?? null,
         hasPartition: true,
       }
     })
@@ -1286,7 +1350,7 @@ export default function App() {
   } else if (state.slide === 1)
     body = (
       <Welcome
-        onNext={() => go(state.profile.email.trim() ? 3 : 2)}
+        onNext={() => go(2)}
       />
     )
   else if (state.slide === 2) {
@@ -1347,12 +1411,15 @@ export default function App() {
     body = (
       <PracticeStage
         pieceName={state.pieceName}
+        pieceId={state.selectedPresetId}
         partitionPreview={state.partitionPreview}
         partitionMime={state.partitionMime}
         partitionName={state.partitionName}
         previewAudio={state.previewAudio}
+        practicePeekSec={state.practicePeekSec}
         scrollCapRatio={state.scrollCapRatio ?? undefined}
         repeatEverySec={state.repeatEverySec ?? undefined}
+        scrollKeyframes={state.scrollKeyframes}
         onNext={() => go(6)}
       />
     )
@@ -1360,6 +1427,7 @@ export default function App() {
     body = (
       <RecordStage
         pieceName={state.pieceName}
+        pieceId={state.selectedPresetId}
         partitionPreview={null}
         partitionMime={null}
         partitionName=""
@@ -1373,6 +1441,7 @@ export default function App() {
     body = (
       <RecordStage
         pieceName={state.pieceName}
+        pieceId={state.selectedPresetId}
         partitionPreview={state.partitionPreview}
         partitionMime={state.partitionMime}
         partitionName={state.partitionName}
@@ -1382,14 +1451,27 @@ export default function App() {
         scrollCapRatio={state.scrollCapRatio}
         repeatEverySec={state.repeatEverySec}
         scrollDurationSec={state.scrollDurationSec}
+        scrollKeyframes={state.scrollKeyframes}
         demoSync={IS_YC_FLOW}
         onFinish={finishTake}
       />
     )
   } else if (state.slide === 6 && !withPartition) {
-    body = <Analyzing firstName={state.profile.firstName} onDone={afterAnalyze} />
+    body = (
+      <Analyzing
+        firstName={state.profile.firstName}
+        ready={Boolean(state.feedback)}
+        onDone={afterAnalyze}
+      />
+    )
   } else if (state.slide === 7 && withPartition) {
-    body = <Analyzing firstName={state.profile.firstName} onDone={afterAnalyze} />
+    body = (
+      <Analyzing
+        firstName={state.profile.firstName}
+        ready={Boolean(state.feedback)}
+        onDone={afterAnalyze}
+      />
+    )
   } else if (state.slide === 7 && !withPartition) {
     body = <Report state={state} onReplay={replay} onNewPiece={newPiece} onOpenHistory={() => setShowHistory(true)} />
   } else if (state.slide === 8 && withPartition) {
