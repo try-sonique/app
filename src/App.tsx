@@ -134,49 +134,8 @@ function FooterLine({ withPartition }: { withPartition?: boolean }) {
 
 function Welcome({ onNext }: { onNext: () => void }) {
   const copy = t()
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  useEffect(() => {
-    const audio = new Audio('./presets/lettre-a-elise.mp3')
-    audio.loop = true
-    audio.volume = 0.28
-    audioRef.current = audio
-    const tryPlay = () => {
-      void audio.play().catch(() => {
-        /* autoplay may be blocked until a gesture */
-      })
-    }
-    tryPlay()
-    const unlock = () => {
-      tryPlay()
-      window.removeEventListener('pointerdown', unlock)
-    }
-    window.addEventListener('pointerdown', unlock)
-    return () => {
-      window.removeEventListener('pointerdown', unlock)
-      audio.pause()
-      audio.src = ''
-      audioRef.current = null
-    }
-  }, [])
 
   const go = () => {
-    const audio = audioRef.current
-    if (audio) {
-      // short fade then stop so Get Started feels intentional with the VO
-      const startVol = audio.volume
-      const t0 = performance.now()
-      const fade = (now: number) => {
-        const u = Math.min(1, (now - t0) / 350)
-        audio.volume = startVol * (1 - u)
-        if (u < 1) requestAnimationFrame(fade)
-        else {
-          audio.pause()
-          audio.currentTime = 0
-        }
-      }
-      requestAnimationFrame(fade)
-    }
     onNext()
   }
 
