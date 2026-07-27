@@ -138,7 +138,7 @@ const FR = {
   // Piece pick
   choosePiece: 'Choisis un morceau',
   chooseLead:
-    'Choisis un titre prêt, ou importe ta partition — ou continue sans.',
+    'Choisis un titre prêt avec sa partition, ou importe la tienne — tu joueras avec à l’écran.',
   downloadScore: 'Télécharger la partition',
   orUploadOwn: 'Ou importe ta propre partition',
   backToPresets: 'Retour aux morceaux proposés',
@@ -148,20 +148,21 @@ const FR = {
   withScore: 'Avec partition',
   howTitle: 'Comment ça marche',
   howLead:
-    'Sur Sonique, Aria t’accompagne pas à pas avant l’enregistrement — pour corriger sans te juger.',
+    'Sur Sonique, tu joues avec ta partition à l’écran. Aria t’accompagne avant l’enregistrement — pour corriger sans te juger.',
   howStep1Title: 'Choisis le passage travaillé',
   howStep1Body: 'On ne traite pas toute la partition d’un coup.',
-  howStep2Title: 'Entraîne-toi librement',
-  howStep2Body: 'Prends ton instrument et joue — aussi longtemps que tu veux, sans enregistrer.',
+  howStep2Title: 'Entraîne-toi avec ta partition',
+  howStep2Body:
+    'La partition reste à l’écran et suit ton jeu. Prends ton instrument — aussi longtemps que tu veux, sans enregistrer.',
   howStep3Title: 'Aria chuchote en live',
   howStep3Body: 'Tempo, rythme… elle te le dit pendant que tu joues.',
   howStep4Title: 'Enregistre une trace',
-  howStep4Body: 'Quand tu es prêt·e, passe à l’enregistrement pour garder ta prise.',
+  howStep4Body: 'Quand tu es prêt·e, passe à l’enregistrement — partition syncée sur ta prise.',
   howStep5Title: 'Reçois ton retour',
   howStep5Body: 'Max 3 essais par morceau, pour digérer ce qu’Aria t’a dit.',
   goToPractice: 'Passer à l’entraînement',
 
-  // No partition
+  // No partition (legacy copy keys kept for type parity)
   noScoreEyebrow: 'Sans partition',
   noScoreTitle: 'Aide Sonique à t’écouter',
   noScoreLead:
@@ -174,8 +175,7 @@ const FR = {
 
   // Classic setup
   classicTitle: 'Quel morceau vas-tu travailler ?',
-  classicLead:
-    'Importe ta partition, ou continue sans — Aria s’adapte. Au piano.',
+  classicLead: 'Importe ta partition — tu t’entraîneras et joueras avec elle à l’écran.',
   pieceNameLabel: 'Nom du morceau',
   pieceNamePlaceholder: 'Ex. Clair de Lune',
   dropScore: 'Glisse ta partition ici, ou choisis un fichier',
@@ -184,8 +184,8 @@ const FR = {
   previewLabel: 'Aperçu de ta partition',
   noScoreContinue: 'Je n’ai pas de partition — continuer quand même',
   noScoreContinueHint: 'Aria écoutera à l’oreille.',
-  noScoreStageTitle: 'Pas de partition à l’écran',
-  noScoreStageBody: 'Tu joues librement — Aria chuchote. Rien n’est enregistré ici.',
+  noScoreStageTitle: 'Charge ta partition pour continuer',
+  noScoreStageBody: 'Sonique est fait pour jouer avec ta partition à l’écran.',
   historyBack: 'Retour',
 
   // Practice
@@ -195,8 +195,9 @@ const FR = {
   refPlaying:
     'Repère court (quelques secondes) — juste pour te placer. Ce n’est pas ta prise.',
   yourTurnLead:
-    'Prends ton instrument et entraîne-toi librement. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, tu passes à la performance.',
-  practiceNote: 'Ici : entraînement. La musique complète + partition sync = l’étape suivante.',
+    'Joue avec ta partition à l’écran. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, tu passes à la performance.',
+  practiceNote:
+    'Ta partition suit ton jeu : silence = pause, tu joues = elle descend. La prise syncée = l’étape suivante.',
   practiceNoteNoScore:
     'Ici : entraînement — rien n’est enregistré. Quand tu es prêt·e, passe à ta prise.',
   refOn: 'Repère en cours',
@@ -299,7 +300,7 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   choosePiece: 'Choose a piece',
   chooseLead:
-    'Pick a ready piece for a quick try, upload your own score, or continue without one.',
+    'Pick a ready piece with its score on screen, or upload yours — you play with the score.',
   downloadScore: 'Download score',
   orUploadOwn: 'Or upload your own score',
   backToPresets: 'Back to suggested pieces',
@@ -307,15 +308,17 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   withScore: 'With score',
   howTitle: 'How it works',
-  howLead: 'On Sonique, Aria guides you step by step before recording — to correct without judging.',
+  howLead:
+    'On Sonique, you play with your score on screen. Aria guides you before recording — to correct without judging.',
   howStep1Title: 'Pick the passage you’re working on',
   howStep1Body: 'We don’t tackle the whole score at once.',
-  howStep2Title: 'Practice freely',
-  howStep2Body: 'Pick up your instrument and play — as long as you want, nothing is recorded.',
+  howStep2Title: 'Practice with your score',
+  howStep2Body:
+    'Your score stays on screen and follows your playing. Pick up your instrument — as long as you want, nothing is recorded.',
   howStep3Title: 'Aria whispers live',
   howStep3Body: 'Tempo, rhythm… she flags it while you play.',
   howStep4Title: 'Record a take',
-  howStep4Body: 'When you’re ready, move on to recording to keep today’s performance.',
+  howStep4Body: 'When you’re ready, move on to recording — score synced to your take.',
   howStep5Title: 'Get your feedback',
   howStep5Body: 'Max 3 takes per piece, so you can digest what Aria said.',
   goToPractice: 'Go to practice',
@@ -330,7 +333,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   startRecording: 'Start recording',
 
   classicTitle: 'Which piece will you work on?',
-  classicLead: 'Upload your score, or continue without — Aria adapts.',
+  classicLead: 'Upload your score — you’ll practice and perform with it on screen.',
   pieceNameLabel: 'Piece name',
   pieceNamePlaceholder: 'e.g. Clair de Lune',
   dropScore: 'Drop your score here, or choose a file',
@@ -339,8 +342,8 @@ const EN: { [K in keyof typeof FR]: string } = {
   previewLabel: 'Score preview',
   noScoreContinue: 'I don’t have a score — continue anyway',
   noScoreContinueHint: 'Aria will listen by ear.',
-  noScoreStageTitle: 'No score on screen',
-  noScoreStageBody: 'Practice freely — Aria whispers. Nothing is recorded here.',
+  noScoreStageTitle: 'Upload a score to continue',
+  noScoreStageBody: 'Sonique is built to play with your score on screen.',
   historyBack: 'Back',
 
   training: 'Step 2 · Practice',
@@ -348,8 +351,9 @@ const EN: { [K in keyof typeof FR]: string } = {
   yourTurn: 'Practice room',
   refPlaying: 'Short cue (a few seconds) — just to get oriented. This is not your take.',
   yourTurnLead:
-    'Pick up your instrument and practice freely. Aria whispers — nothing is recorded. When you’re ready, move on to the performance.',
-  practiceNote: 'This is practice. Full music + synced score = the next step.',
+    'Play with your score on screen. Aria whispers — nothing is recorded. When you’re ready, move on to the performance.',
+  practiceNote:
+    'Your score follows your playing: silence = pause, you play = it moves down. Synced take = next step.',
   practiceNoteNoScore:
     'This is practice — nothing is recorded. When you’re ready, move on to your take.',
   refOn: 'Cue playing',
