@@ -11,6 +11,17 @@ import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/ari
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
 import { DEMO_PIECES, getLocale, pieceBlurb, t } from './lib/presets'
+
+function downloadScoreFile(src: string, title: string) {
+  const ext = src.includes('.png') ? 'png' : src.includes('.pdf') ? 'pdf' : 'jpg'
+  const a = document.createElement('a')
+  a.href = src
+  a.download = `${title.replace(/[^\w]+/g, '-').toLowerCase()}-score.${ext}`
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
   findProfileByEmail,
@@ -493,16 +504,26 @@ function PieceSetupYC({
         {DEMO_PIECES.map((p) => {
           const active = selectedPresetId === p.id
           return (
-            <button
-              key={p.id}
-              type="button"
-              role="listitem"
-              className={`preset-card ${active ? 'active' : ''}`}
-              onClick={() => onSelectPreset(p.id)}
-            >
-              <strong>{p.title}</strong>
-              <span>{pieceBlurb(p)}</span>
-            </button>
+            <div key={p.id} className={`preset-card-wrap ${active ? 'active' : ''}`} role="listitem">
+              <button
+                type="button"
+                className={`preset-card ${active ? 'active' : ''}`}
+                onClick={() => onSelectPreset(p.id)}
+              >
+                <strong>{p.title}</strong>
+                <span>{pieceBlurb(p)}</span>
+              </button>
+              <button
+                type="button"
+                className="btn-download-score"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  downloadScoreFile(p.partitionSrc, p.title)
+                }}
+              >
+                {copy.downloadScore}
+              </button>
+            </div>
           )
         })}
       </div>
@@ -740,6 +761,15 @@ function PracticeStage({
         </p>
       ) : null}
       <div className="actions play-actions">
+        {partitionPreview ? (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => downloadScoreFile(partitionPreview, pieceName)}
+          >
+            {copy.downloadScore}
+          </button>
+        ) : null}
         {previewAudio ? (
           <button
             type="button"

@@ -139,6 +139,7 @@ const FR = {
   choosePiece: 'Choisis un morceau',
   chooseLead:
     'Trois titres connus, partitions prêtes. Au piano — idéal pour une démo rapide.',
+  downloadScore: 'Télécharger la partition',
   stepPiece: 'Étape 1 · Morceau',
 
   // How it works
@@ -292,6 +293,7 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   choosePiece: 'Choose a piece',
   chooseLead: 'Three well-known pieces with sheet music ready. Piano only — perfect for a quick demo.',
+  downloadScore: 'Download score',
   stepPiece: 'Step 1 · Piece',
 
   withScore: 'With score',
