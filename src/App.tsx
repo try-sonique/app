@@ -86,12 +86,8 @@ function ThemeDock({
 
 type Phase = 'partition' | 'jouer' | 'retour'
 
-function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
-  if (hasPartition === false) {
-    if (slide <= 4) return 'partition'
-    if (slide <= 5) return 'jouer'
-    return 'retour'
-  }
+function phaseFromSlide(slide: number, _hasPartition: boolean | null): Phase {
+  // Same phases with or without score: setup → practice/record → feedback
   if (slide <= 4) return 'partition'
   if (slide <= 6) return 'jouer'
   return 'retour'
@@ -533,8 +529,7 @@ function NoPartitionQuestions({
       </div>
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!arrangement} onClick={onNext}>
-          <span style={{ color: 'var(--rec)', marginRight: '0.45rem' }}>●</span>
-          {copy.startRecording}
+          {copy.goToPractice}
         </button>
       </div>
       <FooterLine />
@@ -639,7 +634,7 @@ function PracticeStage({
         <h1>{refPlaying ? copy.followRef : copy.yourTurn}</h1>
         <p className="lead play-lead">{refPlaying ? copy.refPlaying : copy.yourTurnLead}</p>
         <p className="footer-note" style={{ paddingTop: 0 }}>
-          {copy.practiceNote}
+          {partitionPreview ? copy.practiceNote : copy.practiceNoteNoScore}
         </p>
         <div className="meta-row">
           <span>{pieceName}</span>
@@ -1179,7 +1174,7 @@ export default function App() {
     audioBlob: Blob | null,
     meta?: Omit<PerformanceMeta, 'features'>,
   ) => {
-    const analyzeSlide = state.hasPartition === false ? 6 : 7
+    const analyzeSlide = 7
     setState((s) => ({ ...s, slide: analyzeSlide, isRecording: false, feedback: null }))
     void (async () => {
       const features = await extractAudioFeatures(audioBlob)
@@ -1219,13 +1214,13 @@ export default function App() {
   }
 
   const afterAnalyze = useCallback(() => {
-    setState((s) => ({ ...s, slide: s.hasPartition === false ? 7 : 8 }))
+    setState((s) => ({ ...s, slide: 8 }))
   }, [])
 
   const replay = () => {
     setState((s) => ({
       ...s,
-      slide: s.hasPartition === false ? 5 : 6,
+      slide: 6,
       feedback: null,
     }))
   }
@@ -1311,7 +1306,7 @@ export default function App() {
             setState((s) => ({
               ...s,
               feedback,
-              slide: s.hasPartition === false ? 7 : 8,
+              slide: 8,
             }))
           }
           setShowHistory(false)
@@ -1378,34 +1373,20 @@ export default function App() {
         onNext={() => go(5)}
       />
     )
-  } else if (state.slide === 5 && withPartition) {
+  } else if (state.slide === 5) {
     body = (
       <PracticeStage
         pieceName={state.pieceName}
         pieceId={state.selectedPresetId}
-        partitionPreview={state.partitionPreview}
-        partitionMime={state.partitionMime}
-        partitionName={state.partitionName}
+        partitionPreview={state.hasPartition === false ? null : state.partitionPreview}
+        partitionMime={state.hasPartition === false ? null : state.partitionMime}
+        partitionName={state.hasPartition === false ? '' : state.partitionName}
         previewAudio={state.previewAudio}
         practicePeekSec={state.practicePeekSec}
         scrollCapRatio={state.scrollCapRatio ?? undefined}
         repeatEverySec={state.repeatEverySec ?? undefined}
         scrollKeyframes={state.scrollKeyframes}
         onNext={() => go(6)}
-      />
-    )
-  } else if (state.slide === 5 && !withPartition) {
-    body = (
-      <RecordStage
-        pieceName={state.pieceName}
-        pieceId={state.selectedPresetId}
-        partitionPreview={null}
-        partitionMime={null}
-        partitionName=""
-        hasPartition={false}
-        takesUsed={state.takesUsed}
-        demoSync={false}
-        onFinish={finishTake}
       />
     )
   } else if (state.slide === 6 && withPartition) {
@@ -1429,13 +1410,19 @@ export default function App() {
     )
   } else if (state.slide === 6 && !withPartition) {
     body = (
-      <Analyzing
-        firstName={state.profile.firstName}
-        ready={Boolean(state.feedback)}
-        onDone={afterAnalyze}
+      <RecordStage
+        pieceName={state.pieceName}
+        pieceId={state.selectedPresetId}
+        partitionPreview={null}
+        partitionMime={null}
+        partitionName=""
+        hasPartition={false}
+        takesUsed={state.takesUsed}
+        demoSync={false}
+        onFinish={finishTake}
       />
     )
-  } else if (state.slide === 7 && withPartition) {
+  } else if (state.slide === 7) {
     body = (
       <Analyzing
         firstName={state.profile.firstName}
@@ -1443,10 +1430,15 @@ export default function App() {
         onDone={afterAnalyze}
       />
     )
-  } else if (state.slide === 7 && !withPartition) {
-    body = <Report state={state} onReplay={replay} onNewPiece={newPiece} onOpenHistory={() => setShowHistory(true)} />
-  } else if (state.slide === 8 && withPartition) {
-    body = <Report state={state} onReplay={replay} onNewPiece={newPiece} onOpenHistory={() => setShowHistory(true)} />
+  } else if (state.slide === 8) {
+    body = (
+      <Report
+        state={state}
+        onReplay={replay}
+        onNewPiece={newPiece}
+        onOpenHistory={() => setShowHistory(true)}
+      />
+    )
   }
 
   return (

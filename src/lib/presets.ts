@@ -195,6 +195,8 @@ const FR = {
   yourTurnLead:
     'Prends ton instrument et entraîne-toi librement. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, tu passes à la performance.',
   practiceNote: 'Ici : entraînement. La musique complète + partition sync = l’étape suivante.',
+  practiceNoteNoScore:
+    'Ici : entraînement — rien n’est enregistré. Quand tu es prêt·e, passe à ta prise.',
   refOn: 'Repère en cours',
   cutRef: 'Arrêter le repère',
   restartRef: 'Écouter 12s de repère',
@@ -344,6 +346,8 @@ const EN: { [K in keyof typeof FR]: string } = {
   yourTurnLead:
     'Pick up your instrument and practice freely. Aria whispers — nothing is recorded. When you’re ready, move on to the performance.',
   practiceNote: 'This is practice. Full music + synced score = the next step.',
+  practiceNoteNoScore:
+    'This is practice — nothing is recorded. When you’re ready, move on to your take.',
   refOn: 'Cue playing',
   cutRef: 'Stop cue',
   restartRef: 'Hear a 12s cue',
