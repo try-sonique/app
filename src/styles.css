@@ -1108,6 +1108,43 @@ h2 {
   padding: 1.25rem;
 }
 
+.sheet-empty {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 40%),
+    repeating-linear-gradient(
+      transparent,
+      transparent 52px,
+      rgba(40, 32, 18, 0.08) 52px,
+      rgba(40, 32, 18, 0.08) 53px
+    ),
+    #f7f2e8;
+  color: rgba(28, 22, 12, 0.78);
+}
+
+.sheet-empty-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: rgba(18, 14, 8, 0.92);
+}
+
+.sheet-empty-body {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(28, 22, 12, 0.68);
+}
+
 .history-list {
   width: min(100%, 36rem);
   display: flex;

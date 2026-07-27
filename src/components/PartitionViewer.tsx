@@ -99,25 +99,21 @@ export function PartitionViewer({
     >
       <div ref={innerRef} className="partition-scroll-inner">
         {!src ? (
-          <div className="sheet-lines tall">
-            {Array.from({ length: compact ? 14 : 22 }, (_, i) => (
-              <div className="staff" key={i} />
-            ))}
+          <div className="sheet-empty">
+            <p className="sheet-empty-title">{t().noScoreStageTitle}</p>
+            <p className="sheet-empty-body">{t().noScoreStageBody}</p>
           </div>
         ) : isPdf ? (
-          <object
+          <iframe
             className="partition-pdf-doc"
-            data={`${src}#toolbar=0&navpanes=0`}
-            type="application/pdf"
-            aria-label={name ? `Partition ${name}` : 'Partition PDF'}
-          >
-            <iframe className="partition-pdf-doc" src={src} title={name || 'Partition PDF'} />
-          </object>
+            src={src}
+            title={name || 'Score PDF'}
+          />
         ) : (
           <img
             className="partition-image"
             src={src}
-            alt={name ? `Partition ${name}` : 'Partition importée'}
+            alt={name ? `Score ${name}` : 'Uploaded score'}
           />
         )}
       </div>

@@ -184,6 +184,8 @@ const FR = {
   previewLabel: 'Aperçu de ta partition',
   noScoreContinue: 'Je n’ai pas de partition — continuer quand même',
   noScoreContinueHint: 'Aria écoutera à l’oreille.',
+  noScoreStageTitle: 'Pas de partition à l’écran',
+  noScoreStageBody: 'Tu joues librement — Aria chuchote. Rien n’est enregistré ici.',
   historyBack: 'Retour',
 
   // Practice
@@ -297,7 +299,7 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   choosePiece: 'Choose a piece',
   chooseLead:
-    'Pick a ready piece, or upload your own score — or continue without one.',
+    'Pick a ready piece for a quick try, upload your own score, or continue without one.',
   downloadScore: 'Download score',
   orUploadOwn: 'Or upload your own score',
   backToPresets: 'Back to suggested pieces',
@@ -337,6 +339,8 @@ const EN: { [K in keyof typeof FR]: string } = {
   previewLabel: 'Score preview',
   noScoreContinue: 'I don’t have a score — continue anyway',
   noScoreContinueHint: 'Aria will listen by ear.',
+  noScoreStageTitle: 'No score on screen',
+  noScoreStageBody: 'Practice freely — Aria whispers. Nothing is recorded here.',
   historyBack: 'Back',
 
   training: 'Step 2 · Practice',
