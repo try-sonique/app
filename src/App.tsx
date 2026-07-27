@@ -10,7 +10,7 @@ import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
-import { DEMO_PIECES, getLocale, pieceBlurb, t } from './lib/presets'
+import { getLocale, t } from './lib/presets'
 
 function downloadScoreFile(src: string, title: string) {
   const ext = src.includes('.png') ? 'png' : src.includes('.pdf') ? 'pdf' : 'jpg'
@@ -437,180 +437,6 @@ function PieceSetupClassic({
         </button>
       </div>
       <FooterLine withPartition={!noPartition} />
-    </section>
-  )
-}
-
-function PieceSetupYC({
-  selectedPresetId,
-  pieceName,
-  hasPartition,
-  partitionName,
-  partitionPreview,
-  partitionMime,
-  onSelectPreset,
-  onPieceName,
-  onToggleNoPartition,
-  onUpload,
-  onNext,
-}: {
-  selectedPresetId: string | null
-  pieceName: string
-  hasPartition: boolean | null
-  partitionName: string
-  partitionPreview: string | null
-  partitionMime: string | null
-  onSelectPreset: (id: string) => void
-  onPieceName: (v: string) => void
-  onToggleNoPartition: (checked: boolean) => void
-  onUpload: (file: File | null) => void
-  onNext: () => void
-}) {
-  const [mode, setMode] = useState<'presets' | 'upload'>('presets')
-  const copy = t()
-  const noPartition = hasPartition === false
-  const canContinuePresets = Boolean(selectedPresetId)
-  const canContinueUpload =
-    pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
-
-  if (mode === 'upload') {
-    return (
-      <section className="slide slide-left">
-        <span className="eyebrow">{copy.stepPiece}</span>
-        <h1>{copy.classicTitle}</h1>
-        <p className="lead">{copy.classicLead}</p>
-
-        <div className="stack">
-          <label className="field">
-            <span>{copy.pieceNameLabel}</span>
-            <input
-              type="text"
-              value={pieceName}
-              onChange={(e) => onPieceName(e.target.value)}
-              placeholder={copy.pieceNamePlaceholder}
-            />
-          </label>
-
-          <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
-            <div className="upload-icon" aria-hidden>
-              ♫
-            </div>
-            <strong>{copy.dropScore}</strong>
-            <p className="lead" style={{ margin: 0 }}>
-              {copy.uploadHint}
-            </p>
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              disabled={noPartition}
-              onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
-            />
-            {partitionName && !noPartition ? (
-              <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
-                {copy.fileLabel} : {partitionName}
-              </p>
-            ) : null}
-          </div>
-
-          {!noPartition && partitionPreview ? (
-            <div className="stage partition-stage">
-              <p className="partition-label">{copy.previewLabel}</p>
-              <PartitionViewer
-                src={partitionPreview}
-                mime={partitionMime}
-                name={partitionName}
-              />
-            </div>
-          ) : null}
-
-          <label className="check-row">
-            <input
-              type="checkbox"
-              checked={noPartition}
-              onChange={(e) => onToggleNoPartition(e.target.checked)}
-            />
-            <div>
-              <strong>{copy.noScoreContinue}</strong>
-              <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-                {copy.noScoreContinueHint}
-              </p>
-            </div>
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="button" className="btn btn-ghost" onClick={() => setMode('presets')}>
-            {copy.backToPresets}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!canContinueUpload}
-            onClick={onNext}
-          >
-            {copy.continue}
-          </button>
-        </div>
-        <FooterLine withPartition={!noPartition} />
-      </section>
-    )
-  }
-
-  return (
-    <section className="slide slide-left">
-      <span className="eyebrow">{copy.stepPiece}</span>
-      <h1>{copy.choosePiece}</h1>
-      <p className="lead">{copy.chooseLead}</p>
-
-      <div className="preset-grid" role="list">
-        {DEMO_PIECES.map((p) => {
-          const active = selectedPresetId === p.id
-          return (
-            <div key={p.id} className={`preset-card-wrap ${active ? 'active' : ''}`} role="listitem">
-              <button
-                type="button"
-                className={`preset-card ${active ? 'active' : ''}`}
-                onClick={() => onSelectPreset(p.id)}
-              >
-                <strong>{p.title}</strong>
-                <span>{pieceBlurb(p)}</span>
-              </button>
-              <button
-                type="button"
-                className="btn-download-score"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  downloadScoreFile(p.partitionSrc, p.title)
-                }}
-              >
-                {copy.downloadScore}
-              </button>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="actions" style={{ flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => {
-            onToggleNoPartition(false)
-            setMode('upload')
-          }}
-        >
-          {copy.orUploadOwn}
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={!canContinuePresets}
-          onClick={onNext}
-        >
-          {copy.continue}
-        </button>
-      </div>
-      <FooterLine withPartition />
     </section>
   )
 }
@@ -1434,31 +1260,6 @@ export default function App() {
     })
   }
 
-  const onSelectPreset = (id: string) => {
-    const piece = DEMO_PIECES.find((p) => p.id === id)
-    if (!piece) return
-    setState((s) => {
-      revokeIfBlob(s.partitionPreview)
-      return {
-        ...s,
-        pieceName: piece.title,
-        partitionName: `${piece.title}`,
-        partitionPreview: piece.partitionSrc,
-        partitionMime: piece.mime,
-        selectedPresetId: piece.id,
-        // Peek source only (short cue) — full track reserved for performance
-        previewAudio: piece.audioSrc ?? piece.performanceAudioSrc ?? null,
-        performanceAudio: piece.performanceAudioSrc ?? piece.audioSrc ?? null,
-        practicePeekSec: piece.practicePeekSec ?? 12,
-        scrollCapRatio: piece.scrollCapRatio ?? null,
-        repeatEverySec: piece.repeatEverySec ?? null,
-        scrollDurationSec: piece.scrollDurationSec ?? null,
-        scrollKeyframes: piece.scrollKeyframes ?? null,
-        hasPartition: true,
-      }
-    })
-  }
-
   const onUpload = (file: File | null) => {
     setState((s) => {
       revokeIfBlob(s.partitionPreview)
@@ -1535,40 +1336,7 @@ export default function App() {
       />
     )
   } else if (state.slide === 3) {
-    body = IS_YC_FLOW ? (
-      <PieceSetupYC
-        selectedPresetId={state.selectedPresetId}
-        pieceName={state.pieceName}
-        hasPartition={state.hasPartition}
-        partitionName={state.partitionName}
-        partitionPreview={state.partitionPreview}
-        partitionMime={state.partitionMime}
-        onSelectPreset={onSelectPreset}
-        onPieceName={(pieceName) => patch({ pieceName })}
-        onToggleNoPartition={(checked) =>
-          setState((s) => {
-            if (checked) revokeIfBlob(s.partitionPreview)
-            return {
-              ...s,
-              hasPartition: checked ? false : s.partitionName ? true : null,
-              partitionName: checked ? '' : s.partitionName,
-              partitionPreview: checked ? null : s.partitionPreview,
-              partitionMime: checked ? null : s.partitionMime,
-              selectedPresetId: null,
-              previewAudio: null,
-              performanceAudio: null,
-              practicePeekSec: null,
-              scrollCapRatio: null,
-              repeatEverySec: null,
-              scrollDurationSec: null,
-              scrollKeyframes: null,
-            }
-          })
-        }
-        onUpload={onUpload}
-        onNext={() => go(4)}
-      />
-    ) : (
+    body = (
       <PieceSetupClassic
         pieceName={state.pieceName}
         hasPartition={state.hasPartition}
@@ -1587,6 +1355,12 @@ export default function App() {
               partitionMime: checked ? null : s.partitionMime,
               selectedPresetId: null,
               previewAudio: null,
+              performanceAudio: null,
+              practicePeekSec: null,
+              scrollCapRatio: null,
+              repeatEverySec: null,
+              scrollDurationSec: null,
+              scrollKeyframes: null,
             }
           })
         }

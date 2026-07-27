@@ -326,7 +326,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   startRecording: 'Start recording',
 
   classicTitle: 'Which piece will you work on?',
-  classicLead: 'Upload your score, or continue without — Aria adapts. Piano only.',
+  classicLead: 'Upload your score, or continue without — Aria adapts.',
   pieceNameLabel: 'Piece name',
   pieceNamePlaceholder: 'e.g. Clair de Lune',
   dropScore: 'Drop your score here, or choose a file',
