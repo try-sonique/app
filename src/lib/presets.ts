@@ -138,8 +138,10 @@ const FR = {
   // Piece pick
   choosePiece: 'Choisis un morceau',
   chooseLead:
-    'Trois titres connus, partitions prêtes. Au piano — idéal pour une démo rapide.',
+    'Choisis un titre prêt, ou importe ta partition — ou continue sans.',
   downloadScore: 'Télécharger la partition',
+  orUploadOwn: 'Ou importe ta propre partition',
+  backToPresets: 'Retour aux morceaux proposés',
   stepPiece: 'Étape 1 · Morceau',
 
   // How it works
@@ -292,8 +294,11 @@ const EN: { [K in keyof typeof FR]: string } = {
   loginNotFound: 'No account found with that email. Choose “First time here” to sign up.',
 
   choosePiece: 'Choose a piece',
-  chooseLead: 'Three well-known pieces with sheet music ready. Piano only — perfect for a quick demo.',
+  chooseLead:
+    'Pick a ready piece, or upload your own score — or continue without one.',
   downloadScore: 'Download score',
+  orUploadOwn: 'Or upload your own score',
+  backToPresets: 'Back to suggested pieces',
   stepPiece: 'Step 1 · Piece',
 
   withScore: 'With score',

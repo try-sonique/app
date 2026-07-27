@@ -443,15 +443,118 @@ function PieceSetupClassic({
 
 function PieceSetupYC({
   selectedPresetId,
+  pieceName,
+  hasPartition,
+  partitionName,
+  partitionPreview,
+  partitionMime,
   onSelectPreset,
+  onPieceName,
+  onToggleNoPartition,
+  onUpload,
   onNext,
 }: {
   selectedPresetId: string | null
+  pieceName: string
+  hasPartition: boolean | null
+  partitionName: string
+  partitionPreview: string | null
+  partitionMime: string | null
   onSelectPreset: (id: string) => void
+  onPieceName: (v: string) => void
+  onToggleNoPartition: (checked: boolean) => void
+  onUpload: (file: File | null) => void
   onNext: () => void
 }) {
-  const canContinue = Boolean(selectedPresetId)
+  const [mode, setMode] = useState<'presets' | 'upload'>('presets')
   const copy = t()
+  const noPartition = hasPartition === false
+  const canContinuePresets = Boolean(selectedPresetId)
+  const canContinueUpload =
+    pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
+
+  if (mode === 'upload') {
+    return (
+      <section className="slide slide-left">
+        <span className="eyebrow">{copy.stepPiece}</span>
+        <h1>{copy.classicTitle}</h1>
+        <p className="lead">{copy.classicLead}</p>
+
+        <div className="stack">
+          <label className="field">
+            <span>{copy.pieceNameLabel}</span>
+            <input
+              type="text"
+              value={pieceName}
+              onChange={(e) => onPieceName(e.target.value)}
+              placeholder={copy.pieceNamePlaceholder}
+            />
+          </label>
+
+          <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
+            <div className="upload-icon" aria-hidden>
+              ♫
+            </div>
+            <strong>{copy.dropScore}</strong>
+            <p className="lead" style={{ margin: 0 }}>
+              {copy.uploadHint}
+            </p>
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              disabled={noPartition}
+              onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
+            />
+            {partitionName && !noPartition ? (
+              <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
+                {copy.fileLabel} : {partitionName}
+              </p>
+            ) : null}
+          </div>
+
+          {!noPartition && partitionPreview ? (
+            <div className="stage partition-stage">
+              <p className="partition-label">{copy.previewLabel}</p>
+              <PartitionViewer
+                src={partitionPreview}
+                mime={partitionMime}
+                name={partitionName}
+              />
+            </div>
+          ) : null}
+
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={noPartition}
+              onChange={(e) => onToggleNoPartition(e.target.checked)}
+            />
+            <div>
+              <strong>{copy.noScoreContinue}</strong>
+              <p className="lead" style={{ margin: '0.25rem 0 0' }}>
+                {copy.noScoreContinueHint}
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <div className="actions">
+          <button type="button" className="btn btn-ghost" onClick={() => setMode('presets')}>
+            {copy.backToPresets}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!canContinueUpload}
+            onClick={onNext}
+          >
+            {copy.continue}
+          </button>
+        </div>
+        <FooterLine withPartition={!noPartition} />
+      </section>
+    )
+  }
 
   return (
     <section className="slide slide-left">
@@ -487,8 +590,23 @@ function PieceSetupYC({
         })}
       </div>
 
-      <div className="actions">
-        <button type="button" className="btn btn-primary" disabled={!canContinue} onClick={onNext}>
+      <div className="actions" style={{ flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            onToggleNoPartition(false)
+            setMode('upload')
+          }}
+        >
+          {copy.orUploadOwn}
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!canContinuePresets}
+          onClick={onNext}
+        >
           {copy.continue}
         </button>
       </div>
@@ -1420,7 +1538,34 @@ export default function App() {
     body = IS_YC_FLOW ? (
       <PieceSetupYC
         selectedPresetId={state.selectedPresetId}
+        pieceName={state.pieceName}
+        hasPartition={state.hasPartition}
+        partitionName={state.partitionName}
+        partitionPreview={state.partitionPreview}
+        partitionMime={state.partitionMime}
         onSelectPreset={onSelectPreset}
+        onPieceName={(pieceName) => patch({ pieceName })}
+        onToggleNoPartition={(checked) =>
+          setState((s) => {
+            if (checked) revokeIfBlob(s.partitionPreview)
+            return {
+              ...s,
+              hasPartition: checked ? false : s.partitionName ? true : null,
+              partitionName: checked ? '' : s.partitionName,
+              partitionPreview: checked ? null : s.partitionPreview,
+              partitionMime: checked ? null : s.partitionMime,
+              selectedPresetId: null,
+              previewAudio: null,
+              performanceAudio: null,
+              practicePeekSec: null,
+              scrollCapRatio: null,
+              repeatEverySec: null,
+              scrollDurationSec: null,
+              scrollKeyframes: null,
+            }
+          })
+        }
+        onUpload={onUpload}
         onNext={() => go(4)}
       />
     ) : (
@@ -1504,7 +1649,7 @@ export default function App() {
         repeatEverySec={state.repeatEverySec}
         scrollDurationSec={state.scrollDurationSec}
         scrollKeyframes={state.scrollKeyframes}
-        demoSync={IS_YC_FLOW}
+        demoSync={IS_YC_FLOW && Boolean(state.performanceAudio)}
         onFinish={finishTake}
       />
     )
