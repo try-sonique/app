@@ -7,18 +7,34 @@ type Cue = { text: string; tone: 'good' | 'warn' | 'neutral' }
 
 const PRACTICE_CUES_FR: Cue[] = [
   { text: 'Bien — le phrasé respire.', tone: 'good' },
-  { text: 'Attention au rythme ici.', tone: 'warn' },
+  { text: 'Le rythme se décale un peu ici.', tone: 'warn' },
   { text: 'Tiens la tenue jusqu’au bout.', tone: 'good' },
-  { text: 'Stabilise un peu le tempo.', tone: 'warn' },
-  { text: 'Ça sonne juste ici.', tone: 'good' },
+  { text: 'Tempo : un cran plus stable.', tone: 'warn' },
+  { text: 'Belle présence — continue comme ça.', tone: 'good' },
+  { text: 'Assouplis l’attaque sur cette phrase.', tone: 'warn' },
 ]
 
 const PRACTICE_CUES_EN: Cue[] = [
   { text: 'Nice — the phrasing breathes.', tone: 'good' },
-  { text: 'Watch the rhythm here.', tone: 'warn' },
+  { text: 'The rhythm drifts a little here.', tone: 'warn' },
   { text: 'Hold the sustain all the way through.', tone: 'good' },
-  { text: 'Steady the tempo a little.', tone: 'warn' },
-  { text: 'That sounds right here.', tone: 'good' },
+  { text: 'Tempo: keep it one notch steadier.', tone: 'warn' },
+  { text: 'Strong presence — keep that.', tone: 'good' },
+  { text: 'Soften the attack on this phrase.', tone: 'warn' },
+]
+
+const BY_EAR_CUES_FR: Cue[] = [
+  { text: 'Je t’écoute à l’oreille — belle ligne.', tone: 'good' },
+  { text: 'Le tempo avance un peu trop.', tone: 'warn' },
+  { text: 'Clarté sur les notes graves.', tone: 'good' },
+  { text: 'Respire entre les phrases.', tone: 'warn' },
+]
+
+const BY_EAR_CUES_EN: Cue[] = [
+  { text: 'Listening by ear — lovely line.', tone: 'good' },
+  { text: 'Tempo is pushing ahead a bit.', tone: 'warn' },
+  { text: 'Clarity in the lower notes.', tone: 'good' },
+  { text: 'Breathe between the phrases.', tone: 'warn' },
 ]
 
 const PIECE_CUES: Record<string, { fr: Cue[]; en: Cue[] }> = {
@@ -67,6 +83,7 @@ export function useAriaCues(
   active: boolean,
   mode: 'practice' | 'record',
   pieceId?: string | null,
+  byEar = false,
 ) {
   const [cue, setCue] = useState<Cue | null>(null)
   const index = useRef(0)
@@ -84,7 +101,14 @@ export function useAriaCues(
           ? PIECE_CUES[pieceId].en
           : PIECE_CUES[pieceId].fr
         : []
-    const base = locale === 'en' ? PRACTICE_CUES_EN : PRACTICE_CUES_FR
+    const base =
+      byEar && !pieceId
+        ? locale === 'en'
+          ? BY_EAR_CUES_EN
+          : BY_EAR_CUES_FR
+        : locale === 'en'
+          ? PRACTICE_CUES_EN
+          : PRACTICE_CUES_FR
     const record = locale === 'en' ? RECORD_CUES_EN : RECORD_CUES_FR
     const pool =
       mode === 'practice'
@@ -101,7 +125,7 @@ export function useAriaCues(
     tick()
     const id = window.setInterval(tick, mode === 'practice' ? 4500 : 3200)
     return () => window.clearInterval(id)
-  }, [active, mode, locale, pieceId])
+  }, [active, mode, locale, pieceId, byEar])
 
   return cue
 }

@@ -206,10 +206,12 @@ export function PartitionViewer({
         )}
       </div>
       {showReadingLine && autoScroll ? <div className="reading-line" aria-hidden /> : null}
-      {autoScroll ? (
+      {autoScroll && src ? (
         <div className="scroll-hint">
           {scrollProgress != null ? t().scrollHintRef : t().scrollHintPlay}
         </div>
+      ) : !src ? (
+        <div className="scroll-hint is-ear">{t().scrollHintListen}</div>
       ) : null}
     </div>
   )

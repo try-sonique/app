@@ -565,9 +565,10 @@ function PracticeStage({
   const [refPlaying, setRefPlaying] = useState(false)
   const [refProgress, setRefProgress] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const cue = useAriaCues(active, 'practice', pieceId)
+  const cue = useAriaCues(active, 'practice', pieceId, !partitionPreview)
   const { energy, denied } = usePlayEnergy(active && !refPlaying)
   const peekSec = Math.max(6, practicePeekSec ?? 12)
+  const hasScore = Boolean(partitionPreview)
 
   const stopRef = () => {
     audioRef.current?.pause()
@@ -631,21 +632,27 @@ function PracticeStage({
       <div className="play-header">
         <span className="eyebrow">{copy.training}</span>
         <h1>{refPlaying ? copy.followRef : copy.yourTurn}</h1>
-        <p className="lead play-lead">{refPlaying ? copy.refPlaying : copy.yourTurnLead}</p>
-        <p className="footer-note" style={{ paddingTop: 0 }}>
-          {partitionPreview ? copy.practiceNote : copy.practiceNoteNoScore}
+        <p className="lead play-lead">
+          {refPlaying
+            ? copy.refPlaying
+            : hasScore
+              ? copy.yourTurnLead
+              : copy.yourTurnLeadNoScore}
         </p>
+        {hasScore && !refPlaying ? (
+          <p className="play-subnote">{copy.practiceNote}</p>
+        ) : null}
         <div className="meta-row">
           <span>{pieceName}</span>
           {refPlaying ? <span className="ref-pill">{copy.refOn}</span> : null}
         </div>
       </div>
-      <div className="stage stage-score">
+      <div className={`stage stage-score ${hasScore ? '' : 'stage-score-ear'}`}>
         <PartitionViewer
           src={partitionPreview}
           mime={partitionMime}
           name={partitionName}
-          autoScroll={active}
+          autoScroll={active && hasScore}
           energy={refPlaying ? 0 : energy}
           scrollProgress={refPlaying ? refProgress : null}
           scrollCapRatio={scrollCapRatio ?? 1}
@@ -653,16 +660,16 @@ function PracticeStage({
         {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
       </div>
       {denied && !refPlaying ? (
-        <p className="footer-note" style={{ paddingTop: '0.75rem' }}>
+        <p className="play-subnote" style={{ paddingTop: '0.75rem' }}>
           {copy.micDeniedPractice}
         </p>
       ) : null}
       <div className="actions play-actions">
-        {partitionPreview ? (
+        {hasScore ? (
           <button
             type="button"
             className="btn btn-ghost"
-            onClick={() => downloadScoreFile(partitionPreview, pieceName)}
+            onClick={() => downloadScoreFile(partitionPreview!, pieceName)}
           >
             {copy.downloadScore}
           </button>
@@ -690,7 +697,7 @@ function PracticeStage({
           {copy.readyRecord}
         </button>
       </div>
-      <FooterLine withPartition />
+      <FooterLine withPartition={hasScore} />
     </section>
   )
 }

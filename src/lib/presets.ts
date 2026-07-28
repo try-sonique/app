@@ -196,11 +196,13 @@ const FR = {
   refPlaying:
     'Repère court (quelques secondes) — juste pour te placer. Ce n’est pas ta prise.',
   yourTurnLead:
-    'Joue avec ta partition à l’écran. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, tu passes à la performance.',
+    'Joue avec ta partition à l’écran. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, passe à la performance.',
+  yourTurnLeadNoScore:
+    'Joue à l’oreille. Aria chuchote — rien n’est enregistré. Quand tu es prêt·e, passe à la performance.',
   practiceNote:
-    'Ta partition suit ton jeu : silence = pause, tu joues = elle descend. La prise syncée = l’étape suivante.',
-  practiceNoteNoScore:
-    'Ici : entraînement — rien n’est enregistré. Quand tu es prêt·e, passe à ta prise.',
+    'Ta partition suit ton jeu : silence = pause, tu joues = elle descend.',
+  practiceNoteNoScore: '',
+  scrollHintListen: 'À l’oreille — Aria écoute pendant que tu joues',
   refOn: 'Repère en cours',
   cutRef: 'Arrêter le repère',
   restartRef: 'Écouter 12s de repère',
@@ -352,11 +354,13 @@ const EN: { [K in keyof typeof FR]: string } = {
   yourTurn: 'Practice room',
   refPlaying: 'Short cue (a few seconds) — just to get oriented. This is not your take.',
   yourTurnLead:
-    'Play with your score on screen. Aria whispers — nothing is recorded. When you’re ready, move on to the performance.',
+    'Play with your score on screen. Aria whispers — nothing is recorded. When you’re ready, go to performance.',
+  yourTurnLeadNoScore:
+    'Play by ear. Aria whispers — nothing is recorded. When you’re ready, go to performance.',
   practiceNote:
-    'Your score follows your playing: silence = pause, you play = it moves down. Synced take = next step.',
-  practiceNoteNoScore:
-    'This is practice — nothing is recorded. When you’re ready, move on to your take.',
+    'Your score follows your playing: silence = pause, you play = it moves down.',
+  practiceNoteNoScore: '',
+  scrollHintListen: 'By ear — Aria listens while you play',
   refOn: 'Cue playing',
   cutRef: 'Stop cue',
   restartRef: 'Hear a 12s cue',
