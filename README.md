@@ -1,24 +1,24 @@
 # Sonique
 
-App d’entraînement musical avec coach **Aria** : jouer → s’entraîner → enregistrer → recevoir un compte rendu.
+Music practice app with coach **Aria**: pick a piece → practice with your score on screen → record a take → get feedback.
 
-## Parcours
+## Demo (English)
 
-- **Avec partition (8 slides)** : accueil → inscription → morceau + upload → consignes → entraînement live → enregistrement → Aria analyse → compte rendu
-- **Sans partition (7 slides)** : accueil → inscription → morceau + case « pas de partition » → arrangement/original → enregistrement → Aria analyse → compte rendu
-- **3 takes max** par morceau, puis retour slide 3
+**Stable (GitHub Pages):** https://elodieybs.github.io/Sonique-app-/yc/?fresh=1
 
-## Démo
+**Live tunnel (while agent is running):** https://yes-interim-php-push.trycloudflare.com/
 
-https://traditional-hits-biology-reflections.trycloudflare.com
+Score-first flow · noir/gold · Manrope · score scrolls with your playing
 
-Noir/or figé · Syne + Plus Jakarta Sans · partition large · timer discret
+## Flow
 
-## Couleurs
+1. Welcome → account  
+2. Choose a ready piece **or** upload your score (required)  
+3. How it works  
+4. Practice room — score on screen, Aria whispers, nothing recorded  
+5. Performance — synced take  
+6. Aria feedback (max 3 takes per piece)
 
-Palette dans `src/styles.css` (`:root` CSS variables) — interchangeable sans refondre l’UI.
+## Note on Cloudflare quick tunnels
 
-## Démo
-
-- Micro navigateur pour l’enregistrement (sinon bouton « Simuler un take »)
-- Aria V1 = feedback guidé / mock (APIs audio + LLM à brancher ensuite)
+`*.trycloudflare.com` URLs are temporary. When the tunnel stops, that exact link dies and cannot be revived. Use the GitHub Pages `/yc/` link for YC / sharing.
