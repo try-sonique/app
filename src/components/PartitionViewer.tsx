@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { t } from '../lib/presets'
 
 type PartitionViewerProps = {
@@ -23,6 +23,105 @@ type PartitionViewerProps = {
   tall?: boolean
 }
 
+function isPdfSource(src: string | null, mime: string | null, name?: string) {
+  if (!src) return false
+  return (
+    mime === 'application/pdf' ||
+    Boolean(name?.toLowerCase().endsWith('.pdf')) ||
+    src.toLowerCase().includes('.pdf')
+  )
+}
+
+/** Render PDF pages as crisp bitmaps (avoids Chrome’s tiny 66% iframe viewer). */
+function PdfPages({ src, name }: { src: string; name?: string }) {
+  const [pages, setPages] = useState<string[]>([])
+  const [error, setError] = useState(false)
+  const urlsRef = useRef<string[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    urlsRef.current.forEach((u) => URL.revokeObjectURL(u))
+    urlsRef.current = []
+    setPages([])
+    setError(false)
+
+    void (async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist')
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url,
+        ).toString()
+
+        const doc = await pdfjs.getDocument({ url: src }).promise
+        const rendered: string[] = []
+        const dpr = Math.min(2.5, window.devicePixelRatio || 1)
+
+        for (let i = 1; i <= doc.numPages; i += 1) {
+          const page = await doc.getPage(i)
+          const base = page.getViewport({ scale: 1 })
+          // Target ~1200 CSS px wide for readable notation
+          const cssWidth = Math.min(1400, Math.max(900, base.width * 1.35))
+          const scale = (cssWidth / base.width) * dpr
+          const viewport = page.getViewport({ scale })
+          const canvas = document.createElement('canvas')
+          canvas.width = Math.floor(viewport.width)
+          canvas.height = Math.floor(viewport.height)
+          const ctx = canvas.getContext('2d')
+          if (!ctx) continue
+          await page.render({ canvasContext: ctx, viewport }).promise
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob((b) => resolve(b), 'image/png'),
+          )
+          if (!blob) continue
+          const url = URL.createObjectURL(blob)
+          rendered.push(url)
+        }
+
+        if (cancelled) {
+          rendered.forEach((u) => URL.revokeObjectURL(u))
+          return
+        }
+        urlsRef.current = rendered
+        setPages(rendered)
+      } catch {
+        if (!cancelled) setError(true)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      urlsRef.current.forEach((u) => URL.revokeObjectURL(u))
+      urlsRef.current = []
+    }
+  }, [src])
+
+  if (error) {
+    // Fallback: native viewer, page-width zoom, no chrome clutter
+    const embed = `${src}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
+    return (
+      <iframe className="partition-pdf-doc" src={embed} title={name || 'Score PDF'} />
+    )
+  }
+
+  if (!pages.length) {
+    return <div className="partition-pdf-loading">{t().previewLabel}…</div>
+  }
+
+  return (
+    <div className="partition-pdf-pages">
+      {pages.map((url, i) => (
+        <img
+          key={url}
+          className="partition-image"
+          src={url}
+          alt={name ? `Score ${name} — page ${i + 1}` : `Score page ${i + 1}`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export function PartitionViewer({
   src,
   mime,
@@ -44,11 +143,7 @@ export function PartitionViewer({
   const capRef = useRef(scrollCapRatio)
   capRef.current = Math.min(1, Math.max(0.05, scrollCapRatio))
 
-  const isPdf =
-    Boolean(src) &&
-    (mime === 'application/pdf' ||
-      name?.toLowerCase().endsWith('.pdf') ||
-      src!.toLowerCase().includes('.pdf'))
+  const isPdf = isPdfSource(src, mime, name)
 
   useEffect(() => {
     if (!autoScroll) return
@@ -68,16 +163,13 @@ export function PartitionViewer({
       const guided = progressRef.current
 
       if (guided != null && maxScroll > 0) {
-        // Ligne de lecture ~28% du viewport → on décale le scroll pour anticiper
         const leadPx = showReadingLine ? viewport.clientHeight * 0.12 : 0
         const target = Math.min(cap, Math.max(0, guided) * cap)
         offset = Math.min(cap, target + leadPx)
-        // Lerp léger pour éviter les sauts
         const cur = viewport.scrollTop
         viewport.scrollTop = cur + (offset - cur) * 0.35
       } else {
         const e = energyRef.current
-        // Plus doux : suit le jeu sans filer sur la partition
         const pxPerSec = e < 0.05 ? 0 : 3.5 + e * 22
         if (cap > 0 && pxPerSec > 0) {
           offset = Math.min(cap, offset + pxPerSec * dt)
@@ -104,11 +196,7 @@ export function PartitionViewer({
             <p className="sheet-empty-body">{t().noScoreStageBody}</p>
           </div>
         ) : isPdf ? (
-          <iframe
-            className="partition-pdf-doc"
-            src={src}
-            title={name || 'Score PDF'}
-          />
+          <PdfPages src={src} name={name} />
         ) : (
           <img
             className="partition-image"

@@ -175,7 +175,8 @@ const FR = {
 
   // Classic setup
   classicTitle: 'Quel morceau vas-tu travailler ?',
-  classicLead: 'Nomme-le et importe ta partition — tu t’entraîneras et joueras avec elle à l’écran.',
+  classicLead:
+    'Importe ta partition pour jouer avec elle à l’écran — ou continue à l’oreille sans.',
   pieceNameLabel: 'Nom du morceau',
   pieceNamePlaceholder: 'Ex. Clair de Lune',
   dropScore: 'Glisse ta partition ici, ou choisis un fichier',
@@ -184,8 +185,8 @@ const FR = {
   previewLabel: 'Aperçu de ta partition',
   noScoreContinue: 'Je n’ai pas de partition — continuer quand même',
   noScoreContinueHint: 'Aria écoutera à l’oreille.',
-  noScoreStageTitle: 'Charge ta partition pour continuer',
-  noScoreStageBody: 'Sonique est fait pour jouer avec ta partition à l’écran.',
+  noScoreStageTitle: 'Pas de partition à l’écran',
+  noScoreStageBody: 'Tu joues à l’oreille — Aria chuchote. Rien n’est enregistré ici.',
   historyBack: 'Retour',
 
   // Practice
@@ -333,7 +334,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   startRecording: 'Start recording',
 
   classicTitle: 'Which piece will you work on?',
-  classicLead: 'Name it and upload your score — you’ll practice and perform with it on screen.',
+  classicLead: 'Upload your score to play with it on screen — or continue by ear without one.',
   pieceNameLabel: 'Piece name',
   pieceNamePlaceholder: 'e.g. Clair de Lune',
   dropScore: 'Drop your score here, or choose a file',
@@ -342,8 +343,8 @@ const EN: { [K in keyof typeof FR]: string } = {
   previewLabel: 'Score preview',
   noScoreContinue: 'I don’t have a score — continue anyway',
   noScoreContinueHint: 'Aria will listen by ear.',
-  noScoreStageTitle: 'Upload a score to continue',
-  noScoreStageBody: 'Sonique is built to play with your score on screen.',
+  noScoreStageTitle: 'No score on screen',
+  noScoreStageBody: 'Practice freely by ear — Aria whispers. Nothing is recorded here.',
   historyBack: 'Back',
 
   training: 'Step 2 · Practice',
