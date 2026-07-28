@@ -13,7 +13,7 @@ Score-first flow · noir/gold · Manrope · score scrolls with your playing
 ## Flow
 
 1. Welcome → account  
-2. Choose a ready piece **or** upload your score (required)  
+2. **Upload your score** (required — no preset pieces)  
 3. How it works  
 4. Practice room — score on screen, Aria whispers, nothing recorded  
 5. Performance — synced take  

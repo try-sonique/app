@@ -175,7 +175,7 @@ const FR = {
 
   // Classic setup
   classicTitle: 'Quel morceau vas-tu travailler ?',
-  classicLead: 'Importe ta partition — tu t’entraîneras et joueras avec elle à l’écran.',
+  classicLead: 'Nomme-le et importe ta partition — tu t’entraîneras et joueras avec elle à l’écran.',
   pieceNameLabel: 'Nom du morceau',
   pieceNamePlaceholder: 'Ex. Clair de Lune',
   dropScore: 'Glisse ta partition ici, ou choisis un fichier',
@@ -333,7 +333,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   startRecording: 'Start recording',
 
   classicTitle: 'Which piece will you work on?',
-  classicLead: 'Upload your score — you’ll practice and perform with it on screen.',
+  classicLead: 'Name it and upload your score — you’ll practice and perform with it on screen.',
   pieceNameLabel: 'Piece name',
   pieceNamePlaceholder: 'e.g. Clair de Lune',
   dropScore: 'Drop your score here, or choose a file',
