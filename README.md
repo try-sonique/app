@@ -6,7 +6,7 @@ Music practice app with coach **Aria**: pick a piece → practice with your scor
 
 **Stable (GitHub Pages):** https://elodieybs.github.io/Sonique-app-/yc/?fresh=1
 
-**Live tunnel (while agent is running):** https://yes-interim-php-push.trycloudflare.com/
+**Live tunnel (while agent is running):** https://andrew-mild-textbooks-path.trycloudflare.com/
 
 Score-first flow · noir/gold · Manrope · score scrolls with your playing
 
