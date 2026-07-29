@@ -7,6 +7,16 @@ export type AudioFeatures = {
   silenceRatio: number
   attackCount: number
   dynamicRange: number
+  /** Attacks per second while “playing” (non-silent frames). */
+  attacksPerSec: number
+  /** Mean energy in first / middle / last third of the take (0–1 relative). */
+  openingEnergy: number
+  middleEnergy: number
+  endingEnergy: number
+  /** How steady the energy envelope is (lower = more even). */
+  energyVariance: number
+  /** True when decode failed or blob was empty. */
+  weakSignal: boolean
 }
 
 const EMPTY: AudioFeatures = {
@@ -16,6 +26,23 @@ const EMPTY: AudioFeatures = {
   silenceRatio: 1,
   attackCount: 0,
   dynamicRange: 0,
+  attacksPerSec: 0,
+  openingEnergy: 0,
+  middleEnergy: 0,
+  endingEnergy: 0,
+  energyVariance: 0,
+  weakSignal: true,
+}
+
+function mean(xs: number[]): number {
+  if (!xs.length) return 0
+  return xs.reduce((a, b) => a + b, 0) / xs.length
+}
+
+function variance(xs: number[]): number {
+  if (xs.length < 2) return 0
+  const m = mean(xs)
+  return mean(xs.map((x) => (x - m) * (x - m)))
 }
 
 /**
@@ -50,9 +77,9 @@ export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeat
 
     if (energies.length === 0) return { ...EMPTY, durationSec }
 
-    const rmsMean = energies.reduce((a, b) => a + b, 0) / energies.length
+    const rmsMean = mean(energies)
     const rmsPeak = Math.max(...energies)
-    const silenceThreshold = Math.max(0.01, rmsMean * 0.28)
+    const silenceThreshold = Math.max(0.008, rmsMean * 0.28)
     const silent = energies.filter((e) => e < silenceThreshold).length
     const silenceRatio = silent / energies.length
 
@@ -68,6 +95,17 @@ export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeat
     const p90 = sorted[Math.floor(sorted.length * 0.9)] ?? 0
     const dynamicRange = Math.max(0, p90 - p10)
 
+    const activeSec = Math.max(0.25, durationSec * (1 - silenceRatio))
+    const attacksPerSec = attackCount / activeSec
+
+    const third = Math.max(1, Math.floor(energies.length / 3))
+    const openingEnergy = mean(energies.slice(0, third))
+    const middleEnergy = mean(energies.slice(third, third * 2))
+    const endingEnergy = mean(energies.slice(third * 2))
+    const energyVariance = variance(energies)
+
+    const weakSignal = rmsPeak < 0.015 || durationSec < 1.2
+
     return {
       durationSec,
       rmsMean,
@@ -75,6 +113,12 @@ export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeat
       silenceRatio,
       attackCount,
       dynamicRange,
+      attacksPerSec,
+      openingEnergy,
+      middleEnergy,
+      endingEnergy,
+      energyVariance,
+      weakSignal,
     }
   } catch {
     return EMPTY
@@ -102,7 +146,6 @@ export function mapScrollProgress(
     const b = kfs[i + 1]
     if (t >= a.t && t <= b.t) {
       const u = (t - a.t) / Math.max(1e-6, b.t - a.t)
-      // smootherstep — less sudden acceleration between sections
       const s = u * u * u * (u * (u * 6 - 15) + 10)
       return a.p + (b.p - a.p) * s
     }
