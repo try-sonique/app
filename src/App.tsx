@@ -953,11 +953,23 @@ function Analyzing({
   onDone: () => void
 }) {
   const copy = t()
+  const [stuck, setStuck] = useState(false)
+
   useEffect(() => {
     if (!ready) return
     const id = window.setTimeout(onDone, 900)
     return () => window.clearTimeout(id)
   }, [onDone, ready])
+
+  // If analyze hangs (audio decode), never leave the founder on a dead orb
+  useEffect(() => {
+    if (ready) {
+      setStuck(false)
+      return
+    }
+    const id = window.setTimeout(() => setStuck(true), 4500)
+    return () => window.clearTimeout(id)
+  }, [ready])
 
   return (
     <section className="slide">
@@ -967,6 +979,13 @@ function Analyzing({
         <p className="lead" style={{ marginInline: 'auto' }}>
           {firstName ? `${firstName}, ${copy.oneMoment}` : copy.oneMoment}
         </p>
+        {stuck && !ready ? (
+          <div className="actions" style={{ justifyContent: 'center', marginTop: '1.25rem' }}>
+            <button type="button" className="btn btn-primary" onClick={onDone}>
+              {copy.seeFeedback}
+            </button>
+          </div>
+        ) : null}
       </div>
       <FooterLine withPartition />
     </section>
@@ -1183,44 +1202,92 @@ export default function App() {
     const analyzeSlide = 7
     setState((s) => ({ ...s, slide: analyzeSlide, isRecording: false, feedback: null }))
     void (async () => {
-      const features = await extractAudioFeatures(audioBlob)
+      let features
+      try {
+        features = await extractAudioFeatures(audioBlob)
+      } catch {
+        features = await extractAudioFeatures(null)
+      }
       setState((s) => {
-        const takesUsed = s.takesUsed + 1
-        const fullMeta: PerformanceMeta = {
-          playedSec: meta?.playedSec ?? 0,
-          totalSec: meta?.totalSec ?? null,
-          demoSync: meta?.demoSync ?? false,
-          pieceId: meta?.pieceId ?? s.selectedPresetId,
-          features,
+        try {
+          const takesUsed = s.takesUsed + 1
+          const fullMeta: PerformanceMeta = {
+            playedSec: meta?.playedSec ?? features.durationSec ?? 0,
+            totalSec: meta?.totalSec ?? null,
+            demoSync: meta?.demoSync ?? false,
+            pieceId: meta?.pieceId ?? s.selectedPresetId,
+            features,
+          }
+          const feedback = analyzePerformance({
+            pieceName: s.pieceName,
+            hasPartition: s.hasPartition === true,
+            firstName: s.profile.firstName,
+            arrangement: s.arrangement,
+            takesUsed,
+            maxTakes: MAX_TAKES,
+            meta: fullMeta,
+          })
+          try {
+            const saved = saveSession({
+              email: s.profile.email,
+              pieceName: s.pieceName,
+              hasPartition: s.hasPartition === true,
+              feedbackHeadline: feedback.headline,
+              takeNumber: takesUsed,
+              feedback,
+              hasAudio: Boolean(audioBlob),
+            })
+            if (audioBlob) {
+              void saveRecordingBlob(saved.id, audioBlob)
+            }
+          } catch {
+            /* storage optional for demo */
+          }
+          return { ...s, takesUsed, feedback }
+        } catch {
+          const takesUsed = s.takesUsed + 1
+          const feedback = analyzePerformance({
+            pieceName: s.pieceName,
+            hasPartition: s.hasPartition === true,
+            firstName: s.profile.firstName,
+            arrangement: s.arrangement,
+            takesUsed,
+            maxTakes: MAX_TAKES,
+            meta: {
+              playedSec: meta?.playedSec ?? 0,
+              totalSec: meta?.totalSec ?? null,
+              demoSync: meta?.demoSync ?? false,
+              pieceId: meta?.pieceId ?? s.selectedPresetId,
+              features: null,
+            },
+          })
+          return { ...s, takesUsed, feedback }
         }
-        const feedback = analyzePerformance({
-          pieceName: s.pieceName,
-          hasPartition: s.hasPartition === true,
-          firstName: s.profile.firstName,
-          arrangement: s.arrangement,
-          takesUsed,
-          maxTakes: MAX_TAKES,
-          meta: fullMeta,
-        })
-        const saved = saveSession({
-          email: s.profile.email,
-          pieceName: s.pieceName,
-          hasPartition: s.hasPartition === true,
-          feedbackHeadline: feedback.headline,
-          takeNumber: takesUsed,
-          feedback,
-          hasAudio: Boolean(audioBlob),
-        })
-        if (audioBlob) {
-          void saveRecordingBlob(saved.id, audioBlob)
-        }
-        return { ...s, takesUsed, feedback }
       })
     })()
   }
 
   const afterAnalyze = useCallback(() => {
-    setState((s) => ({ ...s, slide: 8 }))
+    setState((s) => {
+      if (s.feedback) return { ...s, slide: 8 }
+      const takesUsed = Math.max(s.takesUsed, 1)
+      const feedback = analyzePerformance({
+        pieceName: s.pieceName,
+        hasPartition: s.hasPartition === true,
+        firstName: s.profile.firstName,
+        arrangement: s.arrangement,
+        takesUsed,
+        maxTakes: MAX_TAKES,
+        meta: {
+          playedSec: 0,
+          totalSec: null,
+          demoSync: false,
+          pieceId: s.selectedPresetId,
+          features: null,
+        },
+      })
+      return { ...s, takesUsed, feedback, slide: 8 }
+    })
   }, [])
 
   const replay = () => {

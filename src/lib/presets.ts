@@ -238,6 +238,7 @@ const FR = {
   // Analyzing / report
   ariaListening: 'Aria écoute…',
   oneMoment: 'Un instant.',
+  seeFeedback: 'Voir mon retour',
   reportEyebrow: 'Retour Aria',
   takesLeft: 'Essais restants',
   strengths: 'Points positifs',
@@ -392,6 +393,7 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   ariaListening: 'Aria is listening…',
   oneMoment: 'Just a moment.',
+  seeFeedback: 'See my feedback',
   reportEyebrow: 'Aria feedback',
   takesLeft: 'Takes left',
   strengths: 'What worked',

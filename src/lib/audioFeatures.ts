@@ -49,14 +49,11 @@ function variance(xs: number[]): number {
  * Decode a recording / demo blob and extract coarse musical signals
  * used to personalize Aria’s report (tempo feel, density, silence).
  */
-export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeatures> {
-  if (!blob || blob.size < 64) return EMPTY
-
+async function extractAudioFeaturesInner(blob: Blob): Promise<AudioFeatures> {
+  const ctx = new AudioContext()
   try {
-    const ctx = new AudioContext()
     const raw = await blob.arrayBuffer()
     const buffer = await ctx.decodeAudioData(raw.slice(0))
-    await ctx.close()
 
     const channel = buffer.getChannelData(0)
     const durationSec = buffer.duration
@@ -120,6 +117,21 @@ export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeat
       energyVariance,
       weakSignal,
     }
+  } finally {
+    await ctx.close().catch(() => undefined)
+  }
+}
+
+/** Public API — never hangs the “Aria is listening…” screen. */
+export async function extractAudioFeatures(blob: Blob | null): Promise<AudioFeatures> {
+  if (!blob || blob.size < 64) return EMPTY
+  try {
+    return await Promise.race([
+      extractAudioFeaturesInner(blob),
+      new Promise<AudioFeatures>((resolve) => {
+        window.setTimeout(() => resolve({ ...EMPTY, weakSignal: true }), 7000)
+      }),
+    ])
   } catch {
     return EMPTY
   }
