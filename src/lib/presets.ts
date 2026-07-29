@@ -101,7 +101,7 @@ const FR = {
   backHome: 'Retour à l’accueil Sonique',
   footerWithScore:
     'Sonique écoute ce que tu joues et le compare à ta partition — pour te faire progresser, jamais pour te juger.',
-  footerNoScore: 'Sonique écoute ce que tu joues au piano — et te répond fidèlement.',
+  footerNoScore: 'Sonique écoute ce que tu joues — et te répond fidèlement.',
 
   // Welcome
   readyToPlay: 'Prêt·e à jouer',
@@ -223,7 +223,7 @@ const FR = {
     'C’est ta prise : la musique joue, la partition avance avec toi. Différent de l’entraînement — Aria juge cette performance.',
   perfLeadMic:
     'C’est ta prise — pas le repère. Aria se base uniquement sur ce que tu joues maintenant.',
-  perfLeadEar: 'C’est ta prise. Aria écoute à l’oreille ce que tu joues au piano.',
+  perfLeadEar: 'C’est ta prise. Aria écoute à l’oreille ce que tu joues.',
   startPerf: 'Lancer la performance',
   startMic: 'Lancer mon enregistrement',
   finishPerf: 'Terminer et recevoir mon retour',
@@ -271,7 +271,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   backHome: 'Back to Sonique home',
   footerWithScore:
     'Sonique listens to what you play and compares it to your score — to help you improve, never to judge you.',
-  footerNoScore: 'Sonique listens to what you play on the piano — and answers honestly.',
+  footerNoScore: 'Sonique listens to what you play — and answers honestly.',
 
   readyToPlay: 'Ready to play',
   heroTagline: 'The app that lets you play your favorite pieces.',
@@ -378,7 +378,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   performance: 'Your performance',
   perfLead: 'This is your take: music plays, the score moves with you. Different from practice — Aria reviews this performance.',
   perfLeadMic: 'This is your take — not the cue. Aria reviews only what you play now.',
-  perfLeadEar: 'This is your take. Aria listens by ear to what you play on the piano.',
+  perfLeadEar: 'This is your take. Aria listens by ear to what you play.',
   startPerf: 'Start performance',
   startMic: 'Start my recording',
   finishPerf: 'Finish and get my feedback',
