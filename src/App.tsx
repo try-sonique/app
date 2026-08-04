@@ -653,7 +653,10 @@ function AuthSlide({
           />
         </label>
         <label className="field">
-          <span>{copy.password}</span>
+          <span>
+            {copy.password}
+            <em className="optional-tag"> — {copy.passwordHint}</em>
+          </span>
           <input
             type="password"
             name="sonique-signup-password"
@@ -682,9 +685,6 @@ function AuthSlide({
             minLength={6}
           />
         </label>
-        <p className="footer-note" style={{ margin: '-0.25rem 0 0.5rem', opacity: 0.75 }}>
-          {copy.passwordHint}
-        </p>
         <label className="field">
           <span>
             {copy.lastName} <em className="optional-tag">{copy.optional}</em>
@@ -1636,7 +1636,7 @@ function HistoryView({
   const dateLocale = getLocale() === 'en' ? 'en-US' : 'fr-FR'
 
   return (
-    <section className="slide">
+    <section className="slide history-slide">
       <span className="eyebrow">{copy.historyEyebrow}</span>
       <h1>{copy.historyTitle}</h1>
       <p className="lead">{copy.historyLead}</p>
@@ -1655,7 +1655,11 @@ function HistoryView({
               <p className="lead" style={{ margin: 0 }}>
                 {formatSessionHeadline(s.feedbackHeadline, s.pieceName)}
               </p>
-              {audioUrls[s.id] ? <audio controls src={audioUrls[s.id]} /> : null}
+              {audioUrls[s.id] ? (
+                <div className="history-audio">
+                  <audio controls preload="metadata" src={audioUrls[s.id]} />
+                </div>
+              ) : null}
               <div className="actions" style={{ marginTop: '0.85rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => onOpenFeedback(s)}>
                   {copy.viewFeedback}

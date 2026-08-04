@@ -80,9 +80,11 @@ export function useMediaRecorder() {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+          // Music / instrument: browser “voice” processing often causes crackle
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
         },
       })
       streamRef.current = stream
@@ -90,9 +92,18 @@ export function useMediaRecorder() {
 
       const mimeType = pickMimeType()
       mimeTypeRef.current = mimeType
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream)
+      const recorderOptions: MediaRecorderOptions = {
+        audioBitsPerSecond: 192_000,
+      }
+      if (mimeType) recorderOptions.mimeType = mimeType
+      let recorder: MediaRecorder
+      try {
+        recorder = new MediaRecorder(stream, recorderOptions)
+      } catch {
+        recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream)
+      }
       mediaRecorder.current = recorder
 
       recorder.ondataavailable = (event) => {
@@ -124,8 +135,8 @@ export function useMediaRecorder() {
         mediaRecorder.current = null
       }
 
-      // timeslice: force periodic chunks (fixes empty blobs on some browsers)
-      recorder.start(250)
+      // Larger timeslice = fewer joins = less crackle than 250ms chunks
+      recorder.start(1000)
       setSeconds(0)
       setStatus('recording')
       clearTimer()
