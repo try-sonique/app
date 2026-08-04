@@ -36,6 +36,7 @@ import {
   isSupabaseConfigured,
   requestPasswordReset,
   signInWithPassword,
+  signOut,
   signUpWithPassword,
 } from './lib/supabaseAuth'
 import {
@@ -265,6 +266,18 @@ function AuthSlide({
     }
   }
 
+  const startSignup = () => {
+    onChange('firstName', '')
+    onChange('lastName', '')
+    onChange('email', '')
+    onChange('phone', '')
+    setSignupPassword('')
+    setSignupPassword2('')
+    setAuthError('')
+    setAuthInfo('')
+    setMode('signup')
+  }
+
   if (mode === 'choose') {
     const returning = Boolean(profile.firstName.trim() || profile.email.trim())
     return (
@@ -281,7 +294,7 @@ function AuthSlide({
             {copy.login}
             <small>{copy.loginHint}</small>
           </button>
-          <button type="button" className="choice" onClick={() => setMode('signup')}>
+          <button type="button" className="choice" onClick={startSignup}>
             {copy.firstTime}
             <small>{copy.firstTimeHint}</small>
           </button>
@@ -370,7 +383,7 @@ function AuthSlide({
           type="button"
           className="linkish"
           style={{ marginTop: '0.5rem' }}
-          onClick={() => setMode('signup')}
+          onClick={startSignup}
         >
           {copy.createAccountLink}
         </button>
@@ -1326,16 +1339,26 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    const existing = getCurrentProfile()
-    if (existing) {
-      setState((s) => ({ ...s, profile: existing }))
-    }
-    void (async () => {
+    const boot = async () => {
+      if (sessionStorage.getItem('sonique.forceFresh') === '1') {
+        sessionStorage.removeItem('sonique.forceFresh')
+        await signOut()
+        setState((s) => ({
+          ...s,
+          profile: { firstName: '', lastName: '', email: '', phone: '' },
+        }))
+        return
+      }
+      const existing = getCurrentProfile()
+      if (existing) {
+        setState((s) => ({ ...s, profile: existing }))
+      }
       const remote = await getSessionProfile()
       if (remote) {
         setState((s) => ({ ...s, profile: remote }))
       }
-    })()
+    }
+    void boot()
   }, [])
 
   const withPartition = state.hasPartition !== false

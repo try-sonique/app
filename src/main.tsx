@@ -4,13 +4,19 @@ import App from './App'
 import { getLocale } from './lib/presets'
 import './styles.css'
 
-// Demo helper: ?fresh=1 clears saved profile so the flow starts blank
+// Demo helper: ?fresh=1 clears saved profile + Supabase session so the flow starts blank
 const params = new URLSearchParams(window.location.search)
 if (params.has('fresh') || params.has('reset')) {
   try {
     localStorage.removeItem('sonique.profiles')
     localStorage.removeItem('sonique.currentEmail')
     localStorage.removeItem('sonique.sessions')
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('sb-') && key.includes('auth-token')) {
+        localStorage.removeItem(key)
+      }
+    }
+    sessionStorage.setItem('sonique.forceFresh', '1')
   } catch {
     /* ignore */
   }

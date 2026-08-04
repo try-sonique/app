@@ -161,3 +161,25 @@ export async function getSessionProfile(): Promise<UserProfile | null> {
   if (!session?.user) return null
   return profileFromUser(session.user)
 }
+
+/** Clears Supabase session + local Sonique profile cache. */
+export async function signOut(): Promise<void> {
+  if (supabase) {
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      /* ignore */
+    }
+  }
+  try {
+    localStorage.removeItem('sonique.profiles')
+    localStorage.removeItem('sonique.currentEmail')
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('sb-') && key.includes('auth-token')) {
+        localStorage.removeItem(key)
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
