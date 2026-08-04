@@ -143,6 +143,11 @@ const FR = {
   loginNotFound:
     "Aucun compte trouvé avec cet email. Choisis « Créer un compte » pour t’inscrire.",
   loginFailed: 'Email ou mot de passe incorrect.',
+  emailRateLimited:
+    'Trop d’essais d’email pour le moment (limite Supabase). Attends 5–15 minutes, puis réessaie — ou désactive « Confirm email » dans Supabase Auth pour tester sans envoi.',
+  emailNotConfirmed:
+    'Email pas encore confirmé. Ouvre le lien dans ta boîte mail, ou désactive « Confirm email » dans Supabase Auth pour tester plus vite.',
+  alreadyRegistered: 'Un compte existe déjà avec cet email — connecte-toi plutôt.',
 
   // Piece pick
   choosePiece: 'Choisis un morceau',
@@ -320,6 +325,11 @@ const EN: { [K in keyof typeof FR]: string } = {
   createAndContinue: 'Create and continue',
   loginNotFound: 'No account found with that email. Choose “Create an account” to sign up.',
   loginFailed: 'Incorrect email or password.',
+  emailRateLimited:
+    'Too many email attempts right now (Supabase limit). Wait 5–15 minutes, then try again — or turn off “Confirm email” in Supabase Auth so testing doesn’t send mail.',
+  emailNotConfirmed:
+    'Email not confirmed yet. Open the link in your inbox, or turn off “Confirm email” in Supabase Auth to test faster.',
+  alreadyRegistered: 'An account already exists with that email — log in instead.',
 
   choosePiece: 'Choose a piece',
   chooseLead:

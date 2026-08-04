@@ -20,9 +20,26 @@ export const supabase = isSupabaseConfigured
 export type AuthResult = {
   ok: boolean
   profile?: UserProfile
+  /** Stable code for UI copy, or a raw fallback message */
   error?: string
   /** User must confirm email before session is active */
   needsEmailConfirm?: boolean
+}
+
+/** Map Supabase Auth error text → stable codes the UI can translate. */
+export function mapAuthError(message: string): string {
+  const m = message.toLowerCase()
+  if (m.includes('rate limit')) return 'rate_limited'
+  if (m.includes('email not confirmed') || m.includes('not confirmed')) {
+    return 'email_not_confirmed'
+  }
+  if (m.includes('invalid login credentials') || m.includes('invalid credentials')) {
+    return 'invalid_credentials'
+  }
+  if (m.includes('user already registered') || m.includes('already been registered')) {
+    return 'already_registered'
+  }
+  return message
 }
 
 function profileFromUser(user: User, fallback?: Partial<UserProfile>): UserProfile {
@@ -80,7 +97,7 @@ export async function signUpWithPassword(input: {
     },
   })
 
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: mapAuthError(error.message) }
 
   const user = data.user
   if (!user) return { ok: false, error: 'Signup failed' }
@@ -115,7 +132,7 @@ export async function signInWithPassword(input: {
     password,
   })
 
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: mapAuthError(error.message) }
   const user = data.user
   if (!user) return { ok: false, error: 'Login failed' }
 
@@ -150,7 +167,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
     redirectTo: `${window.location.origin}${window.location.pathname}`,
   })
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: mapAuthError(error.message) }
   return { ok: true }
 }
 

@@ -204,6 +204,16 @@ function AuthSlide({
     setAuthInfo('')
   }
 
+  const friendlyAuthError = (code?: string) => {
+    if (!code) return copy.loginFailed
+    if (code === 'rate_limited') return copy.emailRateLimited
+    if (code === 'email_not_confirmed') return copy.emailNotConfirmed
+    if (code === 'already_registered') return copy.alreadyRegistered
+    if (code === 'invalid_credentials') return copy.loginFailed
+    if (code === 'not_found') return copy.loginNotFound
+    return code
+  }
+
   const submitSignup = async (e: FormEvent) => {
     e.preventDefault()
     setAuthError('')
@@ -227,7 +237,7 @@ function AuthSlide({
       }
       const result = await signUpWithPassword({ profile: draft, password: signupPassword })
       if (!result.ok || !result.profile) {
-        setAuthError(result.error || copy.loginFailed)
+        setAuthError(friendlyAuthError(result.error))
         return
       }
       onProfileLoaded(result.profile)
@@ -256,11 +266,7 @@ function AuthSlide({
     try {
       const result = await signInWithPassword({ email: loginEmail, password: loginPassword })
       if (!result.ok || !result.profile) {
-        const msg =
-          result.error === 'not_found'
-            ? copy.loginNotFound
-            : result.error || copy.loginFailed
-        setAuthError(msg)
+        setAuthError(friendlyAuthError(result.error))
         return
       }
       onProfileLoaded(result.profile)
@@ -281,7 +287,7 @@ function AuthSlide({
     try {
       const result = await requestPasswordReset(loginEmail)
       if (!result.ok) {
-        setAuthError(result.error || copy.loginFailed)
+        setAuthError(friendlyAuthError(result.error))
         return
       }
       setAuthInfo(copy.resetSent)
