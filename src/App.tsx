@@ -182,6 +182,8 @@ function AuthSlide({
   const [signupPassword2, setSignupPassword2] = useState('')
   const [authError, setAuthError] = useState('')
   const [authInfo, setAuthInfo] = useState('')
+  /** After signup with Confirm email on — keep email visible + guide to inbox first */
+  const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const signupValid = Boolean(
@@ -202,6 +204,7 @@ function AuthSlide({
     setLoginPassword('')
     setAuthError('')
     setAuthInfo('')
+    setAwaitingEmailConfirm(false)
   }
 
   const friendlyAuthError = (code?: string) => {
@@ -242,9 +245,12 @@ function AuthSlide({
       }
       onProfileLoaded(result.profile)
       if (result.needsEmailConfirm) {
-        setAuthInfo(copy.checkEmailConfirm)
+        const email = result.profile.email
         blankSignupFields()
-        setLoginEmail(result.profile.email)
+        setLoginEmail(email)
+        setLoginPassword('')
+        setAwaitingEmailConfirm(true)
+        setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
         setMode('login')
         return
       }
@@ -257,7 +263,6 @@ function AuthSlide({
   const submitLogin = async (e: FormEvent) => {
     e.preventDefault()
     setAuthError('')
-    setAuthInfo('')
     if (!loginEmail.trim() || !loginPassword) {
       setAuthError(copy.loginFailed)
       return
@@ -267,8 +272,17 @@ function AuthSlide({
       const result = await signInWithPassword({ email: loginEmail, password: loginPassword })
       if (!result.ok || !result.profile) {
         setAuthError(friendlyAuthError(result.error))
+        // Keep the “check your inbox” tip visible if they still need to confirm
+        if (result.error === 'email_not_confirmed' || awaitingEmailConfirm) {
+          setAuthInfo(
+            copy.checkEmailConfirm.replace('{email}', loginEmail.trim().toLowerCase()),
+          )
+          setAwaitingEmailConfirm(true)
+        }
         return
       }
+      setAwaitingEmailConfirm(false)
+      setAuthInfo('')
       onProfileLoaded(result.profile)
       onNext()
     } finally {
@@ -307,6 +321,7 @@ function AuthSlide({
     setLoginPassword('')
     setAuthError('')
     setAuthInfo('')
+    setAwaitingEmailConfirm(false)
     setMode('login')
   }
 
@@ -351,8 +366,25 @@ function AuthSlide({
     return (
       <section className="slide slide-left">
         <span className="eyebrow">{copy.loginEyebrow}</span>
-        <h1>{copy.welcomeBack}</h1>
-        <p className="lead">{copy.loginLead}</p>
+        <h1>{awaitingEmailConfirm ? copy.checkEmailTitle : copy.welcomeBack}</h1>
+        <p className="lead">
+          {awaitingEmailConfirm ? copy.checkEmailLead : copy.loginLead}
+        </p>
+        {authInfo ? (
+          <p
+            className="lead"
+            style={{
+              margin: '0 0 1rem',
+              padding: '0.85rem 1rem',
+              borderRadius: 8,
+              background: 'rgba(255, 214, 90, 0.12)',
+              border: '1px solid rgba(255, 214, 90, 0.35)',
+              color: 'var(--text)',
+            }}
+          >
+            {authInfo}
+          </p>
+        ) : null}
         <form
           className="stack"
           autoComplete="off"
@@ -365,6 +397,7 @@ function AuthSlide({
               name="sonique-login-email"
               autoComplete="off"
               value={loginEmail}
+              readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
               onChange={(e) => {
                 setLoginEmail(e.target.value)
                 setAuthError('')
@@ -373,7 +406,12 @@ function AuthSlide({
             />
           </label>
           <label className="field">
-            <span>{copy.password}</span>
+            <span>
+              {copy.password}
+              {awaitingEmailConfirm ? (
+                <em className="optional-tag"> — {copy.afterEmailConfirm}</em>
+              ) : null}
+            </span>
             <input
               type="password"
               name="sonique-login-password"
@@ -389,11 +427,6 @@ function AuthSlide({
           {authError ? (
             <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
               {authError}
-            </p>
-          ) : null}
-          {authInfo ? (
-            <p className="lead" style={{ margin: 0 }}>
-              {authInfo}
             </p>
           ) : null}
           <div className="actions">

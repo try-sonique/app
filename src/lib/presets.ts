@@ -127,7 +127,12 @@ const FR = {
   passwordMismatch: 'Les mots de passe ne correspondent pas.',
   passwordTooShort: 'Le mot de passe doit faire au moins 6 caractères.',
   authBusy: 'Un instant…',
-  checkEmailConfirm: 'Compte créé — vérifie ta boîte mail pour confirmer, puis reconnecte-toi.',
+  checkEmailTitle: 'Vérifie ta boîte mail',
+  checkEmailLead:
+    'Avant le mot de passe : ouvre le mail de confirmation Sonique, clique le lien, puis reviens ici.',
+  checkEmailConfirm:
+    'Compte créé. Un email a été envoyé à {email}. Confirme d’abord ce lien — ensuite seulement, entre ton mot de passe ci-dessous (le même qu’à l’inscription).',
+  afterEmailConfirm: 'après avoir confirmé le mail',
   back: 'Retour',
   continue: 'Continuer',
   createAccountLink: 'Première fois ? Créer un compte',
@@ -310,7 +315,12 @@ const EN: { [K in keyof typeof FR]: string } = {
   passwordMismatch: 'Passwords do not match.',
   passwordTooShort: 'Password must be at least 6 characters.',
   authBusy: 'One moment…',
-  checkEmailConfirm: 'Account created — check your email to confirm, then log in.',
+  checkEmailTitle: 'Check your inbox',
+  checkEmailLead:
+    'Before the password: open the Sonique confirmation email, click the link, then come back here.',
+  checkEmailConfirm:
+    'Account created. An email was sent to {email}. Confirm that link first — only then enter your password below (the same one from signup).',
+  afterEmailConfirm: 'after confirming the email',
   back: 'Back',
   continue: 'Continue',
   createAccountLink: 'First time? Create an account',
