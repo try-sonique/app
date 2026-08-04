@@ -30,6 +30,13 @@ export type AuthResult = {
 export function mapAuthError(message: string): string {
   const m = message.toLowerCase()
   if (m.includes('rate limit')) return 'rate_limited'
+  if (
+    m.includes('otp_expired') ||
+    m.includes('email link is invalid') ||
+    m.includes('link is invalid or has expired')
+  ) {
+    return 'link_expired'
+  }
   if (m.includes('email not confirmed') || m.includes('not confirmed')) {
     return 'email_not_confirmed'
   }
@@ -162,7 +169,7 @@ export async function signInWithPassword(input: {
 
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
   if (!isSupabaseConfigured || !supabase) {
-    return { ok: false, error: 'Supabase is not configured yet' }
+    return { ok: false, error: 'Auth is not configured yet' }
   }
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
     redirectTo: `${window.location.origin}${window.location.pathname}`,

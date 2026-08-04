@@ -102,7 +102,7 @@ const FR = {
   accountEyebrow: 'Compte',
   accountTitle: 'Ton profil Sonique',
   accountLead:
-    'Tes infos de compte. Le mot de passe reste chez Supabase — jamais affiché ici.',
+    'Tes infos de compte. Le mot de passe est stocké de façon sécurisée — jamais affiché ici.',
   accountSessions: 'Voir mes sessions',
   accountBack: 'Retour',
   phoneMissing: 'Non renseigné',
@@ -161,9 +161,11 @@ const FR = {
     "Aucun compte trouvé avec cet email. Choisis « Créer un compte » pour t’inscrire.",
   loginFailed: 'Email ou mot de passe incorrect.',
   emailRateLimited:
-    'Trop d’essais d’email pour le moment (limite Supabase). Attends 5–15 minutes, puis réessaie — ou désactive « Confirm email » dans Supabase Auth pour tester sans envoi.',
+    'Trop d’essais pour le moment. Réessaie dans un instant — ou utilise un autre email.',
   emailNotConfirmed:
-    'Email pas encore confirmé. Ouvre le lien dans ta boîte mail, ou désactive « Confirm email » dans Supabase Auth pour tester plus vite.',
+    'Email pas encore confirmé. Ouvre le lien reçu dans ta boîte mail, puis reviens ici avec ton mot de passe.',
+  emailLinkExpired:
+    'Le lien du mail a expiré ou n’est plus valide. Demande un nouveau mail (créer un compte / mot de passe oublié), puis reconnecte-toi.',
   alreadyRegistered: 'Un compte existe déjà avec cet email — connecte-toi plutôt.',
 
   // Piece pick
@@ -304,7 +306,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   accountEyebrow: 'Account',
   accountTitle: 'Your Sonique profile',
   accountLead:
-    'Your account details. The password stays in Supabase — never shown here.',
+    'Your account details. The password is stored securely — never shown here.',
   accountSessions: 'View my sessions',
   accountBack: 'Back',
   phoneMissing: 'Not set',
@@ -360,9 +362,11 @@ const EN: { [K in keyof typeof FR]: string } = {
   loginNotFound: 'No account found with that email. Choose “Create an account” to sign up.',
   loginFailed: 'Incorrect email or password.',
   emailRateLimited:
-    'Too many email attempts right now (Supabase limit). Wait 5–15 minutes, then try again — or turn off “Confirm email” in Supabase Auth so testing doesn’t send mail.',
+    'Too many attempts right now. Try again in a moment — or use another email.',
   emailNotConfirmed:
-    'Email not confirmed yet. Open the link in your inbox, or turn off “Confirm email” in Supabase Auth to test faster.',
+    'Email not confirmed yet. Open the link in your inbox, then come back here with your password.',
+  emailLinkExpired:
+    'That email link expired or is no longer valid. Request a new one (sign up / forgot password), then log in again.',
   alreadyRegistered: 'An account already exists with that email — log in instead.',
 
   choosePiece: 'Choose a piece',

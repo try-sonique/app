@@ -191,6 +191,20 @@ function AuthSlide({
   const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false)
   const [busy, setBusy] = useState(false)
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
+        sessionStorage.removeItem('sonique.authFlash')
+        setMode('login')
+        setLoginStep(getRememberedEmail() ? 'password' : 'email')
+        setAuthError(copy.emailLinkExpired)
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot flash on mount
+  }, [])
+
   const signupValid = Boolean(
     signupFirstName.trim() &&
       signupEmail.trim() &&
@@ -220,6 +234,7 @@ function AuthSlide({
     if (!code) return copy.loginFailed
     if (code === 'rate_limited') return copy.emailRateLimited
     if (code === 'email_not_confirmed') return copy.emailNotConfirmed
+    if (code === 'link_expired') return copy.emailLinkExpired
     if (code === 'already_registered') return copy.alreadyRegistered
     if (code === 'invalid_credentials') return copy.loginFailed
     if (code === 'not_found') return copy.loginNotFound
@@ -352,6 +367,15 @@ function AuthSlide({
     setAwaitingEmailConfirm(false)
     setLoginStep(saved ? 'password' : 'email')
     setMode('login')
+    try {
+      if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
+        sessionStorage.removeItem('sonique.authFlash')
+        setAuthError(copy.emailLinkExpired)
+        setLoginStep(saved ? 'password' : 'email')
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   if (mode === 'choose') {
@@ -378,7 +402,7 @@ function AuthSlide({
         </div>
         {!isSupabaseConfigured ? (
           <p className="footer-note" style={{ opacity: 0.7 }}>
-            Auth local (Supabase keys not set yet)
+            Auth local (keys not set yet)
           </p>
         ) : null}
         <p className="footer-note">

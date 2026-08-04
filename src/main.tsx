@@ -34,6 +34,28 @@ document.title =
     ? 'Sonique — Play your favorite pieces'
     : 'Sonique — Joue tes morceaux préférés'
 
+// Auth email links sometimes land with #error=... (expired confirm link, etc.)
+try {
+  const rawHash = window.location.hash.replace(/^#/, '')
+  if (rawHash.includes('error')) {
+    const hp = new URLSearchParams(rawHash)
+    const code = (hp.get('error_code') || '').toLowerCase()
+    const desc = (hp.get('error_description') || '').toLowerCase()
+    if (
+      code === 'otp_expired' ||
+      desc.includes('expired') ||
+      desc.includes('invalid') ||
+      hp.get('error') === 'access_denied'
+    ) {
+      sessionStorage.setItem('sonique.authFlash', 'link_expired')
+    }
+    const clean = `${window.location.pathname}${window.location.search}`
+    window.history.replaceState({}, '', clean)
+  }
+} catch {
+  /* ignore */
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
