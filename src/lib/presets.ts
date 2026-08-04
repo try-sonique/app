@@ -112,6 +112,15 @@ const FR = {
   accountSessionsEmpty: 'Aucune session pour l’instant',
   accountSessionsCount: '{n} session(s)',
   accountBack: 'Retour',
+  accountLanguage: 'Langue',
+  chooseLanguage: 'Choisis ta langue',
+  langFr: 'Français',
+  langEn: 'English',
+  editProfile: 'Modifier',
+  saveProfile: 'Enregistrer',
+  cancelEdit: 'Annuler',
+  profileSaved: 'Profil mis à jour.',
+  emailLockedHint: 'L’email ne se change pas ici (lié au compte).',
   phoneMissing: 'Non renseigné',
   nameMissing: '—',
   backToPiece: 'Retour au choix du morceau',
@@ -317,6 +326,15 @@ const EN: { [K in keyof typeof FR]: string } = {
   accountSessionsEmpty: 'No sessions yet',
   accountSessionsCount: '{n} session(s)',
   accountBack: 'Back',
+  accountLanguage: 'Language',
+  chooseLanguage: 'Choose your language',
+  langFr: 'Français',
+  langEn: 'English',
+  editProfile: 'Edit',
+  saveProfile: 'Save',
+  cancelEdit: 'Cancel',
+  profileSaved: 'Profile updated.',
+  emailLockedHint: 'Email can’t be changed here (linked to your account).',
   phoneMissing: 'Not set',
   nameMissing: '—',
   backToPiece: 'Back to piece selection',
@@ -492,9 +510,26 @@ const EN: { [K in keyof typeof FR]: string } = {
 
 export type CopyKey = keyof typeof FR
 
+const LOCALE_KEY = 'sonique.locale'
+
 export function getLocale(): Locale {
+  try {
+    const saved = localStorage.getItem(LOCALE_KEY)
+    if (saved === 'en' || saved === 'fr') return saved
+  } catch {
+    /* ignore */
+  }
   const raw = (import.meta.env.VITE_LOCALE as string) || 'fr'
   return raw === 'en' ? 'en' : 'fr'
+}
+
+export function setLocale(locale: Locale) {
+  try {
+    localStorage.setItem(LOCALE_KEY, locale)
+  } catch {
+    /* ignore */
+  }
+  document.documentElement.lang = locale
 }
 
 export function t() {

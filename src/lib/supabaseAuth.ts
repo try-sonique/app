@@ -188,6 +188,38 @@ export async function signInWithPassword(input: {
   return { ok: true, profile }
 }
 
+export async function updateUserProfile(profile: UserProfile): Promise<AuthResult> {
+  const next = {
+    firstName: profile.firstName.trim(),
+    lastName: profile.lastName.trim(),
+    email: profile.email.trim().toLowerCase(),
+    phone: profile.phone.trim(),
+  }
+  saveProfile(next)
+
+  if (!isSupabaseConfigured || !supabase) {
+    return { ok: true, profile: next }
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  const user = sessionData.session?.user
+  if (!user) {
+    return { ok: true, profile: next }
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    data: {
+      first_name: next.firstName,
+      last_name: next.lastName,
+      phone: next.phone,
+    },
+  })
+  if (error) return { ok: false, error: mapAuthError(error.message), profile: next }
+
+  await upsertProfileRow(user, next)
+  return { ok: true, profile: next }
+}
+
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
   if (!isSupabaseConfigured || !supabase) {
     return { ok: false, error: 'Auth is not configured yet' }
