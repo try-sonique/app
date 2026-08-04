@@ -24,15 +24,20 @@ function downloadScoreFile(src: string, title: string) {
 }
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
-  findProfileByEmail,
   getCurrentProfile,
   getRecordingBlob,
   listSessions,
-  saveProfile,
   saveRecordingBlob,
   saveSession,
   type StoredSession,
 } from './lib/storage'
+import {
+  getSessionProfile,
+  isSupabaseConfigured,
+  requestPasswordReset,
+  signInWithPassword,
+  signUpWithPassword,
+} from './lib/supabaseAuth'
 import {
   MAX_TAKES,
   initialState,
@@ -167,28 +172,97 @@ function AuthSlide({
   const copy = t()
   const [mode, setMode] = useState<AuthMode>('choose')
   const [loginEmail, setLoginEmail] = useState(profile.email)
-  const [loginError, setLoginError] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [signupPassword, setSignupPassword] = useState('')
+  const [signupPassword2, setSignupPassword2] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authInfo, setAuthInfo] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  const signupValid = Boolean(profile.firstName.trim() && profile.email.trim())
+  const signupValid = Boolean(
+    profile.firstName.trim() &&
+      profile.email.trim() &&
+      signupPassword.length >= 6 &&
+      signupPassword === signupPassword2,
+  )
 
-  const submitSignup = (e: FormEvent) => {
+  const submitSignup = async (e: FormEvent) => {
     e.preventDefault()
-    if (!signupValid) return
-    saveProfile(profile)
-    onNext()
-  }
-
-  const submitLogin = (e: FormEvent) => {
-    e.preventDefault()
-    const found = findProfileByEmail(loginEmail)
-    if (!found) {
-      setLoginError(copy.loginNotFound)
+    setAuthError('')
+    setAuthInfo('')
+    if (signupPassword.length < 6) {
+      setAuthError(copy.passwordTooShort)
       return
     }
-    setLoginError('')
-    onProfileLoaded(found)
-    saveProfile(found)
-    onNext()
+    if (signupPassword !== signupPassword2) {
+      setAuthError(copy.passwordMismatch)
+      return
+    }
+    if (!profile.firstName.trim() || !profile.email.trim()) return
+    setBusy(true)
+    try {
+      const result = await signUpWithPassword({ profile, password: signupPassword })
+      if (!result.ok || !result.profile) {
+        setAuthError(result.error || copy.loginFailed)
+        return
+      }
+      onProfileLoaded(result.profile)
+      if (result.needsEmailConfirm) {
+        setAuthInfo(copy.checkEmailConfirm)
+        setMode('login')
+        setLoginEmail(result.profile.email)
+        return
+      }
+      onNext()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const submitLogin = async (e: FormEvent) => {
+    e.preventDefault()
+    setAuthError('')
+    setAuthInfo('')
+    if (!loginEmail.trim() || !loginPassword) {
+      setAuthError(copy.loginFailed)
+      return
+    }
+    setBusy(true)
+    try {
+      const result = await signInWithPassword({ email: loginEmail, password: loginPassword })
+      if (!result.ok || !result.profile) {
+        const msg =
+          result.error === 'not_found'
+            ? copy.loginNotFound
+            : result.error || copy.loginFailed
+        setAuthError(msg)
+        return
+      }
+      onProfileLoaded(result.profile)
+      onNext()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onForgot = async () => {
+    setAuthError('')
+    setAuthInfo('')
+    if (!loginEmail.trim()) {
+      setAuthError(copy.loginFailed)
+      return
+    }
+    setBusy(true)
+    try {
+      const result = await requestPasswordReset(loginEmail)
+      if (!result.ok) {
+        setAuthError(result.error || copy.loginFailed)
+        return
+      }
+      setAuthInfo(copy.resetSent)
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (mode === 'choose') {
@@ -212,6 +286,11 @@ function AuthSlide({
             <small>{copy.firstTimeHint}</small>
           </button>
         </div>
+        {!isSupabaseConfigured ? (
+          <p className="footer-note" style={{ opacity: 0.7 }}>
+            Auth local (Supabase keys not set yet)
+          </p>
+        ) : null}
         <p className="footer-note">
           Support :{' '}
           <a className="support" href="mailto:sonique@contact.co">
@@ -228,7 +307,7 @@ function AuthSlide({
         <span className="eyebrow">{copy.loginEyebrow}</span>
         <h1>{copy.welcomeBack}</h1>
         <p className="lead">{copy.loginLead}</p>
-        <form className="stack" onSubmit={submitLogin}>
+        <form className="stack" onSubmit={(e) => void submitLogin(e)}>
           <label className="field">
             <span>{copy.email}</span>
             <input
@@ -237,22 +316,44 @@ function AuthSlide({
               value={loginEmail}
               onChange={(e) => {
                 setLoginEmail(e.target.value)
-                setLoginError('')
+                setAuthError('')
               }}
               required
             />
           </label>
-          {loginError ? (
+          <label className="field">
+            <span>{copy.password}</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={loginPassword}
+              onChange={(e) => {
+                setLoginPassword(e.target.value)
+                setAuthError('')
+              }}
+              required
+            />
+          </label>
+          {authError ? (
             <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
-              {loginError}
+              {authError}
+            </p>
+          ) : null}
+          {authInfo ? (
+            <p className="lead" style={{ margin: 0 }}>
+              {authInfo}
             </p>
           ) : null}
           <div className="actions">
-            <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
+            <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')} disabled={busy}>
               {copy.back}
             </button>
-            <button type="submit" className="btn btn-primary" disabled={!loginEmail.trim()}>
-              {copy.continue}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={busy || !loginEmail.trim() || !loginPassword}
+            >
+              {busy ? copy.authBusy : copy.continue}
             </button>
           </div>
         </form>
@@ -260,6 +361,15 @@ function AuthSlide({
           type="button"
           className="linkish"
           style={{ marginTop: '1rem' }}
+          disabled={busy}
+          onClick={() => void onForgot()}
+        >
+          {copy.forgotPassword}
+        </button>
+        <button
+          type="button"
+          className="linkish"
+          style={{ marginTop: '0.5rem' }}
           onClick={() => setMode('signup')}
         >
           {copy.createAccountLink}
@@ -273,7 +383,7 @@ function AuthSlide({
       <span className="eyebrow">{copy.signupEyebrow}</span>
       <h1>{copy.createSpace}</h1>
       <p className="lead">{copy.signupLead}</p>
-      <form className="stack" onSubmit={submitSignup}>
+      <form className="stack" onSubmit={(e) => void submitSignup(e)}>
         <label className="field">
           <span>{copy.firstName}</span>
           <input
@@ -295,6 +405,34 @@ function AuthSlide({
           />
         </label>
         <label className="field">
+          <span>{copy.password}</span>
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={signupPassword}
+            onChange={(e) => {
+              setSignupPassword(e.target.value)
+              setAuthError('')
+            }}
+            required
+            minLength={6}
+          />
+        </label>
+        <label className="field">
+          <span>{copy.passwordConfirm}</span>
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={signupPassword2}
+            onChange={(e) => {
+              setSignupPassword2(e.target.value)
+              setAuthError('')
+            }}
+            required
+            minLength={6}
+          />
+        </label>
+        <label className="field">
           <span>
             {copy.lastName} <em className="optional-tag">{copy.optional}</em>
           </span>
@@ -312,17 +450,22 @@ function AuthSlide({
           <input
             type="tel"
             autoComplete="tel"
-            placeholder="+1…"
+            placeholder="+33…"
             value={profile.phone}
             onChange={(e) => onChange('phone', e.target.value)}
           />
         </label>
+        {authError ? (
+          <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
+            {authError}
+          </p>
+        ) : null}
         <div className="actions">
-          <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
+          <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')} disabled={busy}>
             {copy.back}
           </button>
-          <button type="submit" className="btn btn-primary" disabled={!signupValid}>
-            {copy.continue}
+          <button type="submit" className="btn btn-primary" disabled={busy || !signupValid}>
+            {busy ? copy.authBusy : copy.createAndContinue}
           </button>
         </div>
       </form>
@@ -1187,6 +1330,12 @@ export default function App() {
     if (existing) {
       setState((s) => ({ ...s, profile: existing }))
     }
+    void (async () => {
+      const remote = await getSessionProfile()
+      if (remote) {
+        setState((s) => ({ ...s, profile: remote }))
+      }
+    })()
   }, [])
 
   const withPartition = state.hasPartition !== false
