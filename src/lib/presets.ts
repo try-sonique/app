@@ -97,6 +97,7 @@ const FR = {
   phasePlay: 'Jouer',
   phaseFeedback: 'Retour',
   sessions: 'Mes sessions',
+  logOut: 'Se déconnecter',
   backToPiece: 'Retour au choix du morceau',
   backHome: 'Retour à l’accueil Sonique',
   footerWithScore:
@@ -287,6 +288,7 @@ const EN: { [K in keyof typeof FR]: string } = {
   phasePlay: 'Play',
   phaseFeedback: 'Feedback',
   sessions: 'My sessions',
+  logOut: 'Log out',
   backToPiece: 'Back to piece selection',
   backHome: 'Back to Sonique home',
   footerWithScore:

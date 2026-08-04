@@ -1449,6 +1449,14 @@ export default function App() {
   const go = (slide: number) => setState((s) => ({ ...s, slide }))
   const patch = (partial: Partial<AppState>) => setState((s) => ({ ...s, ...partial }))
 
+  const handleLogOut = () => {
+    setShowHistory(false)
+    void (async () => {
+      await signOut()
+      setState({ ...initialState, slide: 2 })
+    })()
+  }
+
   const finishTake = (
     audioBlob: Blob | null,
     meta?: Omit<PerformanceMeta, 'features'>,
@@ -1786,9 +1794,14 @@ export default function App() {
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {state.profile.email ? (
-            <button type="button" className="top-link" onClick={() => setShowHistory(true)}>
-              {t().sessions}
-            </button>
+            <>
+              <button type="button" className="top-link" onClick={() => setShowHistory(true)}>
+                {t().sessions}
+              </button>
+              <button type="button" className="top-link" onClick={handleLogOut}>
+                {t().logOut}
+              </button>
+            </>
           ) : null}
           {!showHistory && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
         </div>
