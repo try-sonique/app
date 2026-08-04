@@ -2,6 +2,7 @@ import type { AriaFeedback, UserProfile } from '../types'
 
 const PROFILES_KEY = 'sonique.profiles'
 const CURRENT_KEY = 'sonique.currentEmail'
+const REMEMBER_EMAIL_KEY = 'sonique.rememberEmail'
 const SESSIONS_KEY = 'sonique.sessions'
 const DB_NAME = 'sonique-db'
 const DB_STORE = 'recordings'
@@ -55,6 +56,25 @@ export function getCurrentProfile(): UserProfile | null {
 
 export function getCurrentEmail(): string | null {
   return localStorage.getItem(CURRENT_KEY)
+}
+
+/** Email to prefill on the login screen (opt-in “remember me”). */
+export function getRememberedEmail(): string {
+  try {
+    return (localStorage.getItem(REMEMBER_EMAIL_KEY) || '').trim().toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+export function setRememberedEmail(email: string | null) {
+  try {
+    const v = (email || '').trim().toLowerCase()
+    if (v) localStorage.setItem(REMEMBER_EMAIL_KEY, v)
+    else localStorage.removeItem(REMEMBER_EMAIL_KEY)
+  } catch {
+    /* ignore */
+  }
 }
 
 function openDb(): Promise<IDBDatabase> {

@@ -98,6 +98,14 @@ const FR = {
   phaseFeedback: 'Retour',
   sessions: 'Mes sessions',
   logOut: 'Se déconnecter',
+  myAccount: 'Mon compte',
+  accountEyebrow: 'Compte',
+  accountTitle: 'Ton profil Sonique',
+  accountLead:
+    'Tes infos de compte. Le mot de passe reste chez Supabase — jamais affiché ici.',
+  accountSessions: 'Voir mes sessions',
+  accountBack: 'Retour',
+  phoneMissing: 'Non renseigné',
   backToPiece: 'Retour au choix du morceau',
   backHome: 'Retour à l’accueil Sonique',
   footerWithScore:
@@ -120,6 +128,14 @@ const FR = {
   loginEyebrow: 'Connexion',
   welcomeBack: 'Bon retour',
   loginLead: 'Entre ton email et ton mot de passe pour retrouver ton espace Sonique.',
+  rememberEmail: 'Mémoriser mon email sur cet appareil',
+  loginEmailContinue: 'Continuer',
+  checkEmailTitle: 'Vérifie ta boîte mail',
+  checkEmailLead:
+    'Avant le mot de passe : ouvre le mail de confirmation Sonique, clique le lien, puis reviens ici.',
+  checkEmailConfirm:
+    'Compte créé. Un email a été envoyé à {email}. Confirme d’abord ce lien — ensuite seulement, entre ton mot de passe ci-dessous (le même qu’à l’inscription).',
+  afterEmailConfirm: 'après avoir confirmé le mail',
   email: 'Email',
   password: 'Mot de passe',
   passwordConfirm: 'Confirme le mot de passe',
@@ -129,12 +145,6 @@ const FR = {
   passwordMismatch: 'Les mots de passe ne correspondent pas.',
   passwordTooShort: 'Le mot de passe doit faire au moins 6 caractères.',
   authBusy: 'Un instant…',
-  checkEmailTitle: 'Vérifie ta boîte mail',
-  checkEmailLead:
-    'Avant le mot de passe : ouvre le mail de confirmation Sonique, clique le lien, puis reviens ici.',
-  checkEmailConfirm:
-    'Compte créé. Un email a été envoyé à {email}. Confirme d’abord ce lien — ensuite seulement, entre ton mot de passe ci-dessous (le même qu’à l’inscription).',
-  afterEmailConfirm: 'après avoir confirmé le mail',
   back: 'Retour',
   continue: 'Continuer',
   createAccountLink: 'Première fois ? Créer un compte',
@@ -290,6 +300,14 @@ const EN: { [K in keyof typeof FR]: string } = {
   phaseFeedback: 'Feedback',
   sessions: 'My sessions',
   logOut: 'Log out',
+  myAccount: 'My account',
+  accountEyebrow: 'Account',
+  accountTitle: 'Your Sonique profile',
+  accountLead:
+    'Your account details. The password stays in Supabase — never shown here.',
+  accountSessions: 'View my sessions',
+  accountBack: 'Back',
+  phoneMissing: 'Not set',
   backToPiece: 'Back to piece selection',
   backHome: 'Back to Sonique home',
   footerWithScore:
@@ -310,6 +328,8 @@ const EN: { [K in keyof typeof FR]: string } = {
   loginEyebrow: 'Log in',
   welcomeBack: 'Welcome back',
   loginLead: 'Enter your email and password to open your Sonique space.',
+  rememberEmail: 'Remember my email on this device',
+  loginEmailContinue: 'Continue',
   email: 'Email',
   password: 'Password',
   passwordConfirm: 'Confirm password',

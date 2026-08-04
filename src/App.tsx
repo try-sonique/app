@@ -25,10 +25,12 @@ function downloadScoreFile(src: string, title: string) {
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
   getCurrentProfile,
+  getRememberedEmail,
   getRecordingBlob,
   listSessions,
   saveRecordingBlob,
   saveSession,
+  setRememberedEmail,
   type StoredSession,
 } from './lib/storage'
 import {
@@ -171,8 +173,11 @@ function AuthSlide({
   onNext: () => void
 }) {
   const copy = t()
+  const remembered = getRememberedEmail()
   const [mode, setMode] = useState<AuthMode>('choose')
-  const [loginEmail, setLoginEmail] = useState('')
+  const [loginStep, setLoginStep] = useState<'email' | 'password'>('email')
+  const [loginEmail, setLoginEmail] = useState(remembered)
+  const [rememberEmail, setRememberEmail] = useState(Boolean(remembered))
   const [loginPassword, setLoginPassword] = useState('')
   const [signupFirstName, setSignupFirstName] = useState('')
   const [signupLastName, setSignupLastName] = useState('')
@@ -200,11 +205,15 @@ function AuthSlide({
     setSignupPhone('')
     setSignupPassword('')
     setSignupPassword2('')
-    setLoginEmail('')
     setLoginPassword('')
     setAuthError('')
     setAuthInfo('')
     setAwaitingEmailConfirm(false)
+  }
+
+  const persistRememberPreference = (email: string) => {
+    if (rememberEmail) setRememberedEmail(email)
+    else setRememberedEmail(null)
   }
 
   const friendlyAuthError = (code?: string) => {
@@ -248,16 +257,33 @@ function AuthSlide({
         const email = result.profile.email
         blankSignupFields()
         setLoginEmail(email)
+        setRememberEmail(true)
+        setRememberedEmail(email)
         setLoginPassword('')
         setAwaitingEmailConfirm(true)
         setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
+        setLoginStep('password')
         setMode('login')
         return
       }
+      setRememberedEmail(result.profile.email)
       onNext()
     } finally {
       setBusy(false)
     }
+  }
+
+  const continueToPassword = (e: FormEvent) => {
+    e.preventDefault()
+    setAuthError('')
+    const email = loginEmail.trim().toLowerCase()
+    if (!email) {
+      setAuthError(copy.loginFailed)
+      return
+    }
+    persistRememberPreference(email)
+    setLoginEmail(email)
+    setLoginStep('password')
   }
 
   const submitLogin = async (e: FormEvent) => {
@@ -269,14 +295,13 @@ function AuthSlide({
     }
     setBusy(true)
     try {
-      const result = await signInWithPassword({ email: loginEmail, password: loginPassword })
+      const email = loginEmail.trim().toLowerCase()
+      persistRememberPreference(email)
+      const result = await signInWithPassword({ email, password: loginPassword })
       if (!result.ok || !result.profile) {
         setAuthError(friendlyAuthError(result.error))
-        // Keep the “check your inbox” tip visible if they still need to confirm
         if (result.error === 'email_not_confirmed' || awaitingEmailConfirm) {
-          setAuthInfo(
-            copy.checkEmailConfirm.replace('{email}', loginEmail.trim().toLowerCase()),
-          )
+          setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
           setAwaitingEmailConfirm(true)
         }
         return
@@ -295,6 +320,7 @@ function AuthSlide({
     setAuthInfo('')
     if (!loginEmail.trim()) {
       setAuthError(copy.loginFailed)
+      setLoginStep('email')
       return
     }
     setBusy(true)
@@ -317,11 +343,14 @@ function AuthSlide({
   }
 
   const startLogin = () => {
-    setLoginEmail('')
+    const saved = getRememberedEmail()
+    setLoginEmail(saved)
+    setRememberEmail(Boolean(saved))
     setLoginPassword('')
     setAuthError('')
     setAuthInfo('')
     setAwaitingEmailConfirm(false)
+    setLoginStep(saved ? 'password' : 'email')
     setMode('login')
   }
 
@@ -363,14 +392,13 @@ function AuthSlide({
   }
 
   if (mode === 'login') {
+    const onEmailStep = loginStep === 'email'
     return (
       <section className="slide slide-left">
         <span className="eyebrow">{copy.loginEyebrow}</span>
         <h1>{awaitingEmailConfirm ? copy.checkEmailTitle : copy.welcomeBack}</h1>
-        <p className="lead">
-          {awaitingEmailConfirm ? copy.checkEmailLead : copy.loginLead}
-        </p>
-        {authInfo ? (
+        <p className="lead">{awaitingEmailConfirm ? copy.checkEmailLead : copy.loginLead}</p>
+        {authInfo && !onEmailStep ? (
           <p
             className="lead"
             style={{
@@ -385,72 +413,132 @@ function AuthSlide({
             {authInfo}
           </p>
         ) : null}
-        <form
-          className="stack"
-          autoComplete="off"
-          onSubmit={(e) => void submitLogin(e)}
-        >
-          <label className="field">
-            <span>{copy.email}</span>
-            <input
-              type="email"
-              name="sonique-login-email"
-              autoComplete="off"
-              value={loginEmail}
-              readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
-              onChange={(e) => {
-                setLoginEmail(e.target.value)
-                setAuthError('')
-              }}
-              required
-            />
-          </label>
-          <label className="field">
-            <span>
-              {copy.password}
-              {awaitingEmailConfirm ? (
-                <em className="optional-tag"> — {copy.afterEmailConfirm}</em>
-              ) : null}
-            </span>
-            <input
-              type="password"
-              name="sonique-login-password"
-              autoComplete="new-password"
-              value={loginPassword}
-              onChange={(e) => {
-                setLoginPassword(e.target.value)
-                setAuthError('')
-              }}
-              required
-            />
-          </label>
-          {authError ? (
-            <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
-              {authError}
-            </p>
-          ) : null}
-          <div className="actions">
-            <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')} disabled={busy}>
-              {copy.back}
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={busy || !loginEmail.trim() || !loginPassword}
-            >
-              {busy ? copy.authBusy : copy.continue}
-            </button>
-          </div>
-        </form>
-        <button
-          type="button"
-          className="linkish"
-          style={{ marginTop: '1rem' }}
-          disabled={busy}
-          onClick={() => void onForgot()}
-        >
-          {copy.forgotPassword}
-        </button>
+        {onEmailStep ? (
+          <form className="stack" autoComplete="off" onSubmit={continueToPassword}>
+            <label className="field">
+              <span>{copy.email}</span>
+              <input
+                type="email"
+                name="sonique-login-email"
+                autoComplete="username"
+                value={loginEmail}
+                onChange={(e) => {
+                  setLoginEmail(e.target.value)
+                  setAuthError('')
+                }}
+                required
+              />
+            </label>
+            <label className="check-row">
+              <input
+                type="checkbox"
+                checked={rememberEmail}
+                onChange={(e) => setRememberEmail(e.target.checked)}
+              />
+              <span>{copy.rememberEmail}</span>
+            </label>
+            {authError ? (
+              <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
+                {authError}
+              </p>
+            ) : null}
+            <div className="actions">
+              <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
+                {copy.back}
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={!loginEmail.trim()}>
+                {copy.loginEmailContinue}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form
+            className="stack"
+            autoComplete="off"
+            onSubmit={(e) => void submitLogin(e)}
+          >
+            <label className="field">
+              <span>{copy.email}</span>
+              <input
+                type="email"
+                name="sonique-login-email"
+                autoComplete="username"
+                value={loginEmail}
+                readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
+                onChange={(e) => {
+                  setLoginEmail(e.target.value)
+                  setAuthError('')
+                }}
+                required
+              />
+            </label>
+            <label className="check-row">
+              <input
+                type="checkbox"
+                checked={rememberEmail}
+                onChange={(e) => setRememberEmail(e.target.checked)}
+              />
+              <span>{copy.rememberEmail}</span>
+            </label>
+            <label className="field">
+              <span>
+                {copy.password}
+                {awaitingEmailConfirm ? (
+                  <em className="optional-tag"> — {copy.afterEmailConfirm}</em>
+                ) : null}
+              </span>
+              <input
+                type="password"
+                name="sonique-login-password"
+                autoComplete="current-password"
+                value={loginPassword}
+                onChange={(e) => {
+                  setLoginPassword(e.target.value)
+                  setAuthError('')
+                }}
+                required
+              />
+            </label>
+            {authError ? (
+              <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
+                {authError}
+              </p>
+            ) : null}
+            <div className="actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setLoginPassword('')
+                  setAuthError('')
+                  if (awaitingEmailConfirm) setMode('choose')
+                  else setLoginStep('email')
+                }}
+                disabled={busy}
+              >
+                {copy.back}
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={busy || !loginEmail.trim() || !loginPassword}
+              >
+                {busy ? copy.authBusy : copy.continue}
+              </button>
+            </div>
+          </form>
+        )}
+        {!onEmailStep ? (
+          <button
+            type="button"
+            className="linkish"
+            style={{ marginTop: '1rem' }}
+            disabled={busy}
+            onClick={() => void onForgot()}
+          >
+            {copy.forgotPassword}
+          </button>
+        ) : null}
         <button
           type="button"
           className="linkish"
@@ -1324,6 +1412,56 @@ function Report({
 }
 
 
+function AccountView({
+  profile,
+  onBack,
+  onOpenSessions,
+  onLogOut,
+}: {
+  profile: UserProfile
+  onBack: () => void
+  onOpenSessions: () => void
+  onLogOut: () => void
+}) {
+  const copy = t()
+  const rows: { label: string; value: string }[] = [
+    { label: copy.firstName, value: profile.firstName.trim() || '—' },
+    { label: copy.lastName, value: profile.lastName.trim() || '—' },
+    { label: copy.email, value: profile.email.trim() || '—' },
+    {
+      label: copy.phoneOptional,
+      value: profile.phone.trim() || copy.phoneMissing,
+    },
+  ]
+
+  return (
+    <section className="slide">
+      <span className="eyebrow">{copy.accountEyebrow}</span>
+      <h1>{copy.accountTitle}</h1>
+      <p className="lead">{copy.accountLead}</p>
+      <dl className="account-grid">
+        {rows.map((row) => (
+          <div key={row.label} className="account-row">
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="actions" style={{ marginTop: '1.25rem', flexWrap: 'wrap' }}>
+        <button type="button" className="btn btn-ghost" onClick={onBack}>
+          {copy.accountBack}
+        </button>
+        <button type="button" className="btn btn-primary" onClick={onOpenSessions}>
+          {copy.accountSessions}
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={onLogOut}>
+          {copy.logOut}
+        </button>
+      </div>
+    </section>
+  )
+}
+
 function formatSessionHeadline(headline: string, pieceName: string) {
   const copy = t()
   const cleaned = headline
@@ -1416,6 +1554,7 @@ export default function App() {
     return saved && THEMES.some((t) => t.id === saved) ? saved : 'noir'
   })
   const [showHistory, setShowHistory] = useState(false)
+  const [showAccount, setShowAccount] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -1454,6 +1593,7 @@ export default function App() {
 
   const handleLogOut = () => {
     setShowHistory(false)
+    setShowAccount(false)
     void (async () => {
       await signOut()
       setState({ ...initialState, slide: 2 })
@@ -1630,7 +1770,19 @@ export default function App() {
 
   let body: ReactNode = null
 
-  if (showHistory) {
+  if (showAccount) {
+    body = (
+      <AccountView
+        profile={state.profile}
+        onBack={() => setShowAccount(false)}
+        onOpenSessions={() => {
+          setShowAccount(false)
+          setShowHistory(true)
+        }}
+        onLogOut={handleLogOut}
+      />
+    )
+  } else if (showHistory) {
     body = (
       <HistoryView
         email={state.profile.email}
@@ -1787,6 +1939,7 @@ export default function App() {
           className="brand-mark"
           onClick={() => {
             setShowHistory(false)
+            setShowAccount(false)
             // Ne pas renvoyer à l’accueil après connexion (bug ressenti slide 2→1)
             if (state.profile.email.trim()) go(3)
             else go(1)
@@ -1797,16 +1950,18 @@ export default function App() {
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {state.profile.email ? (
-            <>
-              <button type="button" className="top-link" onClick={() => setShowHistory(true)}>
-                {t().sessions}
-              </button>
-              <button type="button" className="top-link" onClick={handleLogOut}>
-                {t().logOut}
-              </button>
-            </>
+            <button
+              type="button"
+              className="top-link"
+              onClick={() => {
+                setShowHistory(false)
+                setShowAccount(true)
+              }}
+            >
+              {t().myAccount}
+            </button>
           ) : null}
-          {!showHistory && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
+          {!showHistory && !showAccount && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
         </div>
       </header>
       {body}

@@ -10,6 +10,7 @@ if (params.has('fresh') || params.has('reset')) {
   try {
     localStorage.removeItem('sonique.profiles')
     localStorage.removeItem('sonique.currentEmail')
+    localStorage.removeItem('sonique.rememberEmail')
     localStorage.removeItem('sonique.sessions')
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith('sb-') && key.includes('auth-token')) {
