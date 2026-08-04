@@ -1,83 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AriaFeedback } from '../types'
 import type { AudioFeatures } from './audioFeatures'
+import {
+  BY_EAR_CUES_EN,
+  BY_EAR_CUES_FR,
+  PIECE_CUES,
+  PRACTICE_CUES_EN,
+  PRACTICE_CUES_FR,
+  RECORD_CUES_EN,
+  RECORD_CUES_FR,
+  type Cue,
+} from './ariaCues'
 import { getLocale, t } from './presets'
-
-type Cue = { text: string; tone: 'good' | 'warn' | 'neutral' }
-
-const PRACTICE_CUES_FR: Cue[] = [
-  { text: 'Bien — le phrasé respire.', tone: 'good' },
-  { text: 'Le rythme se décale un peu ici.', tone: 'warn' },
-  { text: 'Tiens la tenue jusqu’au bout.', tone: 'good' },
-  { text: 'Tempo : un cran plus stable.', tone: 'warn' },
-  { text: 'Belle présence — continue comme ça.', tone: 'good' },
-  { text: 'Assouplis l’attaque sur cette phrase.', tone: 'warn' },
-]
-
-const PRACTICE_CUES_EN: Cue[] = [
-  { text: 'Nice — the phrasing breathes.', tone: 'good' },
-  { text: 'The rhythm drifts a little here.', tone: 'warn' },
-  { text: 'Hold the sustain all the way through.', tone: 'good' },
-  { text: 'Tempo: keep it one notch steadier.', tone: 'warn' },
-  { text: 'Strong presence — keep that.', tone: 'good' },
-  { text: 'Soften the attack on this phrase.', tone: 'warn' },
-]
-
-const BY_EAR_CUES_FR: Cue[] = [
-  { text: 'Je t’écoute à l’oreille — belle ligne.', tone: 'good' },
-  { text: 'Le tempo avance un peu trop.', tone: 'warn' },
-  { text: 'Clarté sur les notes graves.', tone: 'good' },
-  { text: 'Respire entre les phrases.', tone: 'warn' },
-]
-
-const BY_EAR_CUES_EN: Cue[] = [
-  { text: 'Listening by ear — lovely line.', tone: 'good' },
-  { text: 'Tempo is pushing ahead a bit.', tone: 'warn' },
-  { text: 'Clarity in the lower notes.', tone: 'good' },
-  { text: 'Breathe between the phrases.', tone: 'warn' },
-]
-
-const PIECE_CUES: Record<string, { fr: Cue[]; en: Cue[] }> = {
-  clair: {
-    fr: [
-      { text: 'Laisse le silence parler entre les accords.', tone: 'good' },
-      { text: 'Pedale douce — ne noie pas le milieu.', tone: 'warn' },
-      { text: 'Plus de velours sur les tenues.', tone: 'good' },
-    ],
-    en: [
-      { text: 'Let the silence speak between the chords.', tone: 'good' },
-      { text: 'Soft pedal — don’t wash out the middle.', tone: 'warn' },
-      { text: 'More velvet on the sustained notes.', tone: 'good' },
-    ],
-  },
-  entertainer: {
-    fr: [
-      { text: 'Garde le swing — pas trop carré.', tone: 'good' },
-      { text: 'La syncope tire un peu en avant.', tone: 'warn' },
-      { text: 'Main gauche stable, main droite danse.', tone: 'good' },
-    ],
-    en: [
-      { text: 'Keep the swing — don’t square it off.', tone: 'good' },
-      { text: 'The syncopation is pushing ahead a bit.', tone: 'warn' },
-      { text: 'Left hand steady, right hand dances.', tone: 'good' },
-    ],
-  },
-  elise: {
-    fr: [
-      { text: 'Clarté sur le motif — chaque note compte.', tone: 'good' },
-      { text: 'Ne précipite pas le retour du thème.', tone: 'warn' },
-      { text: 'Beau legato sur la ligne droite.', tone: 'good' },
-    ],
-    en: [
-      { text: 'Clarity on the motif — every note counts.', tone: 'good' },
-      { text: 'Don’t rush the theme’s return.', tone: 'warn' },
-      { text: 'Nice legato on the right-hand line.', tone: 'good' },
-    ],
-  },
-}
-
-const RECORD_CUES_FR = ['Continue.', 'Belle présence.', 'Tu y es.', 'Nice.']
-const RECORD_CUES_EN = ['Keep going.', 'Nice presence.', 'You’ve got this.', 'Nice.']
 
 export function useAriaCues(
   active: boolean,
@@ -110,10 +44,7 @@ export function useAriaCues(
           ? PRACTICE_CUES_EN
           : PRACTICE_CUES_FR
     const record = locale === 'en' ? RECORD_CUES_EN : RECORD_CUES_FR
-    const pool =
-      mode === 'practice'
-        ? [...piecePool, ...base]
-        : record.map((text) => ({ text, tone: 'good' as const }))
+    const pool = mode === 'practice' ? [...piecePool, ...base] : record
 
     index.current = 0
     const tick = () => {
@@ -123,7 +54,7 @@ export function useAriaCues(
     }
 
     tick()
-    const id = window.setInterval(tick, mode === 'practice' ? 4500 : 3200)
+    const id = window.setInterval(tick, mode === 'practice' ? 4500 : 3800)
     return () => window.clearInterval(id)
   }, [active, mode, locale, pieceId, byEar])
 
@@ -188,14 +119,14 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
     return en
       ? {
           strengths: [
-            'You commit to the theatrical shifts — this piece needs that courage',
+            'You commit to the theatrical shifts. this piece needs that courage',
             'The quieter pockets already feel intentional, not shy',
             'You hold long lines without collapsing the drama into mush',
           ],
           weaknesses: [
             'Big section changes still wobble before the new character lands',
             'Power moments can flatten the quieter answer that should follow',
-            'Some transitions arrive early — the theatre needs a beat to breathe',
+            'Some transitions arrive early. the theatre needs a beat to breathe',
           ],
           improvements: [
             'Character tip: mark 2 mood changes, play only the bar before/after each',
@@ -205,14 +136,14 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
         }
       : {
           strengths: [
-            'Tu assumes les changements théâtraux — ce morceau en a besoin',
+            'Tu assumes les changements théâtraux. ce morceau en a besoin',
             'Les poches plus douces sonnent déjà choisies, pas timides',
             'Tu tiens les grandes lignes sans noyer le drame',
           ],
           weaknesses: [
             'Les gros changements de section tremblent avant le nouveau caractère',
             'Les moments de puissance aplatissent parfois la réponse douce',
-            'Certaines transitions arrivent tôt — le théâtre a besoin d’un temps',
+            'Certaines transitions arrivent tôt. le théâtre a besoin d’un temps',
           ],
           improvements: [
             'Piste caractère : marque 2 changements d’humeur, ne joue que la mesure avant/après',
@@ -225,7 +156,7 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
     return en
       ? {
           strengths: [
-            'The soft atmosphere is believable — you don’t force the hush',
+            'The soft atmosphere is believable. you don’t force the hush',
             'You leave air between gestures; the night-piece needs that',
             'Tone stays rounded instead of poking every attack',
           ],
@@ -235,14 +166,14 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
             'Pedal / sustain blur can wash the middle voices for a bar',
           ],
           improvements: [
-            'Color tip: 4 bars pp → p only — listen for overtones, not volume',
+            'Color tip: 4 bars pp → p only. listen for overtones, not volume',
             'Ending tip: sing the last note of each phrase, then match it on keys',
             'Space tip: mark two breath bars and protect them like gold',
           ],
         }
       : {
           strengths: [
-            'L’atmosphère douce est crédible — tu ne forces pas le chuchotement',
+            'L’atmosphère douce est crédible. tu ne forces pas le chuchotement',
             'Tu laisses de l’air entre les gestes ; ce morceau nocturne en a besoin',
             'Le son reste rond au lieu de piquer chaque attaque',
           ],
@@ -252,7 +183,7 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
             'Sustain / pédale peut brouiller le medium une mesure',
           ],
           improvements: [
-            'Piste couleur : 4 mesures pp → p seulement — écoute les harmoniques',
+            'Piste couleur : 4 mesures pp → p seulement. écoute les harmoniques',
             'Piste fin : chante la dernière note de chaque phrase, puis retrouve-la',
             'Piste souffle : marque deux mesures respiration et protège-les',
           ],
@@ -262,13 +193,13 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
     return en
       ? {
           strengths: [
-            'The pulse already dances — left-hand feel carries the room',
+            'The pulse already dances. left-hand feel carries the room',
             'Syncopation has character, not just correctness',
             'You commit to the groove instead of smoothing it flat',
           ],
           weaknesses: [
             'When the right hand densifies, the pulse rushes a hair',
-            'Some off-beats arrive early — swing flattens briefly',
+            'Some off-beats arrive early. swing flattens briefly',
             'Phrase endings clip instead of tipping into the next bar',
           ],
           improvements: [
@@ -279,13 +210,13 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
         }
       : {
           strengths: [
-            'Le pulse danse déjà — la main gauche porte la pièce',
+            'Le pulse danse déjà. la main gauche porte la pièce',
             'La syncope a du caractère, pas seulement de la justesse',
             'Tu assumes le groove au lieu de le lisser',
           ],
           weaknesses: [
             'Quand la droite densifie, le pulse accélère d’un cheveu',
-            'Certains contretemps arrivent tôt — le swing s’aplatit un instant',
+            'Certains contretemps arrivent tôt. le swing s’aplatit un instant',
             'Les fins de phrase coupent au lieu de basculer',
           ],
           improvements: [
@@ -300,12 +231,12 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
       ? {
           strengths: [
             'You bring weight without turning every bar into shouting',
-            'Drive is clear — the take doesn’t apologize for power',
+            'Drive is clear. the take doesn’t apologize for power',
             'Accents already carve a shape inside the density',
           ],
           weaknesses: [
             'Dense passages can crush the quieter joint that sells the drama',
-            'Attacks stack too evenly — peaks need hierarchy',
+            'Attacks stack too evenly. peaks need hierarchy',
             'Recovery after loud gestures is short; the next phrase arrives tired',
           ],
           improvements: [
@@ -317,12 +248,12 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
       : {
           strengths: [
             'Tu apportes du poids sans crier chaque mesure',
-            'L’élan est clair — la prise n’excuse pas sa puissance',
+            'L’élan est clair. la prise n’excuse pas sa puissance',
             'Les accents sculptent déjà une forme dans la densité',
           ],
           weaknesses: [
             'Les passages denses écrasent parfois le joint plus doux',
-            'Les attaques sont trop égales — les pics ont besoin d’une hiérarchie',
+            'Les attaques sont trop égales. les pics ont besoin d’une hiérarchie',
             'La récupération après un geste fort est courte',
           ],
           improvements: [
@@ -336,19 +267,19 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
   const seed = hashStr(pieceName || 'piece')
   const strengthsPool = en
     ? [
-        'You prepare before recording — audible in the stable opening',
+        'You prepare before recording. audible in the stable opening',
         'Phrasing has natural breaths: it sounds human',
         'Intention is readable even when the notes are still settling',
         'You stay with the line instead of abandoning mid-phrase',
-        'The take has a clear start — listeners know where they are',
+        'The take has a clear start. listeners know where they are',
         'Touch already has personality; it isn’t generic practice noise',
       ]
     : [
-        'Tu prépares avant d’enregistrer — ça s’entend dans le début',
+        'Tu prépares avant d’enregistrer. ça s’entend dans le début',
         'Le phrasé a des respirations naturelles : ça sonne humain',
         'L’intention se lit même si les notes se placent encore',
         'Tu restes avec la ligne au lieu d’abandonner au milieu',
-        'La prise a un vrai départ — on sait où on est',
+        'La prise a un vrai départ. on sait où on est',
         'Le toucher a déjà une personnalité ; ce n’est pas un bruit générique',
       ]
   const weaknessesPool = en
@@ -397,7 +328,7 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
     return en
       ? {
           strengths: [
-            'The opening haze is already there — Debussy needs that soft attack',
+            'The opening haze is already there. Debussy needs that soft attack',
             'You leave space between chords instead of filling every beat',
             'The right-hand line floats above a calm left hand',
           ],
@@ -408,13 +339,13 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
           ],
           improvements: [
             'Color tip: play the first 4 bars soft → a little fuller, listen for overtones',
-            'Pedal tip: change on the harmony, not on every note — half-pedal once',
+            'Pedal tip: change on the harmony, not on every note. half-pedal once',
             'Space tip: mark two breath bars, then take only those in the next run',
           ],
         }
       : {
           strengths: [
-            'La brume du début est déjà là — Debussy a besoin de cette attaque douce',
+            'La brume du début est déjà là. Debussy a besoin de cette attaque douce',
             'Tu laisses de l’air entre les accords au lieu de remplir chaque temps',
             'La ligne droite flotte au-dessus d’une main gauche calme',
           ],
@@ -434,13 +365,13 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
     return en
       ? {
           strengths: [
-            'The ragtime bounce is readable — left hand keeps the dance floor',
+            'The ragtime bounce is readable. left hand keeps the dance floor',
             'Syncopations land with character, not just accuracy',
             'You commit to the stride pulse instead of smoothing it away',
           ],
           weaknesses: [
             'When the right hand densifies, the left-hand stride rushes a hair',
-            'Some off-beats arrive early — swing flattens into straight eighths',
+            'Some off-beats arrive early. swing flattens into straight eighths',
             'Phrase endings clip instead of tipping into the next bar',
           ],
           improvements: [
@@ -451,13 +382,13 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
         }
       : {
           strengths: [
-            'Le rebond ragtime se lit — la main gauche tient la piste',
+            'Le rebond ragtime se lit. la main gauche tient la piste',
             'Les syncopes ont du caractère, pas seulement de la justesse',
             'Tu assumes le stride au lieu de le lisser',
           ],
           weaknesses: [
             'Quand la droite densifie, le stride gauche accélère d’un cheveu',
-            'Certains contretemps arrivent tôt — le swing devient des croches droites',
+            'Certains contretemps arrivent tôt. le swing devient des croches droites',
             'Les fins de phrase coupent au lieu de basculer',
           ],
           improvements: [
@@ -471,7 +402,7 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
     return en
       ? {
           strengths: [
-            'The motif speaks clearly — Beethoven’s earworm stays articulate',
+            'The motif speaks clearly. Beethoven’s earworm stays articulate',
             'You shape the return of the theme instead of copying bar 1',
             'Fingers stay close to the keys on the quiet answers',
           ],
@@ -488,7 +419,7 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
         }
       : {
           strengths: [
-            'Le motif parle clairement — l’air de Beethoven reste articulé',
+            'Le motif parle clairement. l’air de Beethoven reste articulé',
             'Tu sculptes le retour du thème au lieu de copier la mesure 1',
             'Les doigts restent près des touches sur les réponses douces',
           ],
@@ -514,7 +445,7 @@ type SignalNotes = {
   honesty: string[]
 }
 
-/** Map real take signals → concrete coaching notes (truthful when signal is weak). */
+/** Map take signals → concrete coaching. Prefer “do this next” over apologies. */
 function signalNotes(
   features: AudioFeatures | null,
   meta: PerformanceMeta | undefined,
@@ -527,158 +458,178 @@ function signalNotes(
   const completion = total > 0 ? played / total : 1
 
   if (!f || f.weakSignal || f.durationSec < 1.2) {
-    notes.honesty.push(
-      en
-        ? 'Honest note: the audio signal was thin or very short — I’m coaching from limited evidence, not a full listen.'
-        : 'Note honnête : le signal audio était faible ou très court — je coache avec peu de preuves, pas une écoute complète.',
-    )
     notes.weaknesses.push(
       en
-        ? 'I couldn’t hear a clear, sustained performance in this take'
-        : 'Je n’ai pas entendu une performance claire et tenue sur cette prise',
+        ? 'This take is too thin or too short to coach in detail'
+        : 'Cette prise est trop fine ou trop courte pour un coaching détaillé',
     )
     notes.improvements.push(
       en
-        ? 'Next take: closer to the mic, 20–40 steady seconds, one passage only'
-        : 'Prochaine prise : plus près du micro, 20–40 secondes stables, un seul passage',
+        ? 'Do this: mic closer, 25–40 steady seconds, one short passage only'
+        : 'À faire: micro plus près, 25–40 secondes stables, un seul passage court',
+    )
+    notes.honesty.push(
+      en
+        ? 'I need a clearer take before I can get specific.'
+        : 'Il me faut une prise plus claire avant d’être précise.',
     )
     return notes
   }
 
   if (completion < 0.45 && total > 0) {
-    notes.honesty.push(
-      en
-        ? 'You cut early — fine for a focus pass; I mainly heard the opening.'
-        : 'Tu as coupé tôt — OK pour un focus ; j’ai surtout entendu le début.',
-    )
     notes.weaknesses.push(
       en
-        ? 'The take is short: hard to judge how the middle holds'
-        : 'La prise est courte : difficile de juger le milieu',
+        ? `You stopped early (~${Math.round(played)}s). I mainly heard the opening.`
+        : `Tu as coupé tôt (~${Math.round(played)}s). J’ai surtout entendu le début.`,
     )
-  } else if (f.durationSec >= 25 || completion >= 0.9) {
+    notes.improvements.push(
+      en
+        ? 'Do this: same opening + 8 more bars. Don’t stop mid-arc.'
+        : 'À faire: même début + 8 mesures de plus. Ne coupe pas au milieu.',
+    )
+  } else if (f.durationSec >= 20) {
     notes.strengths.push(
       en
-        ? `You carried ~${Math.round(f.durationSec)}s — stamina and intention both show`
-        : `Tu as tenu ~${Math.round(f.durationSec)}s — endurance et intention se voient`,
+        ? `You held ${Math.round(f.durationSec)}s. Stamina is there.`
+        : `Tu as tenu ${Math.round(f.durationSec)}s. L’endurance est là.`,
     )
   } else if (f.durationSec < 12) {
     notes.weaknesses.push(
       en
-        ? `Short take (${Math.round(f.durationSec)}s) — Aria heard a sketch, not a full arc`
-        : `Prise courte (${Math.round(f.durationSec)}s) — Aria a entendu une esquisse, pas un arc`,
+        ? `Short take (${Math.round(f.durationSec)}s). Hard to judge the middle.`
+        : `Prise courte (${Math.round(f.durationSec)}s). Difficile de juger le milieu.`,
+    )
+    notes.improvements.push(
+      en
+        ? 'Do this: one full phrase start-to-end, no restart mid-way.'
+        : 'À faire: une phrase complète du début à la fin, sans reprendre au milieu.',
     )
   }
 
   if (f.silenceRatio > 0.45) {
     notes.weaknesses.push(
       en
-        ? 'Long gaps between phrases — the line loses continuity'
-        : 'Longs silences entre les phrases — la ligne perd sa continuité',
+        ? 'Long gaps between phrases. The line breaks.'
+        : 'Longs silences entre les phrases. La ligne se casse.',
     )
     notes.improvements.push(
       en
-        ? 'Flow tip: join two phrases with a softer bridge note, no full stop'
-        : 'Piste flux : relie deux phrases avec une note-pont plus douce',
+        ? 'Do this: connect 2 phrases with one soft bridge note. No full stop.'
+        : 'À faire: relie 2 phrases avec une note-pont douce. Pas d’arrêt total.',
     )
   } else if (f.silenceRatio < 0.1 && f.attacksPerSec > 3.2) {
     notes.weaknesses.push(
       en
-        ? 'Very dense attack stream — little recovery between gestures'
-        : 'Flux d’attaques très dense — peu de récupération entre les gestes',
+        ? 'Too dense. Almost no recovery between gestures.'
+        : 'Trop dense. Presque aucune récupération entre les gestes.',
     )
     notes.improvements.push(
       en
-        ? 'Space tip: insert one intentional rest every 4 bars'
-        : 'Piste espace : un silence volontaire toutes les 4 mesures',
+        ? 'Do this: one intentional rest every 4 bars. Count it out loud once.'
+        : 'À faire: un silence volontaire toutes les 4 mesures. Compte-le à voix haute une fois.',
     )
   } else if (f.silenceRatio >= 0.18 && f.silenceRatio <= 0.35) {
     notes.strengths.push(
       en
-        ? 'Breathing between phrases sounds natural, not empty'
-        : 'Les respirations entre phrases sonnent naturelles, pas vides',
+        ? 'Breathing between phrases sounds natural.'
+        : 'Les respirations entre phrases sonnent naturelles.',
     )
   }
 
   if (f.dynamicRange < 0.035) {
     notes.weaknesses.push(
       en
-        ? 'Dynamics stay in a narrow band — the story needs more contrast'
-        : 'La dynamique reste étroite — l’histoire demande plus de contraste',
+        ? 'Dynamics stay flat. Soft and loud barely differ.'
+        : 'Dynamique trop plate. Le doux et le fort se ressemblent trop.',
     )
     notes.improvements.push(
       en
-        ? 'Contrast tip: same 4 bars twice — once soft, once fuller'
-        : 'Piste contraste : les mêmes 4 mesures deux fois — doux, puis plus plein',
+        ? 'Do this: same 4 bars twice. Pass 1 soft. Pass 2 fuller. Then stitch.'
+        : 'À faire: les mêmes 4 mesures deux fois. Passe 1 douce. Passe 2 plus pleine. Puis assemble.',
     )
   } else if (f.dynamicRange > 0.11) {
     notes.strengths.push(
       en
-        ? 'Clear dynamic contrast — soft and full actually talk to each other'
-        : 'Beau contraste dynamique — le doux et le plein se parlent',
+        ? 'Clear dynamic contrast. Soft and full talk to each other.'
+        : 'Beau contraste dynamique. Le doux et le plein se parlent.',
     )
   }
 
   if (f.endingEnergy < f.openingEnergy * 0.55 && f.durationSec > 10) {
     notes.weaknesses.push(
       en
-        ? 'Energy drops hard toward the end — the closing phrase loses body'
-        : 'L’énergie chute fort vers la fin — la phrase de clôture perd du corps',
+        ? 'The ending loses body. You fade when the phrase still needs weight.'
+        : 'La fin perd du corps. Tu t’éteins alors que la phrase a encore besoin de poids.',
     )
     notes.improvements.push(
       en
-        ? 'Close tip: practice only the last 8 seconds until it stays alive'
-        : 'Piste fin : travaille seulement les 8 dernières secondes jusqu’à ce qu’elles restent vivantes',
+        ? 'Do this: loop only the last 8 seconds until they stay alive 3 times.'
+        : 'À faire: boucle seulement les 8 dernières secondes jusqu’à 3 fois vivantes.',
     )
   } else if (f.endingEnergy > f.openingEnergy * 1.35 && f.durationSec > 10) {
     notes.strengths.push(
       en
-        ? 'The ending is stronger than the opening — you build instead of fading'
-        : 'La fin est plus forte que le début — tu construis au lieu de t’éteindre',
+        ? 'The ending is stronger than the opening. You build.'
+        : 'La fin est plus forte que le début. Tu construis.',
     )
   }
 
   if (f.openingEnergy > f.middleEnergy * 1.4 && f.durationSec > 12) {
     notes.weaknesses.push(
       en
-        ? 'Opening is clearer than the middle — focus drifts after the first page of energy'
-        : 'Le début est plus clair que le milieu — l’attention dérive après l’élan initial',
+        ? 'Opening clearer than the middle. Focus drops after the first lift.'
+        : 'Début plus clair que le milieu. L’attention baisse après l’élan.',
+    )
+    notes.improvements.push(
+      en
+        ? 'Do this: start at the middle dip. 5 slow reps, then one real take.'
+        : 'À faire: commence au creux du milieu. 5 reps lentes, puis une vraie prise.',
     )
   }
 
   if (f.attacksPerSec > 0.4 && f.attacksPerSec < 1.1) {
     notes.strengths.push(
       en
-        ? 'Attack pacing is measured — not frantic, not sparse'
-        : 'Le rythme d’attaques est mesuré — ni frénétique, ni trop rare',
+        ? 'Attack pacing is measured. Not frantic.'
+        : 'Rythme d’attaques mesuré. Pas frénétique.',
     )
   } else if (f.attacksPerSec >= 2.8) {
     notes.weaknesses.push(
       en
-        ? `High note density (~${f.attacksPerSec.toFixed(1)} attacks/s) — tempo may be pushing`
-        : `Densité élevée (~${f.attacksPerSec.toFixed(1)} attaques/s) — le tempo pousse peut-être`,
+        ? `High density (${f.attacksPerSec.toFixed(1)} attacks/s). Tempo is likely pushing.`
+        : `Densité élevée (${f.attacksPerSec.toFixed(1)} attaques/s). Le tempo pousse probablement.`,
     )
     notes.improvements.push(
       en
-        ? 'Tempo tip: same passage at −15% metronome until it feels boring-stable'
-        : 'Piste tempo : même passage à −15 % jusqu’à ce que ce soit ennuyeusement stable',
+        ? 'Do this: same passage at −15% metronome until it feels boring-stable.'
+        : 'À faire: même passage à −15% métronome jusqu’à ce que ce soit ennuyeusement stable.',
     )
   }
 
   if (f.energyVariance > 0.0025 && f.dynamicRange > 0.08) {
     notes.strengths.push(
       en
-        ? 'The energy curve moves — the take has a shape, not a flat line'
-        : 'La courbe d’énergie bouge — la prise a une forme, pas une ligne plate',
+        ? 'The take has a shape. Not a flat line.'
+        : 'La prise a une forme. Pas une ligne plate.',
     )
   }
 
   return notes
 }
 
+function stripTipLabel(s: string): string {
+  return s
+    .replace(/^(Do this:\s*|À faire:\s*)/i, '')
+    .replace(
+      /^(Pulse tip:\s*|Tone tip:\s*|Listen tip:\s*|Rhythm tip:\s*|Shape tip:\s*|Focus tip:\s*|Space tip:\s*|Flow tip:\s*|Close tip:\s*|Tempo tip:\s*|Contrast tip:\s*|Groove tip:\s*|Swing tip:\s*|Landing tip:\s*|Color tip:\s*|Ending tip:\s*|Character tip:\s*|Power tip:\s*|Hierarchy tip:\s*|Recovery tip:\s*|Piste [^:]+:\s*)/i,
+      '',
+    )
+    .trim()
+}
+
 /**
- * Aria report: piece-aware + take-aware + audio-signal-aware.
- * Still heuristic (no cloud LLM) — but two different uploads should not clone.
+ * Aria report: signal-first, then piece flavor.
+ * Goal: actionable weaknesses + one clear next-take job.
  */
 export function analyzePerformance(input: {
   pieceName: string
@@ -710,33 +661,31 @@ export function analyzePerformance(input: {
   for (const w of signals.weaknesses) uniquePush(weaknesses, w)
   for (const i of signals.improvements) uniquePush(improvements, i)
 
-  // Piece-specific flavor (rotated by take so take 2 ≠ take 1)
-  for (const s of pickN(base.strengths, seed + take * 3, 2)) uniquePush(strengths, s)
-  for (const w of pickN(base.weaknesses, seed + 17 + take * 5, 2)) uniquePush(weaknesses, w)
-  for (const i of pickN(base.improvements, seed + 41 + take * 7, 2)) uniquePush(improvements, i)
+  for (const s of pickN(base.strengths, seed + take * 3, 1)) uniquePush(strengths, s)
+  for (const w of pickN(base.weaknesses, seed + 17 + take * 5, 1)) uniquePush(weaknesses, w)
+  for (const i of pickN(base.improvements, seed + 41 + take * 7, 1)) uniquePush(improvements, i)
 
   if (take >= 2) {
     uniquePush(
       strengths,
       en
-        ? `Take ${take}: compared with take ${take - 1}, I’m listening for what stabilized — opening calm is one candidate`
-        : `Essai ${take} : par rapport à l’essai ${take - 1}, j’écoute ce qui s’est stabilisé — le calme du début en est un candidat`,
+        ? `Take ${take}: I’m comparing to take ${take - 1}. Keep what already stabilized.`
+        : `Essai ${take}: je compare à l’essai ${take - 1}. Garde ce qui s’est déjà stabilisé.`,
       4,
     )
   }
 
   if (input.arrangement === 'arrangement' && !input.hasPartition) {
     uniquePush(
-      strengths,
+      improvements,
       en
-        ? 'You flagged this as an arrangement — I’m judging your version, not a fixed original'
-        : 'Tu as signalé un arrangement — je juge ta version, pas un original figé',
+        ? 'Do this: judge your arrangement on feel, not a fixed original.'
+        : 'À faire: juge ton arrangement sur le feeling, pas un original figé.',
       4,
     )
   }
 
-  // Guarantee up to 3 each when the pack has enough unique lines (never hang)
-  fillTo(strengths, base.strengths, 3, seed + 91)
+  fillTo(strengths, base.strengths, 2, seed + 91)
   fillTo(weaknesses, base.weaknesses, 3, seed + 193)
   fillTo(improvements, base.improvements, 3, seed + 281)
 
@@ -749,55 +698,35 @@ export function analyzePerformance(input: {
       : null
 
   let greeting: string
-  if (signals.honesty.length) {
+  if (signals.honesty.length && (!features || features.weakSignal)) {
     greeting = en
       ? `${name}, on “${piece}”: ${signals.honesty[0]}`
       : `${name}, sur « ${piece} »: ${signals.honesty[0]}`
-  } else if (!input.hasPartition) {
-    const options = en
-      ? [
-          `${name}, I listened to “${piece}” by ear${dur ? ` (${Math.round(dur)}s)` : ''}. Here’s what this take shows.`,
-          `${name}, take ${take} on “${piece}”${dens ? ` · ${dens}` : ''}. Intention is clear. Now the joints.`,
-          `${name}, “${piece}” without a score: I’m judging sound and shape only.`,
-        ]
-      : [
-          `${name}, j’ai écouté « ${piece} » à l’oreille${dur ? ` (${Math.round(dur)}s)` : ''}. Voici ce que montre cette prise.`,
-          `${name}, essai ${take} sur « ${piece} »${dens ? ` · ${dens}` : ''}. L’intention est claire. Maintenant les joints.`,
-          `${name}, « ${piece} » sans partition: je juge le son et la forme seulement.`,
-        ]
-    greeting = options[(take - 1 + seed) % options.length]
   } else {
-    const options = en
-      ? [
-          `${name}, nice take on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}. Reading and intention already talk.`,
-          `${name}, I followed “${piece}” with the score${dens ? ` · ${dens}` : ''}. Real work shows. We refine the joints.`,
-          `${name}, “${piece}” sounds committed. We fix what this take revealed.`,
-        ]
-      : [
-          `${name}, belle prise sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}. Lecture et intention se parlent déjà.`,
-          `${name}, j’ai suivi « ${piece} » avec la partition${dens ? ` · ${dens}` : ''}. Il y a du vrai travail. On affine les joints.`,
-          `${name}, « ${piece} » sonne engagé. On corrige ce que cette prise révèle.`,
-        ]
-    greeting = options[(take - 1 + seed) % options.length]
+    const topIssue = weaknesses[0]
+      ? stripTipLabel(weaknesses[0]).replace(/\.$/, '')
+      : en
+        ? 'we refine one joint'
+        : 'on affine un joint'
+    greeting = en
+      ? `${name}, take ${take} on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priority: ${topIssue}.`
+      : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priorité: ${topIssue}.`
   }
 
-  const focusOptions = en
-    ? [
-        `Take ${take + 1}: one goal only. Steady tempo on a short passage. Nothing else.`,
-        `Take ${take + 1}: only the fragile ending. Keep the body of the last notes.`,
-        `Take ${take + 1}: contrast only. Soft answer after every bold gesture.`,
-        `Take ${take + 1}: density only. Leave one intentional rest every 4 bars.`,
-      ]
-    : [
-        `Essai ${take + 1}: un seul objectif. Tempo stable sur un passage court.`,
-        `Essai ${take + 1}: uniquement la fin fragile. Garde le corps des dernières notes.`,
-        `Essai ${take + 1}: contraste seulement. Réponse douce après chaque geste fort.`,
-        `Essai ${take + 1}: densité seulement. Un silence volontaire toutes les 4 mesures.`,
-      ]
+  const primaryDrill = improvements[0]
+    ? stripTipLabel(improvements[0])
+    : en
+      ? 'one short passage, steady tempo only'
+      : 'un passage court, tempo stable seulement'
 
-  const doneFocus = en
-    ? '3 takes done. Keep one cue from this report, switch pieces or rest, come back tomorrow.'
-    : '3 essais faits. Garde une consigne de ce retour, change de morceau ou repose-toi, reviens demain.'
+  const nextFocus =
+    takesLeft > 0
+      ? en
+        ? `Take ${take + 1}: only this. ${primaryDrill}`
+        : `Essai ${take + 1}: uniquement ça. ${primaryDrill}`
+      : en
+        ? '3 takes done. Keep one drill from this report. Rest or switch pieces.'
+        : '3 essais faits. Garde un exercice de ce retour. Repose-toi ou change de morceau.'
 
   return {
     headline: piece,
@@ -809,7 +738,7 @@ export function analyzePerformance(input: {
     strengths: strengths.slice(0, 3),
     weaknesses: weaknesses.slice(0, 3),
     improvements: improvements.slice(0, 3),
-    nextFocus: takesLeft > 0 ? focusOptions[(seed + take) % focusOptions.length] : doneFocus,
+    nextFocus,
     takesLeft,
   }
 }
