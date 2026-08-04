@@ -174,7 +174,10 @@ const FR = {
     'Email pas encore confirmé. Ouvre le lien reçu dans ta boîte mail, puis reviens ici avec ton mot de passe.',
   emailLinkExpired:
     'Le lien du mail a expiré ou n’est plus valide. Demande un nouveau mail (créer un compte / mot de passe oublié), puis reconnecte-toi.',
-  alreadyRegistered: 'Un compte existe déjà avec cet email — connecte-toi plutôt.',
+  alreadyRegistered:
+    'Ce compte existe déjà et est déjà activé — aucun nouveau mail de confirmation. Connecte-toi, ou utilise « Mot de passe oublié ».',
+  resendConfirmEmail: 'Renvoyer le mail de confirmation',
+  resendConfirmSent: 'Mail renvoyé — vérifie ta boîte (et les spams).',
 
   // Piece pick
   choosePiece: 'Choisis un morceau',
@@ -383,7 +386,10 @@ const EN: { [K in keyof typeof FR]: string } = {
     'Email not confirmed yet. Open the link in your inbox, then come back here with your password.',
   emailLinkExpired:
     'That email link expired or is no longer valid. Request a new one (sign up / forgot password), then log in again.',
-  alreadyRegistered: 'An account already exists with that email — log in instead.',
+  alreadyRegistered:
+    'This account already exists and is activated — no new confirmation email. Log in, or use “Forgot password”.',
+  resendConfirmEmail: 'Resend confirmation email',
+  resendConfirmSent: 'Email sent again — check your inbox (and spam).',
 
   choosePiece: 'Choose a piece',
   chooseLead:

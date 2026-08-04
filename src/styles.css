@@ -1304,8 +1304,8 @@ h2 {
 .account-hero {
   display: flex;
   align-items: center;
-  gap: 1.15rem;
-  margin-bottom: 1.75rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
   animation: account-in 0.45s ease both;
 }
 
@@ -1344,18 +1344,18 @@ h2 {
 }
 
 .account-lead {
-  margin: 0.45rem 0 0;
+  margin: 0.35rem 0 0;
   font-size: 0.92rem;
 }
 
 .account-section {
-  margin-bottom: 1.35rem;
+  margin-bottom: 0.65rem;
   animation: account-in 0.5s ease both;
   animation-delay: 0.08s;
 }
 
 .account-section-title {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.35rem;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -1375,7 +1375,7 @@ h2 {
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  padding: 0.85rem 0;
+  padding: 0.65rem 0;
   border-bottom: 1px solid var(--line);
 }
 
@@ -1400,7 +1400,7 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.95rem 0;
+  padding: 0.7rem 0;
   border: 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -1446,8 +1446,8 @@ h2 {
 }
 
 .account-footer {
-  margin-top: 1.75rem;
-  padding-top: 0.5rem;
+  margin-top: 1.1rem;
+  padding-top: 0.25rem;
   animation: account-in 0.55s ease both;
   animation-delay: 0.14s;
 }

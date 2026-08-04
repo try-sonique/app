@@ -109,6 +109,12 @@ export async function signUpWithPassword(input: {
   const user = data.user
   if (!user) return { ok: false, error: 'Signup failed' }
 
+  // Existing confirmed account: Auth returns a fake user (no identities) and sends no confirm mail.
+  const identities = (user as { identities?: unknown[] }).identities
+  if (Array.isArray(identities) && identities.length === 0) {
+    return { ok: false, error: 'already_registered' }
+  }
+
   const profile = profileFromUser(user, input.profile)
   saveProfile(profile)
   await upsertProfileRow(user, profile)
@@ -118,6 +124,21 @@ export async function signUpWithPassword(input: {
   }
 
   return { ok: true, profile }
+}
+
+export async function resendSignupEmail(email: string): Promise<AuthResult> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { ok: false, error: 'Auth is not configured yet' }
+  }
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.trim().toLowerCase(),
+    options: {
+      emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+    },
+  })
+  if (error) return { ok: false, error: mapAuthError(error.message) }
+  return { ok: true }
 }
 
 export async function signInWithPassword(input: {

@@ -40,6 +40,7 @@ import {
   signInWithPassword,
   signOut,
   signUpWithPassword,
+  resendSignupEmail,
 } from './lib/supabaseAuth'
 import {
   MAX_TAKES,
@@ -264,7 +265,18 @@ function AuthSlide({
       }
       const result = await signUpWithPassword({ profile: draft, password: signupPassword })
       if (!result.ok || !result.profile) {
-        setAuthError(friendlyAuthError(result.error))
+        const msg = friendlyAuthError(result.error)
+        setAuthError(msg)
+        if (result.error === 'already_registered') {
+          const email = draft.email.trim().toLowerCase()
+          setLoginEmail(email)
+          setRememberEmail(true)
+          setRememberedEmail(email)
+          setLoginStep('password')
+          setMode('login')
+          setAuthInfo(msg)
+          setAuthError('')
+        }
         return
       }
       onProfileLoaded(result.profile)
@@ -346,6 +358,26 @@ function AuthSlide({
         return
       }
       setAuthInfo(copy.resetSent)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onResendConfirm = async () => {
+    setAuthError('')
+    if (!loginEmail.trim()) {
+      setAuthError(copy.loginFailed)
+      return
+    }
+    setBusy(true)
+    try {
+      const result = await resendSignupEmail(loginEmail)
+      if (!result.ok) {
+        setAuthError(friendlyAuthError(result.error))
+        return
+      }
+      setAuthInfo(copy.resendConfirmSent)
+      setAwaitingEmailConfirm(true)
     } finally {
       setBusy(false)
     }
@@ -553,15 +585,28 @@ function AuthSlide({
           </form>
         )}
         {!onEmailStep ? (
-          <button
-            type="button"
-            className="linkish"
-            style={{ marginTop: '1rem' }}
-            disabled={busy}
-            onClick={() => void onForgot()}
-          >
-            {copy.forgotPassword}
-          </button>
+          <>
+            {awaitingEmailConfirm ? (
+              <button
+                type="button"
+                className="linkish"
+                style={{ marginTop: '1rem' }}
+                disabled={busy}
+                onClick={() => void onResendConfirm()}
+              >
+                {copy.resendConfirmEmail}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="linkish"
+              style={{ marginTop: awaitingEmailConfirm ? '0.5rem' : '1rem' }}
+              disabled={busy}
+              onClick={() => void onForgot()}
+            >
+              {copy.forgotPassword}
+            </button>
+          </>
         ) : null}
         <button
           type="button"
