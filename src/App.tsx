@@ -540,7 +540,7 @@ function AuthSlide({
               <span>
                 {copy.password}
                 {awaitingEmailConfirm ? (
-                  <em className="optional-tag"> — {copy.afterEmailConfirm}</em>
+                  <em className="optional-tag"> ({copy.afterEmailConfirm})</em>
                 ) : null}
               </span>
               <input
@@ -655,7 +655,7 @@ function AuthSlide({
         <label className="field">
           <span>
             {copy.password}
-            <em className="optional-tag"> — {copy.passwordHint}</em>
+            <em className="optional-tag"> ({copy.passwordHint})</em>
           </span>
           <input
             type="password"
@@ -1598,7 +1598,7 @@ function formatSessionHeadline(headline: string, pieceName: string) {
     .replace(/^Feedback\s*[—–-]\s*/i, '')
     .trim()
   const title = cleaned || pieceName
-  return `${copy.feedbackPrefix} — ${title}`
+  return `${copy.feedbackPrefix} · ${title}`
 }
 
 function HistoryView({
