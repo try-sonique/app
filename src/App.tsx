@@ -1365,9 +1365,17 @@ function Analyzing({
       setStuck(false)
       return
     }
-    const id = window.setTimeout(() => setStuck(true), 4500)
+    const id = window.setTimeout(() => setStuck(true), 3000)
     return () => window.clearTimeout(id)
   }, [ready])
+
+  // Hard escape: never leave founder stuck on “Aria is listening…”
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (!ready) onDone()
+    }, 12000)
+    return () => window.clearTimeout(id)
+  }, [onDone, ready])
 
   return (
     <section className="slide">

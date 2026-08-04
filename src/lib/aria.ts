@@ -172,6 +172,15 @@ function uniquePush(list: string[], value: string | undefined, max = 6) {
   list.push(value)
 }
 
+/** Fill list up to `need` from `source` without hanging on duplicates. */
+function fillTo(target: string[], source: string[], need: number, seed: number) {
+  if (target.length >= need || !source.length) return
+  for (const item of pickN(source, seed, source.length)) {
+    if (target.length >= need) return
+    uniquePush(target, item, need)
+  }
+}
+
 /** Stable “character” hints from the piece title (not a real music model). */
 function titleFlavor(pieceName: string, en: boolean): PiecePack {
   const n = pieceName.toLowerCase()
@@ -726,22 +735,10 @@ export function analyzePerformance(input: {
     )
   }
 
-  // Guarantee 3 each when possible
-  while (strengths.length < 3) {
-    const extra = pickN(base.strengths, seed + strengths.length * 13, 1)[0]
-    if (!extra) break
-    uniquePush(strengths, extra)
-  }
-  while (weaknesses.length < 3) {
-    const extra = pickN(base.weaknesses, seed + weaknesses.length * 19, 1)[0]
-    if (!extra) break
-    uniquePush(weaknesses, extra)
-  }
-  while (improvements.length < 3) {
-    const extra = pickN(base.improvements, seed + improvements.length * 23, 1)[0]
-    if (!extra) break
-    uniquePush(improvements, extra)
-  }
+  // Guarantee up to 3 each when the pack has enough unique lines (never hang)
+  fillTo(strengths, base.strengths, 3, seed + 91)
+  fillTo(weaknesses, base.weaknesses, 3, seed + 193)
+  fillTo(improvements, base.improvements, 3, seed + 281)
 
   const dur = features?.durationSec
   const dens =

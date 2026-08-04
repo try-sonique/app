@@ -59,11 +59,15 @@ async function extractAudioFeaturesInner(blob: Blob): Promise<AudioFeatures> {
     const durationSec = buffer.duration
     if (!channel.length || durationSec <= 0) return EMPTY
 
-    const hop = Math.max(1, Math.floor(buffer.sampleRate * 0.05)) // 50ms
-    const frame = Math.max(hop, Math.floor(buffer.sampleRate * 0.05))
+    // Cap work so long takes never freeze the tab (analyze first ~90s)
+    const maxSec = 90
+    const sampleRate = buffer.sampleRate
+    const maxSamples = Math.min(channel.length, Math.floor(sampleRate * maxSec))
+    const hop = Math.max(1, Math.floor(sampleRate * 0.05)) // 50ms
+    const frame = hop
     const energies: number[] = []
 
-    for (let i = 0; i + frame < channel.length; i += hop) {
+    for (let i = 0; i + frame < maxSamples; i += hop) {
       let sum = 0
       for (let j = 0; j < frame; j++) {
         const v = channel[i + j]
@@ -75,9 +79,11 @@ async function extractAudioFeaturesInner(blob: Blob): Promise<AudioFeatures> {
     if (energies.length === 0) return { ...EMPTY, durationSec }
 
     const rmsMean = mean(energies)
-    const rmsPeak = Math.max(...energies)
+    let rmsPeak = 0
+    for (const e of energies) if (e > rmsPeak) rmsPeak = e
     const silenceThreshold = Math.max(0.008, rmsMean * 0.28)
-    const silent = energies.filter((e) => e < silenceThreshold).length
+    let silent = 0
+    for (const e of energies) if (e < silenceThreshold) silent += 1
     const silenceRatio = silent / energies.length
 
     let attackCount = 0
@@ -87,12 +93,13 @@ async function extractAudioFeaturesInner(blob: Blob): Promise<AudioFeatures> {
       }
     }
 
-    const sorted = [...energies].sort((a, b) => a - b)
+    const sorted = energies.slice().sort((a, b) => a - b)
     const p10 = sorted[Math.floor(sorted.length * 0.1)] ?? 0
     const p90 = sorted[Math.floor(sorted.length * 0.9)] ?? 0
     const dynamicRange = Math.max(0, p90 - p10)
 
-    const activeSec = Math.max(0.25, durationSec * (1 - silenceRatio))
+    const analyzedSec = Math.min(durationSec, maxSec)
+    const activeSec = Math.max(0.25, analyzedSec * (1 - silenceRatio))
     const attacksPerSec = attackCount / activeSec
 
     const third = Math.max(1, Math.floor(energies.length / 3))
