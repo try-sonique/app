@@ -525,6 +525,9 @@ function AuthSlide({
             minLength={6}
           />
         </label>
+        <p className="footer-note" style={{ margin: '-0.25rem 0 0.5rem', opacity: 0.75 }}>
+          {copy.passwordHint}
+        </p>
         <label className="field">
           <span>
             {copy.lastName} <em className="optional-tag">{copy.optional}</em>
