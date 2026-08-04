@@ -1448,10 +1448,24 @@ function AccountView({
   onLogOut: () => void
 }) {
   const copy = t()
-  const rows: { label: string; value: string }[] = [
-    { label: copy.firstName, value: profile.firstName.trim() || '—' },
-    { label: copy.lastName, value: profile.lastName.trim() || '—' },
-    { label: copy.email, value: profile.email.trim() || '—' },
+  const sessions = listSessions(profile.email)
+  const displayName =
+    [profile.firstName.trim(), profile.lastName.trim()].filter(Boolean).join(' ') ||
+    profile.email.trim() ||
+    'Sonique'
+  const initials = (
+    (profile.firstName.trim().charAt(0) || profile.email.trim().charAt(0) || 'S') +
+    (profile.lastName.trim().charAt(0) || '')
+  ).toUpperCase()
+  const sessionsLabel =
+    sessions.length === 0
+      ? copy.accountSessionsEmpty
+      : copy.accountSessionsCount.replace('{n}', String(sessions.length))
+
+  const infoRows: { label: string; value: string }[] = [
+    { label: copy.firstName, value: profile.firstName.trim() || copy.nameMissing },
+    { label: copy.lastName, value: profile.lastName.trim() || copy.nameMissing },
+    { label: copy.email, value: profile.email.trim() || copy.nameMissing },
     {
       label: copy.phoneOptional,
       value: profile.phone.trim() || copy.phoneMissing,
@@ -1459,26 +1473,63 @@ function AccountView({
   ]
 
   return (
-    <section className="slide">
-      <span className="eyebrow">{copy.accountEyebrow}</span>
-      <h1>{copy.accountTitle}</h1>
-      <p className="lead">{copy.accountLead}</p>
-      <dl className="account-grid">
-        {rows.map((row) => (
-          <div key={row.label} className="account-row">
-            <dt>{row.label}</dt>
-            <dd>{row.value}</dd>
-          </div>
-        ))}
-      </dl>
-      <div className="actions" style={{ marginTop: '1.25rem', flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn-ghost" onClick={onBack}>
-          {copy.accountBack}
+    <section className="slide account-slide">
+      <button type="button" className="account-back-link" onClick={onBack}>
+        ← {copy.accountBack}
+      </button>
+
+      <div className="account-hero">
+        <div className="account-avatar" aria-hidden>
+          {initials}
+        </div>
+        <div className="account-hero-text">
+          <span className="eyebrow">{copy.accountEyebrow}</span>
+          <h1>{displayName}</h1>
+          <p className="account-email">{profile.email.trim()}</p>
+          <p className="lead account-lead">{copy.accountLead}</p>
+        </div>
+      </div>
+
+      <div className="account-section">
+        <h2 className="account-section-title">{copy.accountPersonal}</h2>
+        <ul className="account-list">
+          {infoRows.map((row) => (
+            <li key={row.label} className="account-list-item">
+              <span className="account-list-label">{row.label}</span>
+              <span className="account-list-value">{row.value}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="account-section">
+        <h2 className="account-section-title">{copy.accountSecurity}</h2>
+        <ul className="account-list">
+          <li className="account-list-item">
+            <span className="account-list-label">{copy.accountPasswordLabel}</span>
+            <span className="account-list-value muted">{copy.accountPasswordValue}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div className="account-section">
+        <h2 className="account-section-title">{copy.accountActivity}</h2>
+        <button type="button" className="account-nav-row" onClick={onOpenSessions}>
+          <span className="account-nav-main">
+            <strong>{copy.accountSessions}</strong>
+            <small>{copy.accountSessionsHint}</small>
+          </span>
+          <span className="account-nav-meta">
+            {sessionsLabel}
+            <span className="account-chevron" aria-hidden>
+              ›
+            </span>
+          </span>
         </button>
-        <button type="button" className="btn btn-primary" onClick={onOpenSessions}>
-          {copy.accountSessions}
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={onLogOut}>
+      </div>
+
+      <div className="account-footer">
+        <button type="button" className="btn btn-ghost account-logout" onClick={onLogOut}>
           {copy.logOut}
         </button>
       </div>
