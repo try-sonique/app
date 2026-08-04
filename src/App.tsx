@@ -1139,9 +1139,10 @@ function RecordStage({
   const [demoSeconds, setDemoSeconds] = useState(0)
   const [scrollProgress, setScrollProgress] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
+  const [whispersOn, setWhispersOn] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const recording = demoSync ? demoPlaying : micRecording
-  const cue = useAriaCues(recording, 'record', pieceId)
+  const cue = useAriaCues(recording && whispersOn, 'record', pieceId)
   const { energy } = usePlayEnergy(!demoSync && micRecording)
 
   const stopDemo = () => {
@@ -1272,6 +1273,13 @@ function RecordStage({
             {cue ? <div className={`cue-bubble ${cue.tone}`}>{cue.text}</div> : null}
           </div>
           <div className="actions play-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setWhispersOn((v) => !v)}
+            >
+              {whispersOn ? copy.cutWhispers : copy.reviveAria}
+            </button>
             <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void toggle()}>
               {copy.finishPerf}
             </button>

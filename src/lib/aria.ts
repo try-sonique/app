@@ -742,57 +742,57 @@ export function analyzePerformance(input: {
 
   const dur = features?.durationSec
   const dens =
-    features && !features.weakSignal
+    features && !features.weakSignal && features.attacksPerSec >= 0.2
       ? en
-        ? `~${features.attacksPerSec.toFixed(1)} attacks/s`
-        : `~${features.attacksPerSec.toFixed(1)} attaques/s`
+        ? `${features.attacksPerSec.toFixed(1)} attacks/s`
+        : `${features.attacksPerSec.toFixed(1)} attaques/s`
       : null
 
   let greeting: string
   if (signals.honesty.length) {
     greeting = en
-      ? `${name}, on “${piece}” — ${signals.honesty[0]}`
-      : `${name}, sur « ${piece} » — ${signals.honesty[0]}`
+      ? `${name}, on “${piece}”: ${signals.honesty[0]}`
+      : `${name}, sur « ${piece} »: ${signals.honesty[0]}`
   } else if (!input.hasPartition) {
     const options = en
       ? [
-          `${name}, I listened to “${piece}” by ear${dur ? ` (${Math.round(dur)}s)` : ''}. Here’s what this take actually shows.`,
-          `${name}, take ${take} on “${piece}”${dens ? ` · ${dens}` : ''}. Intention is clear — now the joints.`,
+          `${name}, I listened to “${piece}” by ear${dur ? ` (${Math.round(dur)}s)` : ''}. Here’s what this take shows.`,
+          `${name}, take ${take} on “${piece}”${dens ? ` · ${dens}` : ''}. Intention is clear. Now the joints.`,
           `${name}, “${piece}” without a score: I’m judging sound and shape only.`,
         ]
       : [
           `${name}, j’ai écouté « ${piece} » à l’oreille${dur ? ` (${Math.round(dur)}s)` : ''}. Voici ce que montre cette prise.`,
-          `${name}, essai ${take} sur « ${piece} »${dens ? ` · ${dens}` : ''}. L’intention est claire — maintenant les joints.`,
-          `${name}, « ${piece} » sans partition : je juge le son et la forme seulement.`,
+          `${name}, essai ${take} sur « ${piece} »${dens ? ` · ${dens}` : ''}. L’intention est claire. Maintenant les joints.`,
+          `${name}, « ${piece} » sans partition: je juge le son et la forme seulement.`,
         ]
     greeting = options[(take - 1 + seed) % options.length]
   } else {
     const options = en
       ? [
-          `${name}, nice take on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}. Reading and intention are already talking.`,
-          `${name}, I followed “${piece}” with the score${dens ? ` · ${dens}` : ''}. Real work shows — we refine the joints.`,
-          `${name}, “${piece}” sounds committed. We don’t rewrite the page — we fix what this take revealed.`,
+          `${name}, nice take on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}. Reading and intention already talk.`,
+          `${name}, I followed “${piece}” with the score${dens ? ` · ${dens}` : ''}. Real work shows. We refine the joints.`,
+          `${name}, “${piece}” sounds committed. We fix what this take revealed.`,
         ]
       : [
           `${name}, belle prise sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}. Lecture et intention se parlent déjà.`,
-          `${name}, j’ai suivi « ${piece} » avec la partition${dens ? ` · ${dens}` : ''}. Il y a du vrai travail — on affine les joints.`,
-          `${name}, « ${piece} » sonne engagé. On ne réécrit pas la page — on corrige ce que cette prise révèle.`,
+          `${name}, j’ai suivi « ${piece} » avec la partition${dens ? ` · ${dens}` : ''}. Il y a du vrai travail. On affine les joints.`,
+          `${name}, « ${piece} » sonne engagé. On corrige ce que cette prise révèle.`,
         ]
     greeting = options[(take - 1 + seed) % options.length]
   }
 
   const focusOptions = en
     ? [
-        `Take ${take + 1}: one goal only — steady tempo on a short passage. Nothing else.`,
+        `Take ${take + 1}: one goal only. Steady tempo on a short passage. Nothing else.`,
         `Take ${take + 1}: only the fragile ending. Keep the body of the last notes.`,
-        `Take ${take + 1}: contrast only — soft answer after every bold gesture.`,
-        `Take ${take + 1}: density only — leave one intentional rest every 4 bars.`,
+        `Take ${take + 1}: contrast only. Soft answer after every bold gesture.`,
+        `Take ${take + 1}: density only. Leave one intentional rest every 4 bars.`,
       ]
     : [
-        `Essai ${take + 1} : un seul objectif — tempo stable sur un passage court.`,
-        `Essai ${take + 1} : uniquement la fin fragile. Garde le corps des dernières notes.`,
-        `Essai ${take + 1} : contraste seulement — réponse douce après chaque geste fort.`,
-        `Essai ${take + 1} : densité seulement — un silence volontaire toutes les 4 mesures.`,
+        `Essai ${take + 1}: un seul objectif. Tempo stable sur un passage court.`,
+        `Essai ${take + 1}: uniquement la fin fragile. Garde le corps des dernières notes.`,
+        `Essai ${take + 1}: contraste seulement. Réponse douce après chaque geste fort.`,
+        `Essai ${take + 1}: densité seulement. Un silence volontaire toutes les 4 mesures.`,
       ]
 
   const doneFocus = en
