@@ -443,93 +443,127 @@ type SignalNotes = {
   weaknesses: string[]
   improvements: string[]
   honesty: string[]
+  /** Ranked issues: severity high first. used to pick THE next-take mission */
+  ranked: { severity: number; weakness: string; drill: string; success: string }[]
 }
 
-/** Map take signals → concrete coaching. Prefer “do this next” over apologies. */
+/** Map take signals → ranked musical issues + drills with success criteria. */
 function signalNotes(
   features: AudioFeatures | null,
   meta: PerformanceMeta | undefined,
   en: boolean,
 ): SignalNotes {
-  const notes: SignalNotes = { strengths: [], weaknesses: [], improvements: [], honesty: [] }
+  const notes: SignalNotes = {
+    strengths: [],
+    weaknesses: [],
+    improvements: [],
+    honesty: [],
+    ranked: [],
+  }
   const f = features
   const played = meta?.playedSec ?? f?.durationSec ?? 0
   const total = meta?.totalSec ?? f?.durationSec ?? 0
   const completion = total > 0 ? played / total : 1
 
+  const pushIssue = (
+    severity: number,
+    weakness: string,
+    drill: string,
+    success: string,
+  ) => {
+    notes.ranked.push({ severity, weakness, drill, success })
+    uniquePush(notes.weaknesses, weakness)
+    uniquePush(notes.improvements, en ? `Do this: ${drill}` : `À faire: ${drill}`)
+  }
+
   if (!f || f.weakSignal || f.durationSec < 1.2) {
-    notes.weaknesses.push(
+    pushIssue(
+      100,
       en
-        ? 'This take is too thin or too short to coach in detail'
-        : 'Cette prise est trop fine ou trop courte pour un coaching détaillé',
-    )
-    notes.improvements.push(
+        ? 'Audio too thin or too short to coach this take precisely'
+        : 'Audio trop fin ou trop court pour coacher cette prise précisément',
       en
-        ? 'Do this: mic closer, 25–40 steady seconds, one short passage only'
-        : 'À faire: micro plus près, 25–40 secondes stables, un seul passage court',
+        ? 'mic closer, 30–40 steady seconds, one short passage only'
+        : 'micro plus près, 30–40 secondes stables, un seul passage court',
+      en
+        ? 'Success: Aria hears a continuous line for 30s+'
+        : 'Réussi si: Aria entend une ligne continue 30s+',
     )
     notes.honesty.push(
       en
-        ? 'I need a clearer take before I can get specific.'
-        : 'Il me faut une prise plus claire avant d’être précise.',
+        ? 'I need a clearer take before I can get more specific.'
+        : 'Il me faut une prise plus claire avant d’être plus précise.',
     )
+    notes.ranked.sort((a, b) => b.severity - a.severity)
     return notes
   }
 
+  const peakRatio = f.rmsMean > 0.0001 ? f.rmsPeak / f.rmsMean : 1
+
   if (completion < 0.45 && total > 0) {
-    notes.weaknesses.push(
+    pushIssue(
+      90,
       en
-        ? `You stopped early (~${Math.round(played)}s). I mainly heard the opening.`
-        : `Tu as coupé tôt (~${Math.round(played)}s). J’ai surtout entendu le début.`,
-    )
-    notes.improvements.push(
+        ? `You stopped early (~${Math.round(played)}s of ~${Math.round(total)}s). I mainly heard the opening.`
+        : `Tu as coupé tôt (~${Math.round(played)}s sur ~${Math.round(total)}s). J’ai surtout entendu le début.`,
       en
-        ? 'Do this: same opening + 8 more bars. Don’t stop mid-arc.'
-        : 'À faire: même début + 8 mesures de plus. Ne coupe pas au milieu.',
+        ? 'replay from the same start and add 8 more bars before stopping'
+        : 'repars du même début et ajoute 8 mesures avant d’arrêter',
+      en
+        ? 'Success: you pass the previous stop point without cutting'
+        : 'Réussi si: tu dépasses le point d’arrêt précédent sans couper',
     )
   } else if (f.durationSec >= 20) {
-    notes.strengths.push(
+    uniquePush(
+      notes.strengths,
       en
-        ? `You held ${Math.round(f.durationSec)}s. Stamina is there.`
-        : `Tu as tenu ${Math.round(f.durationSec)}s. L’endurance est là.`,
+        ? `You held ${Math.round(f.durationSec)}s. Stamina is usable.`
+        : `Tu as tenu ${Math.round(f.durationSec)}s. L’endurance est utilisable.`,
     )
   } else if (f.durationSec < 12) {
-    notes.weaknesses.push(
+    pushIssue(
+      85,
       en
-        ? `Short take (${Math.round(f.durationSec)}s). Hard to judge the middle.`
-        : `Prise courte (${Math.round(f.durationSec)}s). Difficile de juger le milieu.`,
-    )
-    notes.improvements.push(
+        ? `Short take (${Math.round(f.durationSec)}s). The middle never appears.`
+        : `Prise courte (${Math.round(f.durationSec)}s). Le milieu n’apparaît pas.`,
       en
-        ? 'Do this: one full phrase start-to-end, no restart mid-way.'
-        : 'À faire: une phrase complète du début à la fin, sans reprendre au milieu.',
+        ? 'one full phrase start-to-end, no restart mid-way'
+        : 'une phrase complète du début à la fin, sans reprendre au milieu',
+      en
+        ? 'Success: one continuous phrase >15s'
+        : 'Réussi si: une phrase continue >15s',
     )
   }
 
   if (f.silenceRatio > 0.45) {
-    notes.weaknesses.push(
+    pushIssue(
+      80,
       en
-        ? 'Long gaps between phrases. The line breaks.'
-        : 'Longs silences entre les phrases. La ligne se casse.',
+        ? `Long gaps (~${Math.round(f.silenceRatio * 100)}% quiet). The musical line breaks.`
+        : `Longs silences (~${Math.round(f.silenceRatio * 100)}% calme). La ligne musicale se casse.`,
+      en
+        ? 'connect 2 phrases with one soft bridge note; no full stop between them'
+        : 'relie 2 phrases avec une note-pont douce; pas d’arrêt total entre elles',
+      en
+        ? 'Success: two phrases feel like one idea'
+        : 'Réussi si: deux phrases sonnent comme une seule idée',
     )
-    notes.improvements.push(
+  } else if (f.silenceRatio < 0.1 && f.attacksPerSec > 3.0) {
+    pushIssue(
+      88,
       en
-        ? 'Do this: connect 2 phrases with one soft bridge note. No full stop.'
-        : 'À faire: relie 2 phrases avec une note-pont douce. Pas d’arrêt total.',
-    )
-  } else if (f.silenceRatio < 0.1 && f.attacksPerSec > 3.2) {
-    notes.weaknesses.push(
+        ? `Too dense (${f.attacksPerSec.toFixed(1)} attacks/s). Almost no recovery.`
+        : `Trop dense (${f.attacksPerSec.toFixed(1)} attaques/s). Presque aucune récupération.`,
       en
-        ? 'Too dense. Almost no recovery between gestures.'
-        : 'Trop dense. Presque aucune récupération entre les gestes.',
-    )
-    notes.improvements.push(
+        ? 'play the same passage with one intentional rest every 4 bars; count the rest out loud once'
+        : 'rejoue le même passage avec un silence volontaire toutes les 4 mesures; compte le silence à voix haute une fois',
       en
-        ? 'Do this: one intentional rest every 4 bars. Count it out loud once.'
-        : 'À faire: un silence volontaire toutes les 4 mesures. Compte-le à voix haute une fois.',
+        ? 'Success: you can point to 2 rests you chose on purpose'
+        : 'Réussi si: tu peux montrer 2 silences choisis volontairement',
     )
   } else if (f.silenceRatio >= 0.18 && f.silenceRatio <= 0.35) {
-    notes.strengths.push(
+    uniquePush(
+      notes.strengths,
       en
         ? 'Breathing between phrases sounds natural.'
         : 'Les respirations entre phrases sonnent naturelles.',
@@ -537,18 +571,21 @@ function signalNotes(
   }
 
   if (f.dynamicRange < 0.035) {
-    notes.weaknesses.push(
+    pushIssue(
+      78,
       en
         ? 'Dynamics stay flat. Soft and loud barely differ.'
         : 'Dynamique trop plate. Le doux et le fort se ressemblent trop.',
-    )
-    notes.improvements.push(
       en
-        ? 'Do this: same 4 bars twice. Pass 1 soft. Pass 2 fuller. Then stitch.'
-        : 'À faire: les mêmes 4 mesures deux fois. Passe 1 douce. Passe 2 plus pleine. Puis assemble.',
+        ? 'same 4 bars twice. pass 1 soft, pass 2 fuller. then stitch once'
+        : 'les mêmes 4 mesures deux fois. passe 1 douce, passe 2 plus pleine. puis assemble une fois',
+      en
+        ? 'Success: a listener hears two clear dynamic levels'
+        : 'Réussi si: on entend clairement deux niveaux dynamiques',
     )
   } else if (f.dynamicRange > 0.11) {
-    notes.strengths.push(
+    uniquePush(
+      notes.strengths,
       en
         ? 'Clear dynamic contrast. Soft and full talk to each other.'
         : 'Beau contraste dynamique. Le doux et le plein se parlent.',
@@ -556,18 +593,21 @@ function signalNotes(
   }
 
   if (f.endingEnergy < f.openingEnergy * 0.55 && f.durationSec > 10) {
-    notes.weaknesses.push(
+    pushIssue(
+      82,
       en
         ? 'The ending loses body. You fade when the phrase still needs weight.'
         : 'La fin perd du corps. Tu t’éteins alors que la phrase a encore besoin de poids.',
-    )
-    notes.improvements.push(
       en
-        ? 'Do this: loop only the last 8 seconds until they stay alive 3 times.'
-        : 'À faire: boucle seulement les 8 dernières secondes jusqu’à 3 fois vivantes.',
+        ? 'loop only the last 8 seconds until they stay alive 3 times in a row'
+        : 'boucle seulement les 8 dernières secondes jusqu’à 3 fois vivantes d’affilée',
+      en
+        ? 'Success: last 8s feel as present as the opening'
+        : 'Réussi si: les 8 dernières secondes sont aussi présentes que le début',
     )
   } else if (f.endingEnergy > f.openingEnergy * 1.35 && f.durationSec > 10) {
-    notes.strengths.push(
+    uniquePush(
+      notes.strengths,
       en
         ? 'The ending is stronger than the opening. You build.'
         : 'La fin est plus forte que le début. Tu construis.',
@@ -575,45 +615,89 @@ function signalNotes(
   }
 
   if (f.openingEnergy > f.middleEnergy * 1.4 && f.durationSec > 12) {
-    notes.weaknesses.push(
+    pushIssue(
+      76,
       en
         ? 'Opening clearer than the middle. Focus drops after the first lift.'
         : 'Début plus clair que le milieu. L’attention baisse après l’élan.',
-    )
-    notes.improvements.push(
       en
-        ? 'Do this: start at the middle dip. 5 slow reps, then one real take.'
-        : 'À faire: commence au creux du milieu. 5 reps lentes, puis une vraie prise.',
+        ? 'start at the middle dip; 5 slow reps, then one real take of that zone only'
+        : 'commence au creux du milieu; 5 reps lentes, puis une vraie prise de cette zone seulement',
+      en
+        ? 'Success: middle bars sound as intentional as bar 1'
+        : 'Réussi si: le milieu sonne aussi intentionnel que la mesure 1',
     )
   }
 
-  if (f.attacksPerSec > 0.4 && f.attacksPerSec < 1.1) {
-    notes.strengths.push(
+  if (f.middleEnergy > f.openingEnergy * 1.45 && f.endingEnergy < f.middleEnergy * 0.6 && f.durationSec > 14) {
+    pushIssue(
+      74,
+      en
+        ? 'Strong middle, weak landing. The arc peaks too early.'
+        : 'Milieu fort, atterrissage faible. L’arc culmine trop tôt.',
+      en
+        ? 'practice the last third only at −10% tempo, then attach it to the middle once'
+        : 'travaille le dernier tiers seul à −10% tempo, puis raccroche-le au milieu une fois',
+      en
+        ? 'Success: energy stays through the final phrase'
+        : 'Réussi si: l’énergie tient jusqu’à la phrase finale',
+    )
+  }
+
+  if (f.attacksPerSec > 0.4 && f.attacksPerSec < 1.15) {
+    uniquePush(
+      notes.strengths,
       en
         ? 'Attack pacing is measured. Not frantic.'
         : 'Rythme d’attaques mesuré. Pas frénétique.',
     )
-  } else if (f.attacksPerSec >= 2.8) {
-    notes.weaknesses.push(
+  } else if (f.attacksPerSec >= 2.6) {
+    pushIssue(
+      86,
       en
         ? `High density (${f.attacksPerSec.toFixed(1)} attacks/s). Tempo is likely pushing.`
         : `Densité élevée (${f.attacksPerSec.toFixed(1)} attaques/s). Le tempo pousse probablement.`,
-    )
-    notes.improvements.push(
       en
-        ? 'Do this: same passage at −15% metronome until it feels boring-stable.'
-        : 'À faire: même passage à −15% métronome jusqu’à ce que ce soit ennuyeusement stable.',
+        ? 'same passage with metronome at −15% until it feels boring-stable, then one take at that speed'
+        : 'même passage au métronome −15% jusqu’à ennuyeusement stable, puis une prise à cette vitesse',
+      en
+        ? 'Success: you finish without speeding in the last bars'
+        : 'Réussi si: tu finis sans accélérer dans les dernières mesures',
+    )
+  }
+
+  if (peakRatio > 4.5 && f.rmsMean > 0.01) {
+    pushIssue(
+      72,
+      en
+        ? 'Attacks spike hard vs the average sound. Touches may be hitting, not placing.'
+        : 'Les attaques piquent fort vs le son moyen. Tu frappes peut-être plus que tu ne poses.',
+      en
+        ? 'one phrase mezzo only; every note same weight; no accents for 8 bars'
+        : 'une phrase tout mezzo; chaque note même poids; aucun accent pendant 8 mesures',
+      en
+        ? 'Success: the line feels even under your hands'
+        : 'Réussi si: la ligne te paraît égale sous les doigts',
     )
   }
 
   if (f.energyVariance > 0.0025 && f.dynamicRange > 0.08) {
-    notes.strengths.push(
+    uniquePush(
+      notes.strengths,
       en
         ? 'The take has a shape. Not a flat line.'
         : 'La prise a une forme. Pas une ligne plate.',
     )
   }
 
+  notes.ranked.sort((a, b) => b.severity - a.severity)
+  // Keep lists aligned to ranked order
+  if (notes.ranked.length) {
+    notes.weaknesses = notes.ranked.map((r) => r.weakness).slice(0, 3)
+    notes.improvements = notes.ranked
+      .map((r) => (en ? `Do this: ${r.drill}` : `À faire: ${r.drill}`))
+      .slice(0, 3)
+  }
   return notes
 }
 
@@ -628,8 +712,8 @@ function stripTipLabel(s: string): string {
 }
 
 /**
- * Aria report: signal-first, then piece flavor.
- * Goal: actionable weaknesses + one clear next-take job.
+ * Aria report: ranked signal issues first.
+ * Generic piece flavor only fills empty gaps. never overrides real take signals.
  */
 export function analyzePerformance(input: {
   pieceName: string
@@ -653,41 +737,34 @@ export function analyzePerformance(input: {
   const base = presetPack(pieceId, en) ?? titleFlavor(piece, en)
   const signals = signalNotes(features, input.meta, en)
 
-  const strengths: string[] = []
-  const weaknesses: string[] = []
-  const improvements: string[] = []
+  const strengths: string[] = [...signals.strengths]
+  const weaknesses: string[] = [...signals.weaknesses]
+  const improvements: string[] = [...signals.improvements]
+  const hasRanked = signals.ranked.length > 0
 
-  for (const s of signals.strengths) uniquePush(strengths, s)
-  for (const w of signals.weaknesses) uniquePush(weaknesses, w)
-  for (const i of signals.improvements) uniquePush(improvements, i)
+  // Only borrow piece flavor when this take didn’t yield enough signal issues
+  if (!hasRanked) {
+    for (const w of pickN(base.weaknesses, seed + 17 + take * 5, 2)) uniquePush(weaknesses, w)
+    for (const i of pickN(base.improvements, seed + 41 + take * 7, 2)) uniquePush(improvements, i)
+  }
+  if (strengths.length < 2) {
+    for (const s of pickN(base.strengths, seed + take * 3, 2)) uniquePush(strengths, s)
+  }
 
-  for (const s of pickN(base.strengths, seed + take * 3, 1)) uniquePush(strengths, s)
-  for (const w of pickN(base.weaknesses, seed + 17 + take * 5, 1)) uniquePush(weaknesses, w)
-  for (const i of pickN(base.improvements, seed + 41 + take * 7, 1)) uniquePush(improvements, i)
-
-  if (take >= 2) {
+  if (take >= 2 && strengths.length < 3) {
     uniquePush(
       strengths,
       en
-        ? `Take ${take}: I’m comparing to take ${take - 1}. Keep what already stabilized.`
-        : `Essai ${take}: je compare à l’essai ${take - 1}. Garde ce qui s’est déjà stabilisé.`,
-      4,
-    )
-  }
-
-  if (input.arrangement === 'arrangement' && !input.hasPartition) {
-    uniquePush(
-      improvements,
-      en
-        ? 'Do this: judge your arrangement on feel, not a fixed original.'
-        : 'À faire: juge ton arrangement sur le feeling, pas un original figé.',
-      4,
+        ? `Take ${take}: compare to take ${take - 1}. Keep only what already stabilized.`
+        : `Essai ${take}: compare à l’essai ${take - 1}. Garde seulement ce qui s’est stabilisé.`,
     )
   }
 
   fillTo(strengths, base.strengths, 2, seed + 91)
-  fillTo(weaknesses, base.weaknesses, 3, seed + 193)
-  fillTo(improvements, base.improvements, 3, seed + 281)
+  if (!hasRanked) {
+    fillTo(weaknesses, base.weaknesses, 3, seed + 193)
+    fillTo(improvements, base.improvements, 3, seed + 281)
+  }
 
   const dur = features?.durationSec
   const dens =
@@ -697,36 +774,46 @@ export function analyzePerformance(input: {
         : `${features.attacksPerSec.toFixed(1)} attaques/s`
       : null
 
+  const top = signals.ranked[0]
   let greeting: string
   if (signals.honesty.length && (!features || features.weakSignal)) {
     greeting = en
       ? `${name}, on “${piece}”: ${signals.honesty[0]}`
       : `${name}, sur « ${piece} »: ${signals.honesty[0]}`
+  } else if (top) {
+    greeting = en
+      ? `${name}, take ${take} on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priority: ${top.weakness.replace(/\.$/, '')}.`
+      : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priorité: ${top.weakness.replace(/\.$/, '')}.`
   } else {
     const topIssue = weaknesses[0]
       ? stripTipLabel(weaknesses[0]).replace(/\.$/, '')
       : en
-        ? 'we refine one joint'
-        : 'on affine un joint'
+        ? 'one clean joint'
+        : 'un joint propre'
     greeting = en
-      ? `${name}, take ${take} on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priority: ${topIssue}.`
-      : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priorité: ${topIssue}.`
+      ? `${name}, take ${take} on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}. Priority: ${topIssue}.`
+      : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}. Priorité: ${topIssue}.`
   }
 
-  const primaryDrill = improvements[0]
-    ? stripTipLabel(improvements[0])
-    : en
-      ? 'one short passage, steady tempo only'
-      : 'un passage court, tempo stable seulement'
-
-  const nextFocus =
-    takesLeft > 0
-      ? en
-        ? `Take ${take + 1}: only this. ${primaryDrill}`
-        : `Essai ${take + 1}: uniquement ça. ${primaryDrill}`
+  let nextFocus: string
+  if (takesLeft <= 0) {
+    nextFocus = en
+      ? '3 takes done. Keep one drill from this report. Rest or switch pieces.'
+      : '3 essais faits. Garde un exercice de ce retour. Repose-toi ou change de morceau.'
+  } else if (top) {
+    nextFocus = en
+      ? `Take ${take + 1}: only this. ${top.drill}. ${top.success}.`
+      : `Essai ${take + 1}: uniquement ça. ${top.drill}. ${top.success}.`
+  } else {
+    const primaryDrill = improvements[0]
+      ? stripTipLabel(improvements[0])
       : en
-        ? '3 takes done. Keep one drill from this report. Rest or switch pieces.'
-        : '3 essais faits. Garde un exercice de ce retour. Repose-toi ou change de morceau.'
+        ? 'one short passage, steady tempo only'
+        : 'un passage court, tempo stable seulement'
+    nextFocus = en
+      ? `Take ${take + 1}: only this. ${primaryDrill}`
+      : `Essai ${take + 1}: uniquement ça. ${primaryDrill}`
+  }
 
   return {
     headline: piece,
