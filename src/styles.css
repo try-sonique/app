@@ -1784,6 +1784,24 @@ h2 {
   padding-left: 1.1rem;
 }
 
+.report-next {
+  margin-top: 1.15rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  background: rgba(232, 192, 74, 0.1);
+  border: 1px solid rgba(232, 192, 74, 0.35);
+}
+
+.report-next p {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+
+.report-strengths {
+  opacity: 0.92;
+}
+
 .takes-pill {
   display: inline-flex;
   align-items: center;

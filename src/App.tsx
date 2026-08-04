@@ -1435,16 +1435,6 @@ function Report({
 
       <div className="report-card report-card-compact">
         <p className="report-greeting">{feedback.greeting}</p>
-        {strengths.length > 0 ? (
-          <div className="report-block">
-            <h3>{copy.strengths}</h3>
-            <ul>
-              {strengths.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
         {weaknesses.length > 0 ? (
           <div className="report-block">
             <h3>{copy.weaknesses}</h3>
@@ -1466,9 +1456,19 @@ function Report({
           </div>
         ) : null}
         {feedback.nextFocus ? (
-          <div className="report-block">
+          <div className="report-block report-next">
             <h3>{copy.nextFocus}</h3>
             <p>{feedback.nextFocus}</p>
+          </div>
+        ) : null}
+        {strengths.length > 0 ? (
+          <div className="report-block report-strengths">
+            <h3>{copy.strengths}</h3>
+            <ul>
+              {strengths.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
           </div>
         ) : null}
       </div>
