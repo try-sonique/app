@@ -161,7 +161,7 @@ type AuthMode = 'choose' | 'login' | 'signup'
 
 function AuthSlide({
   profile,
-  onChange,
+  onChange: _onChange,
   onProfileLoaded,
   onNext,
 }: {
@@ -172,8 +172,12 @@ function AuthSlide({
 }) {
   const copy = t()
   const [mode, setMode] = useState<AuthMode>('choose')
-  const [loginEmail, setLoginEmail] = useState(profile.email)
+  const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
+  const [signupFirstName, setSignupFirstName] = useState('')
+  const [signupLastName, setSignupLastName] = useState('')
+  const [signupEmail, setSignupEmail] = useState('')
+  const [signupPhone, setSignupPhone] = useState('')
   const [signupPassword, setSignupPassword] = useState('')
   const [signupPassword2, setSignupPassword2] = useState('')
   const [authError, setAuthError] = useState('')
@@ -181,11 +185,24 @@ function AuthSlide({
   const [busy, setBusy] = useState(false)
 
   const signupValid = Boolean(
-    profile.firstName.trim() &&
-      profile.email.trim() &&
+    signupFirstName.trim() &&
+      signupEmail.trim() &&
       signupPassword.length >= 6 &&
       signupPassword === signupPassword2,
   )
+
+  const blankSignupFields = () => {
+    setSignupFirstName('')
+    setSignupLastName('')
+    setSignupEmail('')
+    setSignupPhone('')
+    setSignupPassword('')
+    setSignupPassword2('')
+    setLoginEmail('')
+    setLoginPassword('')
+    setAuthError('')
+    setAuthInfo('')
+  }
 
   const submitSignup = async (e: FormEvent) => {
     e.preventDefault()
@@ -199,10 +216,16 @@ function AuthSlide({
       setAuthError(copy.passwordMismatch)
       return
     }
-    if (!profile.firstName.trim() || !profile.email.trim()) return
+    if (!signupFirstName.trim() || !signupEmail.trim()) return
     setBusy(true)
     try {
-      const result = await signUpWithPassword({ profile, password: signupPassword })
+      const draft: UserProfile = {
+        firstName: signupFirstName.trim(),
+        lastName: signupLastName.trim(),
+        email: signupEmail.trim(),
+        phone: signupPhone.trim(),
+      }
+      const result = await signUpWithPassword({ profile: draft, password: signupPassword })
       if (!result.ok || !result.profile) {
         setAuthError(result.error || copy.loginFailed)
         return
@@ -210,8 +233,9 @@ function AuthSlide({
       onProfileLoaded(result.profile)
       if (result.needsEmailConfirm) {
         setAuthInfo(copy.checkEmailConfirm)
-        setMode('login')
+        blankSignupFields()
         setLoginEmail(result.profile.email)
+        setMode('login')
         return
       }
       onNext()
@@ -267,18 +291,21 @@ function AuthSlide({
   }
 
   const startSignup = () => {
-    onChange('firstName', '')
-    onChange('lastName', '')
-    onChange('email', '')
-    onChange('phone', '')
-    setSignupPassword('')
-    setSignupPassword2('')
-    setAuthError('')
-    setAuthInfo('')
+    blankSignupFields()
+    void signOut()
     setMode('signup')
   }
 
+  const startLogin = () => {
+    setLoginEmail('')
+    setLoginPassword('')
+    setAuthError('')
+    setAuthInfo('')
+    setMode('login')
+  }
+
   if (mode === 'choose') {
+    // Only greet by name if THIS browser already has a session — other visitors never see your name.
     const returning = Boolean(profile.firstName.trim() || profile.email.trim())
     return (
       <section className="slide">
@@ -290,7 +317,7 @@ function AuthSlide({
         </h1>
         <p className="lead">{returning ? copy.accessReturningLead : copy.haveAccountLead}</p>
         <div className="choice-grid" style={{ marginInline: 'auto' }}>
-          <button type="button" className="choice" onClick={() => setMode('login')}>
+          <button type="button" className="choice" onClick={startLogin}>
             {copy.login}
             <small>{copy.loginHint}</small>
           </button>
@@ -320,12 +347,17 @@ function AuthSlide({
         <span className="eyebrow">{copy.loginEyebrow}</span>
         <h1>{copy.welcomeBack}</h1>
         <p className="lead">{copy.loginLead}</p>
-        <form className="stack" onSubmit={(e) => void submitLogin(e)}>
+        <form
+          className="stack"
+          autoComplete="off"
+          onSubmit={(e) => void submitLogin(e)}
+        >
           <label className="field">
             <span>{copy.email}</span>
             <input
               type="email"
-              autoComplete="email"
+              name="sonique-login-email"
+              autoComplete="off"
               value={loginEmail}
               onChange={(e) => {
                 setLoginEmail(e.target.value)
@@ -338,7 +370,8 @@ function AuthSlide({
             <span>{copy.password}</span>
             <input
               type="password"
-              autoComplete="current-password"
+              name="sonique-login-password"
+              autoComplete="new-password"
               value={loginPassword}
               onChange={(e) => {
                 setLoginPassword(e.target.value)
@@ -396,14 +429,19 @@ function AuthSlide({
       <span className="eyebrow">{copy.signupEyebrow}</span>
       <h1>{copy.createSpace}</h1>
       <p className="lead">{copy.signupLead}</p>
-      <form className="stack" onSubmit={(e) => void submitSignup(e)}>
+      <form
+        className="stack"
+        autoComplete="off"
+        onSubmit={(e) => void submitSignup(e)}
+      >
         <label className="field">
           <span>{copy.firstName}</span>
           <input
             type="text"
-            autoComplete="given-name"
-            value={profile.firstName}
-            onChange={(e) => onChange('firstName', e.target.value)}
+            name="sonique-signup-firstname"
+            autoComplete="off"
+            value={signupFirstName}
+            onChange={(e) => setSignupFirstName(e.target.value)}
             required
           />
         </label>
@@ -411,9 +449,10 @@ function AuthSlide({
           <span>{copy.email}</span>
           <input
             type="email"
-            autoComplete="email"
-            value={profile.email}
-            onChange={(e) => onChange('email', e.target.value)}
+            name="sonique-signup-email"
+            autoComplete="off"
+            value={signupEmail}
+            onChange={(e) => setSignupEmail(e.target.value)}
             required
           />
         </label>
@@ -421,6 +460,7 @@ function AuthSlide({
           <span>{copy.password}</span>
           <input
             type="password"
+            name="sonique-signup-password"
             autoComplete="new-password"
             value={signupPassword}
             onChange={(e) => {
@@ -435,6 +475,7 @@ function AuthSlide({
           <span>{copy.passwordConfirm}</span>
           <input
             type="password"
+            name="sonique-signup-password2"
             autoComplete="new-password"
             value={signupPassword2}
             onChange={(e) => {
@@ -451,9 +492,10 @@ function AuthSlide({
           </span>
           <input
             type="text"
-            autoComplete="family-name"
-            value={profile.lastName}
-            onChange={(e) => onChange('lastName', e.target.value)}
+            name="sonique-signup-lastname"
+            autoComplete="off"
+            value={signupLastName}
+            onChange={(e) => setSignupLastName(e.target.value)}
           />
         </label>
         <label className="field">
@@ -462,10 +504,11 @@ function AuthSlide({
           </span>
           <input
             type="tel"
-            autoComplete="tel"
+            name="sonique-signup-phone"
+            autoComplete="off"
             placeholder="+33…"
-            value={profile.phone}
-            onChange={(e) => onChange('phone', e.target.value)}
+            value={signupPhone}
+            onChange={(e) => setSignupPhone(e.target.value)}
           />
         </label>
         {authError ? (
