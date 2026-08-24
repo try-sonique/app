@@ -86,7 +86,7 @@ export async function signUpWithPassword(input: {
   const password = input.password
 
   if (!isSupabaseConfigured || !supabase) {
-    // Local fallback until Supabase keys are set (keeps /yc/ usable)
+    // Local fallback until Supabase keys are set (keeps Pages demo usable)
     saveProfile({ ...input.profile, email })
     return { ok: true, profile: { ...input.profile, email } }
   }

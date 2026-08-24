@@ -4,9 +4,11 @@ Music practice app with coach **Aria**: pick a piece → practice with your scor
 
 ## Demo (English)
 
-**Stable (GitHub Pages):** https://elodieybs.github.io/Sonique-app-/yc/?fresh=1
+**GitHub Pages:** https://elodieybs.github.io/Sonique/
 
-**Live tunnel (while agent is running):** https://andrew-mild-textbooks-path.trycloudflare.com/
+> After renaming the repo from `Sonique-app-` to `Sonique`, that URL is live. Until then use: https://elodieybs.github.io/Sonique-app-/
+
+Old `/yc/` and `/live/` links redirect to the site root.
 
 Score-first flow · noir/gold · Manrope · score scrolls with your playing
 
@@ -19,6 +21,11 @@ Score-first flow · noir/gold · Manrope · score scrolls with your playing
 5. Performance — synced take  
 6. Aria feedback (max 3 takes per piece)
 
-## Note on Cloudflare quick tunnels
+## Deploy (GitHub Pages)
 
-`*.trycloudflare.com` URLs are temporary. When the tunnel stops, that exact link dies and cannot be revived. Use the GitHub Pages `/yc/` link for YC / sharing.
+```bash
+npm run build:v2-en
+npm run deploy:pages
+```
+
+Publishes the English YC demo to the root of GitHub Pages (`username.github.io/Sonique/`).
