@@ -1,15 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { getLocale } from './presets'
 
-type RecorderStatus = 'idle' | 'recording' | 'denied' | 'unsupported'
+function recMsg(fr: string, en: string) {
+  return getLocale() === 'en' ? en : fr
+}
+
+type RecorderStatus = 'idle' | 'recording' | 'denied' | 'unsupported' | 'error'
+
+const PREFERRED_MIME_TYPES = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/mp4',
+  'audio/ogg;codecs=opus',
+  'audio/ogg',
+]
+
+function pickMimeType(): string | undefined {
+  if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) {
+    return undefined
+  }
+  return PREFERRED_MIME_TYPES.find((t) => MediaRecorder.isTypeSupported(t))
+}
 
 export function useMediaRecorder() {
   const [status, setStatus] = useState<RecorderStatus>('idle')
   const [seconds, setSeconds] = useState(0)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const mediaRecorder = useRef<MediaRecorder | null>(null)
   const chunks = useRef<Blob[]>([])
   const timer = useRef<number | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const stopResolver = useRef<((blob: Blob | null) => void) | null>(null)
+  const mimeTypeRef = useRef<string | undefined>(undefined)
 
   const clearTimer = () => {
     if (timer.current) {
@@ -26,57 +49,169 @@ export function useMediaRecorder() {
   const start = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setStatus('unsupported')
+      setErrorMessage(
+        recMsg(
+          'Ce navigateur ne permet pas d’enregistrer le micro.',
+          'This browser can’t record from the microphone.',
+        ),
+      )
+      return false
+    }
+
+    // Secure context required (HTTPS or localhost)
+    if (typeof window.isSecureContext === 'boolean' && !window.isSecureContext) {
+      setStatus('unsupported')
+      setErrorMessage(
+        recMsg(
+          'L’enregistrement nécessite une connexion sécurisée (HTTPS).',
+          'Recording needs a secure connection (HTTPS).',
+        ),
+      )
       return false
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      setErrorMessage(null)
+      // Stop any previous stream cleanly
+      if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
+        mediaRecorder.current.stop()
+      }
+      stopStream()
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          // Music / instrument: browser “voice” processing often causes crackle
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
+        },
+      })
       streamRef.current = stream
       chunks.current = []
-      const recorder = new MediaRecorder(stream)
+
+      const mimeType = pickMimeType()
+      mimeTypeRef.current = mimeType
+      const recorderOptions: MediaRecorderOptions = {
+        audioBitsPerSecond: 192_000,
+      }
+      if (mimeType) recorderOptions.mimeType = mimeType
+      let recorder: MediaRecorder
+      try {
+        recorder = new MediaRecorder(stream, recorderOptions)
+      } catch {
+        recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream)
+      }
       mediaRecorder.current = recorder
 
       recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunks.current.push(event.data)
+        if (event.data && event.data.size > 0) chunks.current.push(event.data)
       }
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunks.current, { type: 'audio/webm' })
-        const url = URL.createObjectURL(blob)
-        setAudioUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev)
-          return url
-        })
+      recorder.onerror = () => {
+        setStatus('error')
+        setErrorMessage(
+          recMsg('L’enregistrement s’est interrompu. Réessaie.', 'Recording stopped unexpectedly. Try again.'),
+        )
         stopStream()
       }
 
-      recorder.start()
+      recorder.onstop = () => {
+        const type = mimeTypeRef.current || chunks.current[0]?.type || 'audio/webm'
+        const blob =
+          chunks.current.length > 0 ? new Blob(chunks.current, { type }) : null
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          setAudioUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return url
+          })
+        }
+        stopStream()
+        stopResolver.current?.(blob)
+        stopResolver.current = null
+        mediaRecorder.current = null
+      }
+
+      // Larger timeslice = fewer joins = less crackle than 250ms chunks
+      recorder.start(1000)
       setSeconds(0)
       setStatus('recording')
       clearTimer()
       timer.current = window.setInterval(() => setSeconds((s) => s + 1), 1000)
       return true
-    } catch {
-      setStatus('denied')
+    } catch (err) {
+      stopStream()
+      const name = err instanceof DOMException ? err.name : ''
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        setStatus('denied')
+        setErrorMessage(
+          recMsg(
+            'Micro refusé. Autorise le micro dans ton navigateur, puis réessaie.',
+            'Microphone denied. Allow the mic in your browser, then try again.',
+          ),
+        )
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        setStatus('error')
+        setErrorMessage(
+          recMsg('Aucun micro détecté sur cet appareil.', 'No microphone found on this device.'),
+        )
+      } else {
+        setStatus('error')
+        setErrorMessage(
+          recMsg(
+            'Impossible de démarrer l’enregistrement. Réessaie.',
+            'Couldn’t start recording. Try again.',
+          ),
+        )
+      }
       return false
     }
   }, [])
 
   const stop = useCallback(() => {
     clearTimer()
-    if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
-      mediaRecorder.current.stop()
-    }
-    setStatus('idle')
+    return new Promise<Blob | null>((resolve) => {
+      const recorder = mediaRecorder.current
+      if (!recorder || recorder.state === 'inactive') {
+        setStatus('idle')
+        resolve(null)
+        return
+      }
+      stopResolver.current = (blob) => {
+        setStatus('idle')
+        resolve(blob)
+      }
+      try {
+        // Flush remaining data before stop on browsers that support it
+        if (recorder.state === 'recording') {
+          try {
+            recorder.requestData()
+          } catch {
+            // ignore
+          }
+        }
+        recorder.stop()
+      } catch {
+        setStatus('idle')
+        stopStream()
+        resolve(null)
+      }
+    })
   }, [])
 
-  useEffect(() => () => {
-    clearTimer()
-    stopStream()
-    if (audioUrl) URL.revokeObjectURL(audioUrl)
-  }, [audioUrl])
+  useEffect(
+    () => () => {
+      clearTimer()
+      stopStream()
+      if (audioUrl) URL.revokeObjectURL(audioUrl)
+    },
+    [audioUrl],
+  )
 
-  return { status, seconds, audioUrl, start, stop }
+  return { status, seconds, audioUrl, errorMessage, start, stop }
 }
 
 export function formatTime(totalSeconds: number) {

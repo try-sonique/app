@@ -9,9 +9,18 @@ export type UserProfile = {
 
 export type AriaFeedback = {
   headline: string
-  encouragement: string
+  greeting: string
+  overview: string
+  atmosphere: string
+  technique: string
+  rhythm: string
+  /** Points positifs */
   strengths: string[]
+  /** Points fragiles / à corriger */
+  weaknesses?: string[]
+  /** Axes d'amélioration avec pistes de travail */
   improvements: string[]
+  nextFocus: string
   takesLeft: number
 }
 
@@ -22,6 +31,19 @@ export type AppState = {
   pieceName: string
   partitionName: string
   partitionPreview: string | null
+  partitionMime: string | null
+  /** Id d’un morceau démo préchargé, si choisi */
+  selectedPresetId: string | null
+  /** Extrait audio à écouter à l’entraînement */
+  previewAudio: string | null
+  /** Audio de performance démo (V2) */
+  performanceAudio: string | null
+  /** Secondes max du repère entraînement */
+  practicePeekSec: number | null
+  scrollCapRatio: number | null
+  repeatEverySec: number | null
+  scrollDurationSec: number | null
+  scrollKeyframes: { t: number; p: number }[] | null
   arrangement: ArrangementKind
   takesUsed: number
   isRecording: boolean
@@ -43,6 +65,15 @@ export const initialState: AppState = {
   pieceName: '',
   partitionName: '',
   partitionPreview: null,
+  partitionMime: null,
+  selectedPresetId: null,
+  previewAudio: null,
+  performanceAudio: null,
+  practicePeekSec: null,
+  scrollCapRatio: null,
+  repeatEverySec: null,
+  scrollDurationSec: null,
+  scrollKeyframes: null,
   arrangement: null,
   takesUsed: 0,
   isRecording: false,
