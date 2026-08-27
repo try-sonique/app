@@ -1,31 +1,32 @@
 # Sonique
 
-Music practice app with coach **Aria**: pick a piece → practice with your score on screen → record a take → get feedback.
+App de pratique musicale avec le coach **Aria** : choisis un morceau, joue avec la partition à l’écran, enregistre une prise, reçois un retour.
 
-## Demo (English)
+Démo publique : https://try-sonique.github.io/app/
 
-**GitHub Pages:** https://elodieybs.github.io/Sonique/
+## Lancer en local
 
-> After renaming the repo from `Sonique-app-` to `Sonique`, that URL is live. Until then use: https://elodieybs.github.io/Sonique-app-/
+```bash
+npm install
+npm run dev
+```
 
-Old `/yc/` and `/live/` links redirect to the site root.
+Ouvre [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
-Score-first flow · noir/gold · Manrope · score scrolls with your playing
+L’auth utilise le projet Supabase existant (`rzoqsbxiioaescaoyonh`) : Angelina, Ereka, Elise, Elodie et Marie-Odile se reconnectent avec le même email / mot de passe. Les nouvelles inscriptions reçoivent un mail de confirmation.
+
+Dans Supabase → Authentication → URL Configuration, ajoute :
+
+- Site URL : `https://try-sonique.github.io/app/`
+- Redirect URLs :
+  - `https://try-sonique.github.io/app/**`
+  - `https://elodieybs.github.io/Sonique/**`
+  - `http://127.0.0.1:43123/**`
 
 ## Flow
 
-1. Welcome → account  
-2. **Upload your score** (required — no preset pieces)  
-3. How it works  
-4. Practice room — score on screen, Aria whispers, nothing recorded  
-5. Performance — synced take  
-6. Aria feedback (max 3 takes per piece)
-
-## Deploy (GitHub Pages)
-
-```bash
-npm run build:v2-en
-npm run deploy:pages
-```
-
-Publishes the English YC demo to the root of GitHub Pages (`username.github.io/Sonique/`).
+1. Accueil → compte
+2. Importer une partition (ou un preset)
+3. Salle de pratique — partition à l’écran, chuchotements d’Aria
+4. Performance — prise enregistrée
+5. Retour d’Aria (max 3 prises par morceau)

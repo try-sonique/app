@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sonique — Joue tes morceaux préférés</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,9 +12,53 @@
       rel="stylesheet"
     />
     <meta name="theme-color" content="#000000" />
+    <style>
+      html,
+      body,
+      #root {
+        margin: 0;
+        min-height: 100%;
+        background: #050505;
+        color: #e8d5a3;
+        font-family: Manrope, system-ui, sans-serif;
+      }
+      #boot {
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+      }
+      #boot p {
+        margin: 0.35rem 0;
+      }
+      #boot .brand {
+        letter-spacing: 0.28em;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot">
+        <div>
+          <p class="brand">Sonique</p>
+          <p>Chargement de l’app…</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var boot = document.getElementById('boot')
+          if (!boot) return
+          boot.innerHTML =
+            '<div><p class="brand">Sonique</p><p>L’app n’a pas démarré.</p><p>Recharge la page, ou ouvre <strong>https://try-sonique.github.io/app/</strong> (avec le slash à la fin).</p></div>'
+        }, 8000)
+      })
+    </script>
   </body>
 </html>

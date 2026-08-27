@@ -7,6 +7,15 @@ const anon = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.tri
 
 export const isSupabaseConfigured = Boolean(url && anon)
 
+/** Confirmation / reset emails must land on the app root, not a nested path. */
+export function authRedirectUrl() {
+  const { origin, pathname } = window.location
+  if (pathname === '/app' || pathname.startsWith('/app/')) {
+    return `${origin}/app/`
+  }
+  return `${origin}/`
+}
+
 export const supabase = isSupabaseConfigured
   ? createClient(url, anon, {
       auth: {
@@ -100,7 +109,7 @@ export async function signUpWithPassword(input: {
         last_name: input.profile.lastName.trim(),
         phone: input.profile.phone.trim(),
       },
-      emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+      emailRedirectTo: authRedirectUrl(),
     },
   })
 
@@ -134,7 +143,7 @@ export async function resendSignupEmail(email: string): Promise<AuthResult> {
     type: 'signup',
     email: email.trim().toLowerCase(),
     options: {
-      emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+      emailRedirectTo: authRedirectUrl(),
     },
   })
   if (error) return { ok: false, error: mapAuthError(error.message) }
@@ -225,7 +234,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
     return { ok: false, error: 'Auth is not configured yet' }
   }
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-    redirectTo: `${window.location.origin}${window.location.pathname}`,
+    redirectTo: authRedirectUrl(),
   })
   if (error) return { ok: false, error: mapAuthError(error.message) }
   return { ok: true }
