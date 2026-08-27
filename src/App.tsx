@@ -43,6 +43,7 @@ import {
   updateUserProfile,
   resendSignupEmail,
 } from './lib/supabaseAuth'
+import { pullCloudSessions, pushCloudSession } from './lib/sessionCloud'
 import {
   MAX_TAKES,
   initialState,
@@ -1877,6 +1878,7 @@ export default function App() {
   })
   const [showHistory, setShowHistory] = useState(false)
   const [showAccount, setShowAccount] = useState(false)
+  const [historyRev, setHistoryRev] = useState(0)
 
   const changeLocale = (next: Locale) => {
     setLocale(next)
@@ -1911,6 +1913,8 @@ export default function App() {
       const remote = await getSessionProfile()
       if (remote) {
         setState((s) => ({ ...s, profile: remote }))
+        await pullCloudSessions(remote.email)
+        setHistoryRev((n) => n + 1)
       }
     }
     void boot()
@@ -1973,6 +1977,7 @@ export default function App() {
               feedback,
               hasAudio: Boolean(audioBlob),
             })
+            void pushCloudSession(saved)
             if (audioBlob) {
               void saveRecordingBlob(saved.id, audioBlob)
             }
@@ -2104,6 +2109,7 @@ export default function App() {
   if (showAccount) {
     body = (
       <AccountView
+        key={`account-${historyRev}`}
         profile={state.profile}
         locale={locale}
         onLocaleChange={changeLocale}
@@ -2119,6 +2125,7 @@ export default function App() {
   } else if (showHistory) {
     body = (
       <HistoryView
+        key={`history-${historyRev}`}
         email={state.profile.email}
         onBack={() => setShowHistory(false)}
         onOpenFeedback={(session) => {
@@ -2152,7 +2159,10 @@ export default function App() {
         onChange={(key, value) =>
           setState((s) => ({ ...s, profile: { ...s.profile, [key]: value } }))
         }
-        onProfileLoaded={(profile) => setState((s) => ({ ...s, profile }))}
+        onProfileLoaded={(profile) => {
+          setState((s) => ({ ...s, profile }))
+          void pullCloudSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
+        }}
         onNext={() => go(3)}
       />
     )

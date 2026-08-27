@@ -5,9 +5,9 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { getLocale } from './lib/presets'
 import './styles.css'
 
-// Demo helper: ?fresh=1 clears saved profile + Supabase session so the flow starts blank
+// ?reset=1 clears local demo data. Do not use ?fresh=1 for cache — it used to wipe sessions.
 const params = new URLSearchParams(window.location.search)
-if (params.has('fresh') || params.has('reset')) {
+if (params.has('reset')) {
   try {
     localStorage.removeItem('sonique.profiles')
     localStorage.removeItem('sonique.currentEmail')
@@ -22,7 +22,6 @@ if (params.has('fresh') || params.has('reset')) {
   } catch {
     /* ignore */
   }
-  params.delete('fresh')
   params.delete('reset')
   const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`
   window.history.replaceState({}, '', next)

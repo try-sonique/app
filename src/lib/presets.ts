@@ -296,7 +296,7 @@ const FR = {
   // History
   historyEyebrow: 'Mon compte · Sessions',
   historyTitle: 'Historique de travail',
-  historyLead: 'Rejoue tes sessions et relis tes retours. Tout reste sur ton appareil (interne).',
+  historyLead: 'Rejoue tes sessions et relis tes retours Aria. Ils suivent ton compte.',
   noSessions: 'Aucune session enregistrée pour l’instant.',
   withPartition: 'avec partition',
   byEar: 'à l’oreille',
@@ -498,7 +498,7 @@ const EN: { [K in keyof typeof FR]: string } = {
 
   historyEyebrow: 'My account · Sessions',
   historyTitle: 'Practice history',
-  historyLead: 'Replay your sessions and reread feedback. Everything stays on this device.',
+  historyLead: 'Replay your sessions and reread Aria’s notes. They follow your account.',
   noSessions: 'No sessions saved yet.',
   withPartition: 'with score',
   byEar: 'by ear',

@@ -134,6 +134,23 @@ export function listSessions(email?: string | null): StoredSession[] {
   }
 }
 
+/** Merge cloud + local sessions (same id keeps the newest). */
+export function mergeSessions(incoming: StoredSession[]) {
+  if (!incoming.length) return
+  try {
+    const map = new Map<string, StoredSession>()
+    for (const s of listSessions()) map.set(s.id, s)
+    for (const s of incoming) {
+      const prev = map.get(s.id)
+      if (!prev || s.createdAt >= prev.createdAt) map.set(s.id, s)
+    }
+    const merged = [...map.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(merged.slice(0, 80)))
+  } catch {
+    /* ignore */
+  }
+}
+
 export function saveSession(
   session: Omit<StoredSession, 'id' | 'createdAt'>,
 ): StoredSession {
