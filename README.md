@@ -4,7 +4,7 @@ Music practice app with coach **Aria**: pick a piece → practice with your scor
 
 ## Demo (English)
 
-**Stable (GitHub Pages):** https://elodieybs.github.io/Sonique-app-/yc/?fresh=1
+**Stable (GitHub Pages):** https://try-sonique.github.io/app/
 
 **Live tunnel (while agent is running):** https://andrew-mild-textbooks-path.trycloudflare.com/
 
