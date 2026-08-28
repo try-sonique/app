@@ -1,5 +1,7 @@
 import { supabase } from './supabaseAuth'
-import { mergeSessions, type StoredSession } from './storage'
+import { listSessions, mergeSessions, type StoredSession } from './storage'
+
+const META_KEY = 'sonique_sessions'
 
 type Row = {
   id: string
@@ -27,6 +29,23 @@ function rowToSession(row: Row): StoredSession {
   }
 }
 
+async function pullFromUserMetadata() {
+  if (!supabase) return
+  const { data } = await supabase.auth.getUser()
+  const raw = data.user?.user_metadata?.[META_KEY]
+  if (!Array.isArray(raw) || raw.length === 0) return
+  mergeSessions(raw as StoredSession[])
+}
+
+async function pushToUserMetadata(email: string) {
+  if (!supabase) return
+  const mine = listSessions(email).slice(0, 20)
+  const { error } = await supabase.auth.updateUser({
+    data: { [META_KEY]: mine },
+  })
+  if (error) return
+}
+
 export async function pullCloudSessions(email: string) {
   if (!supabase) return
   const key = email.trim().toLowerCase()
@@ -40,10 +59,16 @@ export async function pullCloudSessions(email: string) {
       .eq('email', key)
       .order('created_at', { ascending: false })
       .limit(80)
-    if (error || !data) return
-    mergeSessions((data as Row[]).map(rowToSession))
+    if (!error && data?.length) {
+      mergeSessions((data as Row[]).map(rowToSession))
+    }
   } catch {
     /* table may not exist yet */
+  }
+  try {
+    await pullFromUserMetadata()
+  } catch {
+    /* ignore */
   }
 }
 
@@ -53,7 +78,7 @@ export async function pushCloudSession(session: StoredSession) {
     const { data: auth } = await supabase.auth.getUser()
     const user = auth.user
     if (!user) return
-    await supabase.from('practice_sessions').upsert(
+    const { error } = await supabase.from('practice_sessions').upsert(
       {
         id: session.id,
         user_id: user.id,
@@ -68,7 +93,46 @@ export async function pushCloudSession(session: StoredSession) {
       },
       { onConflict: 'id' },
     )
+    if (error) {
+      await pushToUserMetadata(session.email)
+      return
+    }
+    await pushToUserMetadata(session.email)
   } catch {
-    /* table may not exist yet */
+    try {
+      await pushToUserMetadata(session.email)
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+export async function syncAccountSessions(email: string) {
+  const key = email.trim().toLowerCase()
+  if (!key || !supabase) return
+  await pullCloudSessions(key)
+  const mine = listSessions(key)
+  if (!mine.length) return
+  await pushToUserMetadata(key)
+  try {
+    const { data: auth } = await supabase.auth.getUser()
+    if (!auth.user) return
+    await supabase.from('practice_sessions').upsert(
+      mine.map((session) => ({
+        id: session.id,
+        user_id: auth.user!.id,
+        email: key,
+        piece_name: session.pieceName,
+        has_partition: session.hasPartition,
+        created_at: session.createdAt,
+        feedback_headline: session.feedbackHeadline,
+        take_number: session.takeNumber,
+        feedback: session.feedback,
+        has_audio: session.hasAudio,
+      })),
+      { onConflict: 'id' },
+    )
+  } catch {
+    /* table optional */
   }
 }

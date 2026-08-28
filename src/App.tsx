@@ -30,9 +30,11 @@ import {
   listSessions,
   saveRecordingBlob,
   saveSession,
+  attachSessionsToEmail,
   setRememberedEmail,
   type StoredSession,
 } from './lib/storage'
+import { pushCloudSession, syncAccountSessions } from './lib/sessionCloud'
 import {
   getSessionProfile,
   isSupabaseConfigured,
@@ -43,12 +45,12 @@ import {
   updateUserProfile,
   resendSignupEmail,
 } from './lib/supabaseAuth'
-import { pullCloudSessions, pushCloudSession } from './lib/sessionCloud'
 import {
   MAX_TAKES,
   initialState,
   type ArrangementKind,
   type AppState,
+  type AriaFeedback,
   type UserProfile,
 } from './types'
 
@@ -1791,6 +1793,28 @@ function formatSessionHeadline(headline: string, pieceName: string) {
   return `${copy.feedbackPrefix} · ${title}`
 }
 
+function feedbackFromSession(session: StoredSession): AriaFeedback {
+  if (session.feedback) {
+    return {
+      ...session.feedback,
+      headline: formatSessionHeadline(session.feedback.headline, session.pieceName),
+    }
+  }
+  return {
+    headline: formatSessionHeadline(session.feedbackHeadline, session.pieceName),
+    greeting: '',
+    overview: session.feedbackHeadline || session.pieceName,
+    atmosphere: '',
+    technique: '',
+    rhythm: '',
+    strengths: [],
+    weaknesses: [],
+    improvements: [],
+    nextFocus: '',
+    takesLeft: 0,
+  }
+}
+
 function HistoryView({
   email,
   onBack,
@@ -1802,6 +1826,12 @@ function HistoryView({
 }) {
   const sessions = listSessions(email)
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!email.trim()) return
+    attachSessionsToEmail(email)
+    void syncAccountSessions(email)
+  }, [email])
 
   useEffect(() => {
     let cancelled = false
@@ -1820,7 +1850,7 @@ function HistoryView({
       cancelled = true
       Object.values(urls).forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [email])
+  }, [email, sessions.length])
 
   const copy = t()
   const dateLocale = getLocale() === 'en' ? 'en-US' : 'fr-FR'
@@ -1908,12 +1938,17 @@ export default function App() {
       }
       const existing = getCurrentProfile()
       if (existing) {
+        attachSessionsToEmail(existing.email)
         setState((s) => ({ ...s, profile: existing }))
       }
       const remote = await getSessionProfile()
       if (remote) {
+        attachSessionsToEmail(remote.email)
         setState((s) => ({ ...s, profile: remote }))
-        await pullCloudSessions(remote.email)
+        await syncAccountSessions(remote.email)
+        setHistoryRev((n) => n + 1)
+      } else if (existing?.email) {
+        await syncAccountSessions(existing.email)
         setHistoryRev((n) => n + 1)
       }
     }
@@ -2116,6 +2151,8 @@ export default function App() {
         onProfileSaved={(profile) => setState((s) => ({ ...s, profile }))}
         onBack={() => setShowAccount(false)}
         onOpenSessions={() => {
+          attachSessionsToEmail(state.profile.email)
+          void syncAccountSessions(state.profile.email).then(() => setHistoryRev((n) => n + 1))
           setShowAccount(false)
           setShowHistory(true)
         }}
@@ -2129,17 +2166,13 @@ export default function App() {
         email={state.profile.email}
         onBack={() => setShowHistory(false)}
         onOpenFeedback={(session) => {
-          if (session.feedback) {
-            const feedback = {
-              ...session.feedback,
-              headline: formatSessionHeadline(session.feedback.headline, session.pieceName),
-            }
-            setState((s) => ({
-              ...s,
-              feedback,
-              slide: 8,
-            }))
-          }
+          setState((s) => ({
+            ...s,
+            pieceName: session.pieceName,
+            hasPartition: session.hasPartition,
+            feedback: feedbackFromSession(session),
+            slide: 8,
+          }))
           setShowHistory(false)
         }}
       />
@@ -2160,8 +2193,9 @@ export default function App() {
           setState((s) => ({ ...s, profile: { ...s.profile, [key]: value } }))
         }
         onProfileLoaded={(profile) => {
+          attachSessionsToEmail(profile.email)
           setState((s) => ({ ...s, profile }))
-          void pullCloudSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
+          void syncAccountSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
         }}
         onNext={() => go(3)}
       />

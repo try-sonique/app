@@ -128,9 +128,32 @@ export function listSessions(email?: string | null): StoredSession[] {
     const list: StoredSession[] = raw ? (JSON.parse(raw) as StoredSession[]) : []
     if (!email) return list
     const key = email.trim().toLowerCase()
-    return list.filter((s) => s.email.trim().toLowerCase() === key)
+    const mine = list.filter((s) => s.email.trim().toLowerCase() === key)
+    const orphans = list.filter((s) => !s.email.trim())
+    return [...mine, ...orphans].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   } catch {
     return []
+  }
+}
+
+/** Rattache les prises sans email au compte qui vient de se connecter. */
+export function attachSessionsToEmail(email: string) {
+  const key = email.trim().toLowerCase()
+  if (!key) return
+  try {
+    const raw = localStorage.getItem(SESSIONS_KEY)
+    const list: StoredSession[] = raw ? (JSON.parse(raw) as StoredSession[]) : []
+    let changed = false
+    const next = list.map((s) => {
+      if (!s.email.trim()) {
+        changed = true
+        return { ...s, email: key }
+      }
+      return s
+    })
+    if (changed) localStorage.setItem(SESSIONS_KEY, JSON.stringify(next))
+  } catch {
+    /* ignore */
   }
 }
 
