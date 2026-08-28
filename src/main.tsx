@@ -3,7 +3,12 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { ErrorBoundary } from './ErrorBoundary'
 import { getLocale } from './lib/presets'
+import { seedHistoryIfRequested } from './lib/seedHistory'
 import './styles.css'
+
+if (import.meta.env.DEV) {
+  seedHistoryIfRequested()
+}
 
 // ?reset=1 clears local demo data. Do not use ?fresh=1 for cache — it used to wipe sessions.
 const params = new URLSearchParams(window.location.search)

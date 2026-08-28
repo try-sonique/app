@@ -2069,14 +2069,27 @@ function HistoryView({
 }
 
 export default function App() {
-  const [state, setState] = useState<AppState>(initialState)
+  const [state, setState] = useState<AppState>(() => {
+    const existing = getCurrentProfile()
+    return existing ? { ...initialState, profile: existing } : initialState
+  })
   const [locale, setLocaleState] = useState<Locale>(() => getLocale())
   const [theme, setTheme] = useState<ThemeId>(() => {
     if (!SHOW_THEME_DOCK) return 'noir'
     const saved = localStorage.getItem('sonique-theme') as ThemeId | null
     return saved && THEMES.some((t) => t.id === saved) ? saved : 'noir'
   })
-  const [showHistory, setShowHistory] = useState(false)
+  const [showHistory, setShowHistory] = useState(() => {
+    try {
+      if (sessionStorage.getItem('sonique.openHistory') === '1') {
+        sessionStorage.removeItem('sonique.openHistory')
+        return true
+      }
+    } catch {
+      /* ignore */
+    }
+    return false
+  })
   const [showAccount, setShowAccount] = useState(false)
   const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
