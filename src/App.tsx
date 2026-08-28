@@ -1815,85 +1815,255 @@ function feedbackFromSession(session: StoredSession): AriaFeedback {
   }
 }
 
+function groupSessionsByPiece(sessions: StoredSession[]) {
+  const map = new Map<string, StoredSession[]>()
+  for (const s of sessions) {
+    const key = s.pieceName.trim() || '—'
+    const group = map.get(key)
+    if (group) group.push(s)
+    else map.set(key, [s])
+  }
+  return [...map.entries()].map(([piece, items]) => ({ piece, items }))
+}
+
+function formatSessionWhen(iso: string) {
+  const copy = t()
+  const locale = getLocale() === 'en' ? 'en-US' : 'fr-FR'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const now = new Date()
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const startThat = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const diffDays = Math.round((startToday - startThat) / 86400000)
+  const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  if (diffDays === 0) return `${copy.historyToday} · ${time}`
+  if (diffDays === 1) return `${copy.historyYesterday} · ${time}`
+  return d.toLocaleString(locale, {
+    day: 'numeric',
+    month: 'short',
+    year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function sessionTeaser(session: StoredSession) {
+  const fb = session.feedback
+  if (fb?.nextFocus?.trim()) return fb.nextFocus.trim()
+  if (fb?.weaknesses?.[0]) return fb.weaknesses[0]
+  if (fb?.greeting?.trim()) return fb.greeting.trim()
+  if (fb?.overview?.trim()) return fb.overview.trim()
+  return formatSessionHeadline(session.feedbackHeadline, session.pieceName)
+}
+
+function SessionNotes({ session }: { session: StoredSession }) {
+  const copy = t()
+  const fb = feedbackFromSession(session)
+  const strengths = (fb.strengths || []).slice(0, 3)
+  const weaknesses = (fb.weaknesses || []).slice(0, 3)
+  const improvements = (fb.improvements || []).slice(0, 3)
+  const hasBody = Boolean(
+    fb.greeting || weaknesses.length || improvements.length || fb.nextFocus || strengths.length,
+  )
+  if (!hasBody) {
+    return <p className="history-notes-fallback">{fb.headline}</p>
+  }
+  return (
+    <div className="history-notes">
+      {fb.greeting ? <p className="report-greeting">{fb.greeting}</p> : null}
+      {weaknesses.length > 0 ? (
+        <div className="report-block">
+          <h3>{copy.weaknesses}</h3>
+          <ul>
+            {weaknesses.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {improvements.length > 0 ? (
+        <div className="report-block">
+          <h3>{copy.improvements}</h3>
+          <ul>
+            {improvements.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {fb.nextFocus ? (
+        <div className="report-block report-next">
+          <h3>{copy.nextFocus}</h3>
+          <p>{fb.nextFocus}</p>
+        </div>
+      ) : null}
+      {strengths.length > 0 ? (
+        <div className="report-block report-strengths">
+          <h3>{copy.strengths}</h3>
+          <ul>
+            {strengths.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function HistoryView({
   email,
   onBack,
   onOpenFeedback,
+  onStartPiece,
 }: {
   email: string
   onBack: () => void
   onOpenFeedback: (session: StoredSession) => void
+  onStartPiece: () => void
 }) {
-  const sessions = listSessions(email)
+  const [sessions, setSessions] = useState(() => listSessions(email))
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({})
+  const [audioReady, setAudioReady] = useState(false)
+  const [syncing, setSyncing] = useState(true)
+  const [openId, setOpenId] = useState<string | null>(
+    () => listSessions(email)[0]?.id ?? null,
+  )
+  const sessionKey = sessions.map((s) => s.id).join('|')
 
   useEffect(() => {
-    if (!email.trim()) return
+    let cancelled = false
     attachSessionsToEmail(email)
-    void syncAccountSessions(email)
+    setSessions(listSessions(email))
+    setSyncing(true)
+    void syncAccountSessions(email).finally(() => {
+      if (cancelled) return
+      const next = listSessions(email)
+      setSessions(next)
+      setOpenId((id) => id ?? next[0]?.id ?? null)
+      setSyncing(false)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [email])
 
   useEffect(() => {
     let cancelled = false
     const urls: Record<string, string> = {}
+    setAudioReady(false)
     ;(async () => {
       for (const s of sessions) {
         if (!s.hasAudio) continue
         const blob = await getRecordingBlob(s.id)
-        if (blob && !cancelled) {
-          urls[s.id] = URL.createObjectURL(blob)
-        }
+        if (blob && !cancelled) urls[s.id] = URL.createObjectURL(blob)
       }
-      if (!cancelled) setAudioUrls(urls)
+      if (!cancelled) {
+        setAudioUrls(urls)
+        setAudioReady(true)
+      }
     })()
     return () => {
       cancelled = true
       Object.values(urls).forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [email, sessions.length])
+    // sessionKey captures identity; sessions is read inside
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, sessionKey])
 
   const copy = t()
-  const dateLocale = getLocale() === 'en' ? 'en-US' : 'fr-FR'
+  const groups = groupSessionsByPiece(sessions)
 
   return (
     <section className="slide history-slide">
-      <span className="eyebrow">{copy.historyEyebrow}</span>
-      <h1>{copy.historyTitle}</h1>
-      <p className="lead">{copy.historyLead}</p>
-      {sessions.length === 0 ? (
-        <p className="lead">{copy.noSessions}</p>
+      <button type="button" className="account-back-link" onClick={onBack}>
+        ← {copy.historyBack}
+      </button>
+
+      <div className="history-hero">
+        <span className="eyebrow">{copy.historyEyebrow}</span>
+        <h1>{copy.historyTitle}</h1>
+        <p className="lead history-lead">{copy.historyLead}</p>
+        {sessions.length > 0 ? (
+          <p className="history-count">
+            {copy.historyCount.replace('{n}', String(sessions.length))}
+          </p>
+        ) : null}
+      </div>
+
+      {syncing && sessions.length === 0 ? (
+        <p className="history-syncing">{copy.historySyncing}</p>
+      ) : sessions.length === 0 ? (
+        <div className="history-empty">
+          <p className="history-empty-title">{copy.noSessions}</p>
+          <p className="lead history-lead">{copy.historyEmptyHint}</p>
+          <button type="button" className="btn btn-primary" onClick={onStartPiece}>
+            {copy.historyStart}
+          </button>
+        </div>
       ) : (
         <div className="history-list">
-          {sessions.map((s) => (
-            <article key={s.id} className="history-item">
-              <h3>{s.pieceName}</h3>
-              <div className="meta">
-                {new Date(s.createdAt).toLocaleString(dateLocale)} · {copy.takeLabel}{' '}
-                {s.takeNumber}
-                {s.hasPartition ? ` · ${copy.withPartition}` : ` · ${copy.byEar}`}
+          {groups.map((group) => (
+            <section key={group.piece} className="history-group">
+              <div className="history-group-head">
+                <h2>{group.piece}</h2>
+                <span>
+                  {copy.historyTakesOnPiece.replace('{n}', String(group.items.length))}
+                </span>
               </div>
-              <p className="lead" style={{ margin: 0 }}>
-                {formatSessionHeadline(s.feedbackHeadline, s.pieceName)}
-              </p>
-              {audioUrls[s.id] ? (
-                <div className="history-audio">
-                  <audio controls preload="metadata" src={audioUrls[s.id]} />
-                </div>
-              ) : null}
-              <div className="actions" style={{ marginTop: '0.85rem' }}>
-                <button type="button" className="btn btn-ghost" onClick={() => onOpenFeedback(s)}>
-                  {copy.viewFeedback}
-                </button>
-              </div>
-            </article>
+              {group.items.map((s) => {
+                const open = openId === s.id
+                return (
+                  <article
+                    key={s.id}
+                    className={`history-item ${open ? 'is-open' : ''}`}
+                  >
+                    <div className="history-item-top">
+                      <span className="history-take-chip">
+                        {copy.takeLabel} {s.takeNumber}
+                      </span>
+                      <time className="history-when" dateTime={s.createdAt}>
+                        {formatSessionWhen(s.createdAt)}
+                      </time>
+                      <span className="history-mode-chip">
+                        {s.hasPartition ? copy.withPartition : copy.byEar}
+                      </span>
+                    </div>
+                    {!open ? <p className="history-teaser">{sessionTeaser(s)}</p> : null}
+                    {open ? <SessionNotes session={s} /> : null}
+                    {audioUrls[s.id] ? (
+                      <div className="history-audio">
+                        <span className="history-audio-label">{copy.historyListen}</span>
+                        <audio controls preload="metadata" src={audioUrls[s.id]} />
+                      </div>
+                    ) : s.hasAudio && audioReady ? (
+                      <p className="history-no-audio">{copy.historyNoAudio}</p>
+                    ) : null}
+                    <div className="history-item-actions">
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => setOpenId(open ? null : s.id)}
+                      >
+                        {open ? copy.historyHideNotes : copy.historyShowNotes}
+                      </button>
+                      {open ? (
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={() => onOpenFeedback(s)}
+                        >
+                          {copy.historyOpenReport}
+                        </button>
+                      ) : null}
+                    </div>
+                  </article>
+                )
+              })}
+            </section>
           ))}
         </div>
       )}
-      <div className="actions">
-        <button type="button" className="btn btn-primary" onClick={onBack}>
-          {copy.historyBack}
-        </button>
-      </div>
     </section>
   )
 }
@@ -1908,6 +2078,7 @@ export default function App() {
   })
   const [showHistory, setShowHistory] = useState(false)
   const [showAccount, setShowAccount] = useState(false)
+  const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
 
   const changeLocale = (next: Locale) => {
@@ -2153,6 +2324,7 @@ export default function App() {
         onOpenSessions={() => {
           attachSessionsToEmail(state.profile.email)
           void syncAccountSessions(state.profile.email).then(() => setHistoryRev((n) => n + 1))
+          setHistoryFromAccount(true)
           setShowAccount(false)
           setShowHistory(true)
         }}
@@ -2164,7 +2336,15 @@ export default function App() {
       <HistoryView
         key={`history-${historyRev}`}
         email={state.profile.email}
-        onBack={() => setShowHistory(false)}
+        onBack={() => {
+          setShowHistory(false)
+          if (historyFromAccount) setShowAccount(true)
+        }}
+        onStartPiece={() => {
+          setShowHistory(false)
+          setShowAccount(false)
+          go(3)
+        }}
         onOpenFeedback={(session) => {
           setState((s) => ({
             ...s,
@@ -2306,7 +2486,10 @@ export default function App() {
         state={state}
         onReplay={replay}
         onNewPiece={newPiece}
-        onOpenHistory={() => setShowHistory(true)}
+        onOpenHistory={() => {
+          setHistoryFromAccount(false)
+          setShowHistory(true)
+        }}
       />
     )
   }
