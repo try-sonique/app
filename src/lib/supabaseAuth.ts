@@ -10,10 +10,9 @@ export const isSupabaseConfigured = Boolean(url && anon)
 /** Confirmation / reset emails must land on the app root, not a nested path. */
 export function authRedirectUrl() {
   const { origin, pathname } = window.location
-  if (pathname === '/app' || pathname.startsWith('/app/')) {
-    return `${origin}/app/`
-  }
-  return `${origin}/`
+  const onPages = pathname === '/app' || pathname.startsWith('/app/')
+  const raw = onPages ? `${origin}/app/` : `${origin}/`
+  return raw.replace(/([^:]\/)\/+/g, '$1')
 }
 
 export const supabase = isSupabaseConfigured
@@ -285,15 +284,45 @@ export async function signInWithSocial(
   } catch {
     /* ignore */
   }
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: authRedirectUrl() },
+    options: {
+      redirectTo: authRedirectUrl(),
+      skipBrowserRedirect: true,
+    },
   })
   if (error) {
     const mapped = mapAuthError(error.message)
     if (mapped === 'oauth_unavailable') return { ok: false, error: `${provider}_unavailable` }
     return { ok: false, error: mapped }
   }
+  const startUrl = data.url
+  if (!startUrl) return { ok: false, error: `${provider}_unavailable` }
+
+  // If the provider is off in Supabase, /authorize returns JSON 400.
+  // Probe first so the musician stays on Sonique instead of a raw error page.
+  try {
+    const probe = await fetch(startUrl, {
+      method: 'GET',
+      redirect: 'manual',
+      headers: { apikey: anon, Authorization: `Bearer ${anon}` },
+    })
+    if (probe.status === 400) {
+      const body = (await probe.json().catch(() => null)) as { msg?: string } | null
+      const msg = body?.msg || ''
+      if (
+        msg.toLowerCase().includes('not enabled') ||
+        msg.toLowerCase().includes('unsupported provider')
+      ) {
+        return { ok: false, error: `${provider}_unavailable` }
+      }
+      return { ok: false, error: mapAuthError(msg || 'oauth_unavailable') }
+    }
+  } catch {
+    /* CORS oddity: still try the real redirect */
+  }
+
+  window.location.assign(startUrl)
   return { ok: true }
 }
 

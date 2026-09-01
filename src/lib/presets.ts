@@ -247,7 +247,7 @@ const FR = {
   scoreSaved: 'Partition enregistrée sur cet appareil.',
   googleContinue: 'Continuer avec Google',
   googleUnavailable:
-    'Google n’est pas encore branché dans Supabase. Facebook, ou un lien par e-mail.',
+    'Google n’est pas encore allumé. Dans Supabase : Authentication → Providers → Google (Client ID + secret Google Cloud).',
   facebookContinue: 'Continuer avec Facebook',
   instagramContinue: 'Continuer avec Instagram',
   facebookUnavailable:
@@ -561,7 +561,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   scoreSaved: 'Score saved on this device.',
   googleContinue: 'Continue with Google',
   googleUnavailable:
-    'Google is not wired in Supabase yet. Facebook, or an email link.',
+    'Google is not enabled yet. In Supabase: Authentication → Providers → Google (Google Cloud Client ID + secret).',
   facebookContinue: 'Continue with Facebook',
   instagramContinue: 'Continue with Instagram',
   facebookUnavailable:
