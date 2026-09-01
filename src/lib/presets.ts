@@ -311,9 +311,10 @@ const FR = {
   howStep5Body: 'Reviens au même morceau autant que tu veux. La session, c’est d’aller plus loin sur CE morceau.',
   goToPractice: 'Passer à l’entraînement',
   howBeginnerLead:
-    'On ne joue pas le morceau entier. D’abord le corps, une main, puis l’autre.',
-  howBeginner1Title: 'Assieds-toi',
-  howBeginner1Body: 'Milieu du banc. Dos droit, épaules basses, pieds à plat.',
+    'Assieds-toi bien en face du clavier et pose tes mains sur le piano. La main droite, c’est la clé de sol. La main gauche, la clé de fa.',
+  howBeginner1Title: 'En face du clavier',
+  howBeginner1Body:
+    'Assieds-toi bien en face. Pose tes mains. Droite : clé de sol. Gauche : clé de fa.',
   howBeginner2Title: 'Place tes mains',
   howBeginner2Body: 'Doigts ronds, poignet souple, pouce sur le côté. Pas une main plate.',
   howBeginner3Title: 'Mains séparées',
@@ -631,9 +632,10 @@ export const EN: { [K in keyof typeof FR]: string } = {
   howStep5Body: 'Come back to the same piece as often as you need. The session is going further on THIS piece.',
   goToPractice: 'Go to practice',
   howBeginnerLead:
-    'We do not play the whole piece. First the body, one hand, then the other.',
-  howBeginner1Title: 'Sit down',
-  howBeginner1Body: 'Middle of the bench. Straight back, low shoulders, feet flat.',
+    'Sit facing the keyboard and put your hands on the piano. Right hand is the treble clef. Left hand is the bass clef.',
+  howBeginner1Title: 'Face the keyboard',
+  howBeginner1Body:
+    'Sit facing it. Put your hands down. Right: treble clef. Left: bass clef.',
   howBeginner2Title: 'Place your hands',
   howBeginner2Body: 'Rounded fingers, soft wrist, thumb on the side. Not a flat hand.',
   howBeginner3Title: 'Hands separate',

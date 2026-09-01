@@ -37,8 +37,8 @@ export function writePianoLevel(level: PianoLevel) {
 }
 
 /**
- * Ordre pédagogique : mains séparées d’abord (le plus actionnable),
- * puis posture, puis placement des mains.
+ * Phrases d’Élodie — à dire, plus tard à enregistrer.
+ * Ce n’est pas un prompt pour un modèle.
  */
 export const BEGINNER_SCRIPTS: CoachScript[] = [
   {
@@ -52,21 +52,22 @@ export const BEGINNER_SCRIPTS: CoachScript[] = [
   },
   {
     id: 'posture',
-    title: 'Posture',
-    whisper: 'Milieu du banc. Dos droit, épaules basses, pieds à plat.',
+    title: 'En face du clavier',
+    whisper: 'En face du clavier. Pose tes mains.',
     weakness:
-      'Avant les notes : le corps. Si tu es recroquevillé, les mains n’ont pas d’appui.',
-    drill: 'Assieds-toi au milieu du banc. Dos droit sans raideur, épaules basses, pieds à plat un peu en avant. Puis pose les mains.',
-    success: 'Réussi si tu tiens 8 mesures sans t’affaisser.',
+      'Avant les notes : tu es en face du clavier, les deux mains posées. Si tu es de travers, rien ne tient.',
+    drill:
+      'Assieds-toi bien en face du clavier et pose tes mains sur le piano. La main droite, c’est la clé de sol. La main gauche, la clé de fa.',
+    success: 'Réussi si tu restes en face, les deux mains posées, pendant 8 mesures.',
   },
   {
     id: 'hands',
     title: 'Placement des mains',
-    whisper: 'Doigts ronds. Poignet souple. Pas une main plate.',
+    whisper: 'Droite : clé de sol. Gauche : clé de fa.',
     weakness:
-      'La main plate et le poignet cassé fatiguent tout de suite. On place d’abord, on joue après.',
-    drill: 'Main comme sur une petite balle : doigts courbés, poignet dans l’axe de l’avant-bras, pouce sur le côté. Main droite d’abord.',
-    success: 'Réussi si le poignet ne s’affaisse pas pendant 4 mesures.',
+      'La main droite lit la clé de sol, la gauche la clé de fa. Si tu mélanges, tu cherches les notes trop bas ou trop haut.',
+    drill: 'Main droite sur la clé de sol, main gauche sur la clé de fa. Doigts ronds, poignet souple. Une main à la fois.',
+    success: 'Réussi si chaque main reste dans sa clé pendant 4 mesures.',
   },
 ]
 
@@ -76,11 +77,10 @@ export function beginnerMission(takeNumber: number): CoachScript {
 }
 
 export const BEGINNER_PRACTICE_CUES: Cue[] = [
+  { text: 'Assieds-toi en face du clavier. Pose tes mains.', tone: 'warn' },
+  { text: 'Droite : clé de sol. Gauche : clé de fa.', tone: 'warn' },
   { text: 'Main droite seule. Quatre mesures. Lent.', tone: 'warn' },
-  { text: 'Milieu du banc. Épaules basses.', tone: 'warn' },
-  { text: 'Doigts ronds. Poignet dans l’axe.', tone: 'warn' },
   { text: 'Maintenant la main gauche seule. Même passage.', tone: 'warn' },
-  { text: 'Pieds à plat. Tu ne te penches pas vers les graves.', tone: 'warn' },
   { text: 'Les deux mains seulement si chaque main est propre.', tone: 'good' },
 ]
 

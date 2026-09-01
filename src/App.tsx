@@ -295,6 +295,9 @@ function PianoLevelSlide({
           <small>{copy.pianoLevelPlayingHint}</small>
         </button>
       </div>
+      {pianoLevel === 'beginner' ? (
+        <p className="lead aria-sentence">{copy.howBeginnerLead}</p>
+      ) : null}
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!pianoLevel} onClick={onNext}>
           {copy.continue}
