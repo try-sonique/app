@@ -181,7 +181,7 @@ function Welcome({
 }
 
 
-type AuthMode = 'choose' | 'login' | 'signup'
+type AuthMode = 'login' | 'signup'
 
 function AuthSlide({
   profile,
@@ -198,8 +198,7 @@ function AuthSlide({
 }) {
   const copy = t()
   const remembered = getRememberedEmail()
-  const [mode, setMode] = useState<AuthMode>('choose')
-  const [loginStep, setLoginStep] = useState<'email' | 'password'>('email')
+  const [mode, setMode] = useState<AuthMode>('login')
   const [loginEmail, setLoginEmail] = useState(remembered)
   const [rememberEmail, setRememberEmail] = useState(Boolean(remembered))
   const [loginPassword, setLoginPassword] = useState('')
@@ -220,7 +219,6 @@ function AuthSlide({
       if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
         sessionStorage.removeItem('sonique.authFlash')
         setMode('login')
-        setLoginStep(getRememberedEmail() ? 'password' : 'email')
         setAuthError(copy.emailLinkExpired)
       }
     } catch {
@@ -295,7 +293,6 @@ function AuthSlide({
           setLoginEmail(email)
           setRememberEmail(true)
           setRememberedEmail(email)
-          setLoginStep('password')
           setMode('login')
           setAuthInfo(msg)
           setAuthError('')
@@ -312,7 +309,6 @@ function AuthSlide({
         setLoginPassword('')
         setAwaitingEmailConfirm(true)
         setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
-        setLoginStep('password')
         setMode('login')
         return
       }
@@ -321,19 +317,6 @@ function AuthSlide({
     } finally {
       setBusy(false)
     }
-  }
-
-  const continueToPassword = (e: FormEvent) => {
-    e.preventDefault()
-    setAuthError('')
-    const email = loginEmail.trim().toLowerCase()
-    if (!email) {
-      setAuthError(copy.loginFailed)
-      return
-    }
-    persistRememberPreference(email)
-    setLoginEmail(email)
-    setLoginStep('password')
   }
 
   const submitLogin = async (e: FormEvent) => {
@@ -370,7 +353,6 @@ function AuthSlide({
     setAuthInfo('')
     if (!loginEmail.trim()) {
       setAuthError(copy.loginFailed)
-      setLoginStep('email')
       return
     }
     setBusy(true)
@@ -420,13 +402,11 @@ function AuthSlide({
     setAuthError('')
     setAuthInfo('')
     setAwaitingEmailConfirm(false)
-    setLoginStep(saved ? 'password' : 'email')
     setMode('login')
     try {
       if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
         sessionStorage.removeItem('sonique.authFlash')
         setAuthError(copy.emailLinkExpired)
-        setLoginStep(saved ? 'password' : 'email')
       }
     } catch {
       /* ignore */
@@ -444,11 +424,11 @@ function AuthSlide({
     }
   }
 
-  if (mode === 'choose') {
-    // Only greet by name if THIS browser already has a session — other visitors never see your name.
-    const returning = Boolean(profile.firstName.trim() || profile.email.trim())
+  const returning = Boolean(profile.firstName.trim() || profile.email.trim())
+
+  if (mode === 'login') {
     return (
-      <section className="slide">
+      <section className="slide slide-left">
         {onCancel ? (
           <button type="button" className="account-back-link" onClick={onCancel}>
             ← {copy.accountBack}
@@ -456,45 +436,16 @@ function AuthSlide({
         ) : null}
         <span className="eyebrow">{copy.accessEyebrow}</span>
         <h1>
-          {returning
-            ? `${copy.accessReturning}${profile.firstName.trim() ? `, ${profile.firstName.trim()}` : ''}`
-            : copy.haveAccount}
+          {awaitingEmailConfirm
+            ? copy.checkEmailTitle
+            : returning && profile.firstName.trim()
+              ? `${copy.accessReturning}, ${profile.firstName.trim()}`
+              : copy.haveAccount}
         </h1>
-        <p className="lead">{returning ? copy.accessReturningLead : copy.authBoxLead}</p>
-        <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
-          <span className="oauth-mark" aria-hidden>
-            G
-          </span>
-          {copy.googleContinue}
-        </button>
-        <p className="auth-or">{copy.authOr}</p>
-        <div className="choice-grid" style={{ marginInline: 'auto' }}>
-          <button type="button" className="choice" onClick={startLogin}>
-            {copy.login}
-            <small>{copy.loginHint}</small>
-          </button>
-          <button type="button" className="choice" onClick={startSignup}>
-            {copy.firstTime}
-            <small>{copy.firstTimeHint}</small>
-          </button>
-        </div>
-        <p className="footer-note">
-          Support :{' '}
-          <a className="support" href="mailto:sonique@contact.co">
-            sonique@contact.co
-          </a>
-        </p>
-      </section>
-    )
-  }
-
-  if (mode === 'login') {
-    const onEmailStep = loginStep === 'email'
-    return (
-      <section className="slide slide-left">
-        <span className="eyebrow">{copy.loginEyebrow}</span>
-        <h1>{awaitingEmailConfirm ? copy.checkEmailTitle : copy.welcomeBack}</h1>
         <p className="lead">{awaitingEmailConfirm ? copy.checkEmailLead : copy.loginLead}</p>
+        <p className="footer-note" style={{ paddingTop: 0 }}>
+          {copy.authBoxLead}
+        </p>
         <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
           <span className="oauth-mark" aria-hidden>
             G
@@ -502,7 +453,7 @@ function AuthSlide({
           {copy.googleContinue}
         </button>
         <p className="auth-or">{copy.authOr}</p>
-        {authInfo && !onEmailStep ? (
+        {authInfo ? (
           <p
             className="lead"
             style={{
@@ -511,151 +462,89 @@ function AuthSlide({
               borderRadius: 8,
               background: 'rgba(255, 214, 90, 0.12)',
               border: '1px solid rgba(255, 214, 90, 0.35)',
-              color: 'var(--text)',
             }}
           >
             {authInfo}
           </p>
         ) : null}
-        {onEmailStep ? (
-          <form className="stack" autoComplete="off" onSubmit={continueToPassword}>
-            <label className="field">
-              <span>{copy.email}</span>
-              <input
-                type="email"
-                name="sonique-login-email"
-                autoComplete="username"
-                value={loginEmail}
-                onChange={(e) => {
-                  setLoginEmail(e.target.value)
-                  setAuthError('')
-                }}
-                required
-              />
-            </label>
-            <label className="check-row">
-              <input
-                type="checkbox"
-                checked={rememberEmail}
-                onChange={(e) => setRememberEmail(e.target.checked)}
-              />
-              <span>{copy.rememberEmail}</span>
-            </label>
-            {authError ? (
-              <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
-                {authError}
-              </p>
-            ) : null}
-            <div className="actions">
-              <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')}>
-                {copy.back}
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={!loginEmail.trim()}>
-                {copy.loginEmailContinue}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <form
-            className="stack"
-            autoComplete="off"
-            onSubmit={(e) => void submitLogin(e)}
-          >
-            <label className="field">
-              <span>{copy.email}</span>
-              <input
-                type="email"
-                name="sonique-login-email"
-                autoComplete="username"
-                value={loginEmail}
-                readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
-                onChange={(e) => {
-                  setLoginEmail(e.target.value)
-                  setAuthError('')
-                }}
-                required
-              />
-            </label>
-            <label className="check-row">
-              <input
-                type="checkbox"
-                checked={rememberEmail}
-                onChange={(e) => setRememberEmail(e.target.checked)}
-              />
-              <span>{copy.rememberEmail}</span>
-            </label>
-            <label className="field">
-              <span>
-                {copy.password}
-                {awaitingEmailConfirm ? (
-                  <em className="optional-tag"> ({copy.afterEmailConfirm})</em>
-                ) : null}
-              </span>
-              <input
-                type="password"
-                name="sonique-login-password"
-                autoComplete="current-password"
-                value={loginPassword}
-                onChange={(e) => {
-                  setLoginPassword(e.target.value)
-                  setAuthError('')
-                }}
-                required
-              />
-            </label>
-            {authError ? (
-              <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
-                {authError}
-              </p>
-            ) : null}
-            <div className="actions">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => {
-                  setLoginPassword('')
-                  setAuthError('')
-                  if (awaitingEmailConfirm) setMode('choose')
-                  else setLoginStep('email')
-                }}
-                disabled={busy}
-              >
-                {copy.back}
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={busy || !loginEmail.trim() || !loginPassword}
-              >
-                {busy ? copy.authBusy : copy.continue}
-              </button>
-            </div>
-          </form>
-        )}
-        {!onEmailStep ? (
-          <>
-            {awaitingEmailConfirm ? (
-              <button
-                type="button"
-                className="linkish"
-                style={{ marginTop: '1rem' }}
-                disabled={busy}
-                onClick={() => void onResendConfirm()}
-              >
-                {copy.resendConfirmEmail}
-              </button>
-            ) : null}
+        <form className="stack" autoComplete="off" onSubmit={(e) => void submitLogin(e)}>
+          <label className="field">
+            <span>{copy.identifier}</span>
+            <input
+              type="email"
+              name="sonique-login-email"
+              autoComplete="username"
+              value={loginEmail}
+              readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
+              onChange={(e) => {
+                setLoginEmail(e.target.value)
+                setAuthError('')
+              }}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>
+              {copy.password}
+              {awaitingEmailConfirm ? (
+                <em className="optional-tag"> ({copy.afterEmailConfirm})</em>
+              ) : null}
+            </span>
+            <input
+              type="password"
+              name="sonique-login-password"
+              autoComplete="current-password"
+              value={loginPassword}
+              onChange={(e) => {
+                setLoginPassword(e.target.value)
+                setAuthError('')
+              }}
+              required
+            />
+          </label>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={rememberEmail}
+              onChange={(e) => setRememberEmail(e.target.checked)}
+            />
+            <span>{copy.rememberEmail}</span>
+          </label>
+          {authError ? (
+            <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
+              {authError}
+            </p>
+          ) : null}
+          <div className="actions">
             <button
-              type="button"
-              className="linkish"
-              style={{ marginTop: awaitingEmailConfirm ? '0.5rem' : '1rem' }}
-              disabled={busy}
-              onClick={() => void onForgot()}
+              type="submit"
+              className="btn btn-primary"
+              disabled={busy || !loginEmail.trim() || !loginPassword}
             >
-              {copy.forgotPassword}
+              {busy ? copy.authBusy : copy.signIn}
             </button>
-          </>
+          </div>
+        </form>
+        {awaitingEmailConfirm ? (
+          <button
+            type="button"
+            className="linkish"
+            style={{ marginTop: '1rem' }}
+            disabled={busy}
+            onClick={() => void onResendConfirm()}
+          >
+            {copy.resendConfirmEmail}
+          </button>
         ) : null}
+        <button
+          type="button"
+          className="linkish"
+          style={{ marginTop: '0.75rem' }}
+          disabled={busy}
+          onClick={() => void onForgot()}
+        >
+          {copy.forgotPassword}
+        </button>
         <button
           type="button"
           className="linkish"
@@ -670,6 +559,11 @@ function AuthSlide({
 
   return (
     <section className="slide slide-left">
+      {onCancel ? (
+        <button type="button" className="account-back-link" onClick={onCancel}>
+          ← {copy.accountBack}
+        </button>
+      ) : null}
       <span className="eyebrow">{copy.signupEyebrow}</span>
       <h1>{copy.createSpace}</h1>
       <p className="lead">{copy.signupLead}</p>
@@ -740,32 +634,25 @@ function AuthSlide({
             minLength={6}
           />
         </label>
-        <label className="field">
-          <span>
-            {copy.lastName} <em className="optional-tag">{copy.optional}</em>
-          </span>
-          <input
-            type="text"
-            name="sonique-signup-lastname"
-            autoComplete="off"
-            value={signupLastName}
-            onChange={(e) => setSignupLastName(e.target.value)}
-          />
-        </label>
         {authError ? (
           <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
             {authError}
           </p>
         ) : null}
         <div className="actions">
-          <button type="button" className="btn btn-ghost" onClick={() => setMode('choose')} disabled={busy}>
-            {copy.back}
-          </button>
           <button type="submit" className="btn btn-primary" disabled={busy || !signupValid}>
             {busy ? copy.authBusy : copy.createAndContinue}
           </button>
         </div>
       </form>
+      <button
+        type="button"
+        className="linkish"
+        style={{ marginTop: '0.85rem' }}
+        onClick={startLogin}
+      >
+        {copy.alreadyAccountLink}
+      </button>
       <p className="footer-note">
         Support :{' '}
         <a className="support" href="mailto:sonique@contact.co">
