@@ -1,26 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { t } from '../lib/presets'
 import { getRememberedEmail, setRememberedEmail } from '../lib/storage'
-import {
-  requestPasswordReset,
-  resendSignupEmail,
-  signInWithGoogle,
-  signInWithPassword,
-  signOut,
-  signUpWithPassword,
-} from '../lib/supabaseAuth'
+import { signInWithEmailLink, signInWithSocial } from '../lib/supabaseAuth'
 import type { AppState, UserProfile } from '../types'
 
 type AuthMode = 'login' | 'signup'
-type LoginStep = 'email' | 'password'
-type LastAuth = 'google' | 'email'
+type LastAuth = 'google' | 'facebook' | 'instagram' | 'email'
 
 const LAST_AUTH_KEY = 'sonique.lastAuthMethod'
 
 function readLastAuth(): LastAuth | null {
   try {
     const v = localStorage.getItem(LAST_AUTH_KEY)
-    if (v === 'google' || v === 'email') return v
+    if (v === 'google' || v === 'facebook' || v === 'instagram' || v === 'email') return v
   } catch {
     /* ignore */
   }
@@ -58,33 +50,57 @@ function GoogleMark() {
   )
 }
 
+function FacebookMark() {
+  return (
+    <svg className="oauth-svg" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="#1877F2"
+        d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.017 1.792-4.688 4.533-4.688 1.312 0 2.686.236 2.686.236v2.97H15.83c-1.491 0-1.956.93-1.956 1.886v2.256h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"
+      />
+    </svg>
+  )
+}
+
+function InstagramMark() {
+  return (
+    <svg className="oauth-svg" viewBox="0 0 24 24" aria-hidden>
+      <defs>
+        <linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f58529" />
+          <stop offset="50%" stopColor="#dd2a7b" />
+          <stop offset="100%" stopColor="#8134af" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#ig)" />
+      <circle cx="12" cy="12" r="4.2" fill="none" stroke="#fff" strokeWidth="1.7" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="#fff" />
+    </svg>
+  )
+}
+
 export function AuthGate({
   profile,
   onProfileLoaded,
   onNext,
   onCancel,
+  onSkip,
 }: {
   profile: AppState['profile']
   onProfileLoaded: (profile: UserProfile) => void
   onNext: () => void
   onCancel?: () => void
+  onSkip?: () => void
 }) {
   const copy = t()
   const remembered = getRememberedEmail()
   const [mode, setMode] = useState<AuthMode>('login')
-  const [loginStep, setLoginStep] = useState<LoginStep>(remembered ? 'password' : 'email')
   const [loginEmail, setLoginEmail] = useState(remembered)
   const [rememberEmail, setRememberEmail] = useState(Boolean(remembered))
-  const [loginPassword, setLoginPassword] = useState('')
   const [signupFirstName, setSignupFirstName] = useState('')
-  const [signupLastName, setSignupLastName] = useState('')
   const [signupEmail, setSignupEmail] = useState('')
-  const [signupPhone, setSignupPhone] = useState('')
-  const [signupPassword, setSignupPassword] = useState('')
-  const [signupPassword2, setSignupPassword2] = useState('')
   const [authError, setAuthError] = useState('')
   const [authInfo, setAuthInfo] = useState('')
-  const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false)
+  const [awaitingLink, setAwaitingLink] = useState(false)
   const [busy, setBusy] = useState(false)
   const [legal, setLegal] = useState<'terms' | 'privacy' | null>(null)
   const [lastAuth, setLastAuth] = useState<LastAuth | null>(readLastAuth)
@@ -94,7 +110,6 @@ export function AuthGate({
       if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
         sessionStorage.removeItem('sonique.authFlash')
         setMode('login')
-        setLoginStep('email')
         setAuthError(copy.emailLinkExpired)
       }
     } catch {
@@ -103,208 +118,100 @@ export function AuthGate({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot flash on mount
   }, [])
 
-  const signupValid = Boolean(
-    signupFirstName.trim() &&
-      signupEmail.trim() &&
-      signupPassword.length >= 6 &&
-      signupPassword === signupPassword2,
-  )
-
-  const blankSignupFields = () => {
-    setSignupFirstName('')
-    setSignupLastName('')
-    setSignupEmail('')
-    setSignupPhone('')
-    setSignupPassword('')
-    setSignupPassword2('')
-    setLoginPassword('')
-    setAuthError('')
-    setAuthInfo('')
-    setAwaitingEmailConfirm(false)
-  }
-
-  const persistRememberPreference = (email: string) => {
-    if (rememberEmail) setRememberedEmail(email)
-    else setRememberedEmail(null)
-  }
-
   const friendlyAuthError = (code?: string) => {
     if (!code) return copy.loginFailed
     if (code === 'rate_limited') return copy.emailRateLimited
     if (code === 'email_not_confirmed') return copy.emailNotConfirmed
     if (code === 'link_expired') return copy.emailLinkExpired
-    if (code === 'already_registered') return copy.alreadyRegistered
     if (code === 'google_unavailable') return copy.googleUnavailable
+    if (code === 'facebook_unavailable') return copy.facebookUnavailable
+    if (code === 'instagram_unavailable') return copy.instagramUnavailable
+    if (code === 'oauth_unavailable') return copy.googleUnavailable
     if (code === 'not_found') return copy.loginNotFound
     return code
   }
 
-  const submitSignup = async (e: FormEvent) => {
-    e.preventDefault()
+  const persistRemember = (email: string) => {
+    if (rememberEmail) setRememberedEmail(email)
+    else setRememberedEmail(null)
+  }
+
+  const afterLinkSent = (email: string) => {
+    persistRemember(email)
+    writeLastAuth('email')
+    setLastAuth('email')
+    setAwaitingLink(true)
+    setAuthInfo(copy.magicLinkSent.replace('{email}', email))
+    setMode('login')
+    setLoginEmail(email)
+  }
+
+  const sendLoginLink = async () => {
     setAuthError('')
     setAuthInfo('')
-    if (signupPassword.length < 6) {
-      setAuthError(copy.passwordTooShort)
-      return
-    }
-    if (signupPassword !== signupPassword2) {
-      setAuthError(copy.passwordMismatch)
-      return
-    }
-    if (!signupFirstName.trim() || !signupEmail.trim()) return
-    setBusy(true)
-    try {
-      const draft: UserProfile = {
-        firstName: signupFirstName.trim(),
-        lastName: signupLastName.trim(),
-        email: signupEmail.trim(),
-        phone: signupPhone.trim(),
-      }
-      const result = await signUpWithPassword({ profile: draft, password: signupPassword })
-      if (!result.ok || !result.profile) {
-        const msg = friendlyAuthError(result.error)
-        setAuthError(msg)
-        if (result.error === 'already_registered') {
-          const email = draft.email.trim().toLowerCase()
-          setLoginEmail(email)
-          setRememberEmail(true)
-          setRememberedEmail(email)
-          setMode('login')
-          setLoginStep('password')
-          setAuthInfo(msg)
-          setAuthError('')
-        }
-        return
-      }
-      onProfileLoaded(result.profile)
-      writeLastAuth('email')
-      setLastAuth('email')
-      if (result.needsEmailConfirm) {
-        const email = result.profile.email
-        blankSignupFields()
-        setLoginEmail(email)
-        setRememberEmail(true)
-        setRememberedEmail(email)
-        setLoginPassword('')
-        setAwaitingEmailConfirm(true)
-        setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
-        setMode('login')
-        setLoginStep('password')
-        return
-      }
-      setRememberedEmail(result.profile.email)
-      onNext()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const continueWithEmail = (e: FormEvent) => {
-    e.preventDefault()
-    setAuthError('')
     if (!loginEmail.trim()) {
-      setAuthError(copy.loginFailed)
-      return
-    }
-    setLoginStep('password')
-  }
-
-  const submitLogin = async (e: FormEvent) => {
-    e.preventDefault()
-    setAuthError('')
-    if (!loginEmail.trim() || !loginPassword) {
       setAuthError(copy.loginFailed)
       return
     }
     setBusy(true)
     try {
       const email = loginEmail.trim().toLowerCase()
-      persistRememberPreference(email)
-      const result = await signInWithPassword({ email, password: loginPassword })
-      if (!result.ok || !result.profile) {
-        setAuthError(friendlyAuthError(result.error))
-        if (result.error === 'email_not_confirmed' || awaitingEmailConfirm) {
-          setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
-          setAwaitingEmailConfirm(true)
-        }
-        return
-      }
-      setAwaitingEmailConfirm(false)
-      setAuthInfo('')
-      writeLastAuth('email')
-      setLastAuth('email')
-      onProfileLoaded(result.profile)
-      onNext()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const onForgot = async () => {
-    setAuthError('')
-    setAuthInfo('')
-    if (!loginEmail.trim()) {
-      setAuthError(copy.loginFailed)
-      return
-    }
-    setBusy(true)
-    try {
-      const result = await requestPasswordReset(loginEmail)
+      const result = await signInWithEmailLink(email)
       if (!result.ok) {
         setAuthError(friendlyAuthError(result.error))
         return
       }
-      setAuthInfo(copy.resetSent)
+      if (result.profile && !result.needsEmailConfirm) {
+        onProfileLoaded(result.profile)
+        writeLastAuth('email')
+        onNext()
+        return
+      }
+      afterLinkSent(email)
     } finally {
       setBusy(false)
     }
   }
 
-  const onResendConfirm = async () => {
+  const sendSignupLink = async (e: FormEvent) => {
+    e.preventDefault()
     setAuthError('')
-    if (!loginEmail.trim()) {
-      setAuthError(copy.loginFailed)
-      return
-    }
+    setAuthInfo('')
+    if (!signupFirstName.trim() || !signupEmail.trim()) return
     setBusy(true)
     try {
-      const result = await resendSignupEmail(loginEmail)
+      const email = signupEmail.trim().toLowerCase()
+      const result = await signInWithEmailLink(email, { firstName: signupFirstName.trim() })
       if (!result.ok) {
         setAuthError(friendlyAuthError(result.error))
         return
       }
-      setAuthInfo(copy.resendConfirmSent)
-      setAwaitingEmailConfirm(true)
+      if (result.profile && !result.needsEmailConfirm) {
+        onProfileLoaded(result.profile)
+        writeLastAuth('email')
+        onNext()
+        return
+      }
+      afterLinkSent(email)
     } finally {
       setBusy(false)
     }
   }
 
-  const startSignup = () => {
-    blankSignupFields()
-    void signOut()
-    setMode('signup')
-  }
-
-  const startLogin = () => {
-    const saved = getRememberedEmail()
-    setLoginEmail(saved)
-    setRememberEmail(Boolean(saved))
-    setLoginPassword('')
+  const onSocial = async (provider: 'google' | 'facebook' | 'instagram') => {
     setAuthError('')
     setAuthInfo('')
-    setAwaitingEmailConfirm(false)
-    setMode('login')
-    setLoginStep(saved ? 'password' : 'email')
-  }
-
-  const onGoogle = async () => {
-    setAuthError('')
+    if (provider === 'instagram') {
+      writeLastAuth('instagram')
+      setLastAuth('instagram')
+      setAuthError(copy.instagramUnavailable)
+      return
+    }
     setBusy(true)
-    writeLastAuth('google')
-    setLastAuth('google')
+    writeLastAuth(provider)
+    setLastAuth(provider)
     try {
-      const result = await signInWithGoogle()
+      const result = await signInWithSocial(provider)
       if (!result.ok) setAuthError(friendlyAuthError(result.error))
     } finally {
       setBusy(false)
@@ -312,20 +219,18 @@ export function AuthGate({
   }
 
   const returning = Boolean(profile.firstName.trim() || profile.email.trim())
-  const title =
-    mode === 'signup'
+  const title = awaitingLink
+    ? copy.checkEmailTitle
+    : mode === 'signup'
       ? copy.createSpace
-      : awaitingEmailConfirm
-        ? copy.checkEmailTitle
-        : returning && profile.firstName.trim()
-          ? `${copy.accessReturning}, ${profile.firstName.trim()}`
-          : copy.welcomeToSonique
-  const lead =
-    mode === 'signup'
+      : returning && profile.firstName.trim()
+        ? `${copy.accessReturning}, ${profile.firstName.trim()}`
+        : copy.welcomeToSonique
+  const lead = awaitingLink
+    ? copy.magicLinkLead
+    : mode === 'signup'
       ? copy.signupLead
-      : awaitingEmailConfirm
-        ? copy.checkEmailLead
-        : copy.authGateLead
+      : copy.authGateLead
 
   return (
     <section className="slide auth-gate">
@@ -344,12 +249,34 @@ export function AuthGate({
             type="button"
             className="auth-social-btn"
             disabled={busy}
-            onClick={() => void onGoogle()}
+            onClick={() => void onSocial('google')}
             aria-label={copy.googleContinue}
             title={copy.googleContinue}
           >
             <GoogleMark />
             {lastAuth === 'google' ? <span className="auth-recent">{copy.authRecent}</span> : null}
+          </button>
+          <button
+            type="button"
+            className="auth-social-btn"
+            disabled={busy}
+            onClick={() => void onSocial('facebook')}
+            aria-label={copy.facebookContinue}
+            title={copy.facebookContinue}
+          >
+            <FacebookMark />
+            {lastAuth === 'facebook' ? <span className="auth-recent">{copy.authRecent}</span> : null}
+          </button>
+          <button
+            type="button"
+            className="auth-social-btn"
+            disabled={busy}
+            onClick={() => void onSocial('instagram')}
+            aria-label={copy.instagramContinue}
+            title={copy.instagramContinue}
+          >
+            <InstagramMark />
+            {lastAuth === 'instagram' ? <span className="auth-recent">{copy.authRecent}</span> : null}
           </button>
         </div>
 
@@ -360,8 +287,11 @@ export function AuthGate({
           </p>
         ) : null}
 
-        {mode === 'login' && loginStep === 'email' ? (
-          <form className="auth-gate-form" autoComplete="off" onSubmit={continueWithEmail}>
+        {mode === 'login' && !awaitingLink ? (
+          <form className="auth-gate-form" autoComplete="off" onSubmit={(e) => {
+            e.preventDefault()
+            void sendLoginLink()
+          }}>
             <label className="field">
               <span>{copy.emailLabel}</span>
               <input
@@ -377,48 +307,6 @@ export function AuthGate({
                 required
               />
             </label>
-            <button type="submit" className="btn auth-continue" disabled={busy || !loginEmail.trim()}>
-              {busy ? copy.authBusy : copy.continueWithEmail}
-            </button>
-          </form>
-        ) : null}
-
-        {mode === 'login' && loginStep === 'password' ? (
-          <form className="auth-gate-form" autoComplete="off" onSubmit={(e) => void submitLogin(e)}>
-            <label className="field">
-              <span>{copy.emailLabel}</span>
-              <input
-                type="email"
-                name="sonique-login-email"
-                autoComplete="username"
-                value={loginEmail}
-                readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
-                onChange={(e) => {
-                  setLoginEmail(e.target.value)
-                  setAuthError('')
-                }}
-                required
-              />
-            </label>
-            <label className="field">
-              <span>
-                {copy.password}
-                {awaitingEmailConfirm ? (
-                  <em className="optional-tag"> ({copy.afterEmailConfirm})</em>
-                ) : null}
-              </span>
-              <input
-                type="password"
-                name="sonique-login-password"
-                autoComplete="current-password"
-                value={loginPassword}
-                onChange={(e) => {
-                  setLoginPassword(e.target.value)
-                  setAuthError('')
-                }}
-                required
-              />
-            </label>
             <label className="check-row">
               <input
                 type="checkbox"
@@ -427,29 +315,25 @@ export function AuthGate({
               />
               <span>{copy.rememberEmail}</span>
             </label>
-            <button
-              type="submit"
-              className="btn auth-continue"
-              disabled={busy || !loginEmail.trim() || !loginPassword}
-            >
-              {busy ? copy.authBusy : copy.signIn}
-            </button>
-            <button
-              type="button"
-              className="linkish"
-              onClick={() => {
-                setLoginStep('email')
-                setLoginPassword('')
-                setAuthError('')
-              }}
-            >
-              {copy.changeEmail}
+            <button type="submit" className="btn auth-continue" disabled={busy || !loginEmail.trim()}>
+              {busy ? copy.authBusy : copy.continueWithEmail}
             </button>
           </form>
         ) : null}
 
-        {mode === 'signup' ? (
-          <form className="auth-gate-form" autoComplete="off" onSubmit={(e) => void submitSignup(e)}>
+        {mode === 'login' && awaitingLink ? (
+          <button
+            type="button"
+            className="btn auth-continue"
+            disabled={busy || !loginEmail.trim()}
+            onClick={() => void sendLoginLink()}
+          >
+            {copy.resendConfirmEmail}
+          </button>
+        ) : null}
+
+        {mode === 'signup' && !awaitingLink ? (
+          <form className="auth-gate-form" autoComplete="off" onSubmit={(e) => void sendSignupLink(e)}>
             <label className="field">
               <span>{copy.pseudo}</span>
               <input
@@ -473,72 +357,55 @@ export function AuthGate({
                 required
               />
             </label>
-            <label className="field">
-              <span>
-                {copy.password}
-                <em className="optional-tag"> ({copy.passwordHint})</em>
-              </span>
-              <input
-                type="password"
-                name="sonique-signup-password"
-                autoComplete="new-password"
-                value={signupPassword}
-                onChange={(e) => {
-                  setSignupPassword(e.target.value)
-                  setAuthError('')
-                }}
-                required
-                minLength={6}
-              />
-            </label>
-            <label className="field">
-              <span>{copy.passwordConfirm}</span>
-              <input
-                type="password"
-                name="sonique-signup-password2"
-                autoComplete="new-password"
-                value={signupPassword2}
-                onChange={(e) => {
-                  setSignupPassword2(e.target.value)
-                  setAuthError('')
-                }}
-                required
-                minLength={6}
-              />
-            </label>
-            <button type="submit" className="btn auth-continue" disabled={busy || !signupValid}>
-              {busy ? copy.authBusy : copy.createAndContinue}
+            <button
+              type="submit"
+              className="btn auth-continue"
+              disabled={busy || !signupFirstName.trim() || !signupEmail.trim()}
+            >
+              {busy ? copy.authBusy : copy.continueWithEmail}
             </button>
           </form>
-        ) : null}
-
-        {awaitingEmailConfirm && mode === 'login' ? (
-          <button type="button" className="linkish" disabled={busy} onClick={() => void onResendConfirm()}>
-            {copy.resendConfirmEmail}
-          </button>
-        ) : null}
-
-        {mode === 'login' && loginStep === 'password' ? (
-          <button type="button" className="linkish" disabled={busy} onClick={() => void onForgot()}>
-            {copy.forgotPassword}
-          </button>
         ) : null}
 
         {mode === 'login' ? (
           <p className="auth-switch">
             {copy.noAccountSignup}{' '}
-            <button type="button" className="auth-switch-link" onClick={startSignup}>
+            <button
+              type="button"
+              className="auth-switch-link"
+              onClick={() => {
+                setMode('signup')
+                setAwaitingLink(false)
+                setAuthError('')
+                setAuthInfo('')
+              }}
+            >
               {copy.signupNow}
             </button>
           </p>
         ) : (
           <p className="auth-switch">
             {copy.haveAccountSignin}{' '}
-            <button type="button" className="auth-switch-link" onClick={startLogin}>
+            <button
+              type="button"
+              className="auth-switch-link"
+              onClick={() => {
+                setMode('login')
+                setAwaitingLink(false)
+                setAuthError('')
+                setAuthInfo('')
+              }}
+            >
               {copy.signinNow}
             </button>
           </p>
         )}
+
+        {onSkip ? (
+          <button type="button" className="linkish" style={{ marginTop: '1.1rem' }} onClick={onSkip}>
+            {copy.skipAccount}
+          </button>
+        ) : null}
       </div>
 
       <p className="auth-legal">

@@ -56,7 +56,7 @@ export function mapAuthError(message: string): string {
     return 'already_registered'
   }
   if (m.includes('provider is not enabled') || m.includes('unsupported provider')) {
-    return 'google_unavailable'
+    return 'oauth_unavailable'
   }
   return message
 }
@@ -243,22 +243,62 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
   return { ok: true }
 }
 
-export async function signInWithGoogle(): Promise<AuthResult> {
+export async function signInWithEmailLink(
+  email: string,
+  meta?: { firstName?: string },
+): Promise<AuthResult> {
+  const trimmed = email.trim().toLowerCase()
+  if (!trimmed) return { ok: false, error: 'invalid_credentials' }
+
   if (!isSupabaseConfigured || !supabase) {
-    return { ok: false, error: 'google_unavailable' }
+    const found = findProfileByEmail(trimmed)
+    const profile: UserProfile = found ?? {
+      firstName: meta?.firstName?.trim() || '',
+      lastName: '',
+      email: trimmed,
+      phone: '',
+    }
+    saveProfile(profile)
+    return { ok: true, profile }
+  }
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: trimmed,
+    options: {
+      emailRedirectTo: authRedirectUrl(),
+      shouldCreateUser: true,
+      data: meta?.firstName?.trim() ? { first_name: meta.firstName.trim() } : undefined,
+    },
+  })
+  if (error) return { ok: false, error: mapAuthError(error.message) }
+  return { ok: true, needsEmailConfirm: true }
+}
+
+export async function signInWithSocial(
+  provider: 'google' | 'facebook',
+): Promise<AuthResult> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { ok: false, error: `${provider}_unavailable` }
+  }
+  try {
+    sessionStorage.setItem('sonique.afterAuth', '1')
+  } catch {
+    /* ignore */
   }
   const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
+    provider,
     options: { redirectTo: authRedirectUrl() },
   })
   if (error) {
     const mapped = mapAuthError(error.message)
-    if (mapped.toLowerCase().includes('provider') || mapped.toLowerCase().includes('unsupported')) {
-      return { ok: false, error: 'google_unavailable' }
-    }
+    if (mapped === 'oauth_unavailable') return { ok: false, error: `${provider}_unavailable` }
     return { ok: false, error: mapped }
   }
   return { ok: true }
+}
+
+export async function signInWithGoogle(): Promise<AuthResult> {
+  return signInWithSocial('google')
 }
 
 export async function getSessionProfile(): Promise<UserProfile | null> {

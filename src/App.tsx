@@ -7,7 +7,6 @@ import {
 } from 'react'
 import { AuthGate } from './components/AuthGate'
 import { PartitionViewer } from './components/PartitionViewer'
-import { StringsStudio } from './components/StringsStudio'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
@@ -154,13 +153,9 @@ function FooterLine({ withPartition }: { withPartition?: boolean }) {
 }
 
 function Welcome({
-  onStartPiano,
-  onGuitar,
-  onBass,
+  onNext,
 }: {
-  onStartPiano: () => void
-  onGuitar: () => void
-  onBass: () => void
+  onNext: () => void
 }) {
   const copy = t()
 
@@ -170,20 +165,9 @@ function Welcome({
         <span className="eyebrow">{copy.readyToPlay}</span>
         <p className="hero-brand">Sonique</p>
         <p className="hero-tagline">{copy.heroTagline}</p>
-        <button type="button" className="btn btn-hero" onClick={onStartPiano}>
+        <button type="button" className="btn btn-hero" onClick={onNext}>
           {copy.start}
         </button>
-        <p className="welcome-instruments-lead">{copy.welcomeInstrumentsLead}</p>
-        <div className="welcome-instruments">
-          <button type="button" className="welcome-instrument" onClick={onGuitar}>
-            <strong>{copy.welcomeGuitar}</strong>
-            <small>{copy.welcomeGuitarHint}</small>
-          </button>
-          <button type="button" className="welcome-instrument" onClick={onBass}>
-            <strong>{copy.welcomeBass}</strong>
-            <small>{copy.welcomeBassHint}</small>
-          </button>
-        </div>
       </div>
       <FooterLine />
     </section>
@@ -1597,6 +1581,7 @@ export default function App() {
     return false
   })
   const [showAccount, setShowAccount] = useState(false)
+  const [authSkipped, setAuthSkipped] = useState(false)
   const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
   const [scoreRev, setScoreRev] = useState(0)
@@ -1627,10 +1612,6 @@ export default function App() {
         }))
         return
       }
-      if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('demoStrings')) {
-        setState((s) => ({ ...s, slide: 2, instrument: 'guitar' }))
-        return
-      }
       if (sessionStorage.getItem('sonique.forceFresh') === '1') {
         sessionStorage.removeItem('sonique.forceFresh')
         await signOut()
@@ -1646,12 +1627,25 @@ export default function App() {
         attachSessionsToEmail(existing.email)
         attachSavedScoresToEmail(existing.email)
         setState((s) => ({ ...s, profile: existing }))
+        setAuthSkipped(true)
       }
       const remote = await getSessionProfile()
       if (remote) {
         attachSessionsToEmail(remote.email)
         attachSavedScoresToEmail(remote.email)
-        setState((s) => ({ ...s, profile: remote }))
+        let afterAuth = false
+        try {
+          afterAuth = sessionStorage.getItem('sonique.afterAuth') === '1'
+          if (afterAuth) sessionStorage.removeItem('sonique.afterAuth')
+        } catch {
+          /* ignore */
+        }
+        setAuthSkipped(true)
+        setState((s) => ({
+          ...s,
+          profile: remote,
+          slide: afterAuth && s.slide < 2 ? 2 : s.slide,
+        }))
         await syncAccountSessions(remote.email)
         setHistoryRev((n) => n + 1)
       } else if (existing?.email) {
@@ -1673,6 +1667,7 @@ export default function App() {
     setShowAccount(false)
     void (async () => {
       await signOut()
+      setAuthSkipped(false)
       setState({ ...initialState, slide: 1, pianoLevel: readPianoLevel() })
     })()
   }
@@ -1935,27 +1930,22 @@ export default function App() {
       />
     )
   } else if (state.slide === 1)
+    body = <Welcome onNext={() => go(2)} />
+  else if (state.slide === 2 && !state.profile.email.trim() && !authSkipped) {
     body = (
-      <Welcome
-        onStartPiano={() => {
-          patch({ instrument: 'piano' })
-          go(2)
+      <AuthGate
+        profile={state.profile}
+        onProfileLoaded={(profile) => {
+          attachSessionsToEmail(profile.email)
+          attachSavedScoresToEmail(profile.email)
+          setState((s) => ({ ...s, profile }))
+          void syncAccountSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
+          setScoreRev((n) => n + 1)
+          setAuthSkipped(true)
         }}
-        onGuitar={() => {
-          patch({ instrument: 'guitar', pianoLevel: null })
-          go(2)
-        }}
-        onBass={() => {
-          patch({ instrument: 'bass', pianoLevel: null })
-          go(2)
-        }}
-      />
-    )
-  else if (state.slide === 2 && state.instrument !== 'piano') {
-    body = (
-      <StringsStudio
-        instrument={state.instrument}
-        onBack={() => go(1)}
+        onNext={() => setAuthSkipped(true)}
+        onCancel={() => go(1)}
+        onSkip={() => setAuthSkipped(true)}
       />
     )
   } else if (state.slide === 2) {
@@ -2105,7 +2095,7 @@ export default function App() {
           onClick={() => {
             setShowHistory(false)
             setShowAccount(false)
-            if (state.instrument !== 'piano') {
+            if (state.slide === 2 && !state.profile.email.trim() && !authSkipped) {
               go(1)
               return
             }
@@ -2114,12 +2104,13 @@ export default function App() {
             else if (state.slide > 1) go(2)
             else go(1)
           }}
-          aria-label={state.instrument !== 'piano' || !state.pianoLevel ? t().backHome : t().backToPiece}
+          aria-label={state.pianoLevel ? t().backToPiece : t().backHome}
         >
           Sonique
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {showAccount && !state.profile.email.trim() ? null : (
+          {(showAccount && !state.profile.email.trim()) ||
+          (state.slide === 2 && !state.profile.email.trim() && !authSkipped && !showAccount) ? null : (
             <button
               type="button"
               className="top-link"
@@ -2131,7 +2122,10 @@ export default function App() {
               {state.profile.email.trim() ? t().myAccount : t().headerSignIn}
             </button>
           )}
-          {!showHistory && !showAccount && state.slide > 1 && state.instrument === 'piano' ? (
+          {!showHistory &&
+          !showAccount &&
+          state.slide > 1 &&
+          !(state.slide === 2 && !state.profile.email.trim() && !authSkipped) ? (
             <PhaseNav phase={phase} />
           ) : null}
         </div>
