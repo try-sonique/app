@@ -143,6 +143,8 @@ const FR = {
   footerWithScore:
     'Sonique écoute ce que tu joues, le compare à ta partition, et te fait progresser sans te juger.',
   footerNoScore: 'Sonique écoute ce que tu joues. Et te répond franchement.',
+  supportLabel: 'Support :',
+  supportEmail: 'contact@sonique.co',
 
   // Welcome
   readyToPlay: 'Prêt·e à jouer',
@@ -462,6 +464,8 @@ export const EN: { [K in keyof typeof FR]: string } = {
   footerWithScore:
     'Sonique listens to what you play, matches it to your score, and helps you improve without judging.',
   footerNoScore: 'Sonique listens to what you play. And answers honestly.',
+  supportLabel: 'Support:',
+  supportEmail: 'contact@sonique.co',
 
   readyToPlay: 'Ready to play',
   heroTagline: 'The app that lets you play your favorite pieces.',

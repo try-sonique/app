@@ -145,10 +145,25 @@ function PhaseNav({ phase }: { phase: Phase }) {
   )
 }
 
+function SupportMail() {
+  const copy = t()
+  return (
+    <p className="footer-note">
+      {copy.supportLabel}{' '}
+      <a className="support" href={`mailto:${copy.supportEmail}`}>
+        {copy.supportEmail}
+      </a>
+    </p>
+  )
+}
+
 function FooterLine({ withPartition }: { withPartition?: boolean }) {
   const copy = t()
   return (
-    <p className="footer-note">{withPartition ? copy.footerWithScore : copy.footerNoScore}</p>
+    <>
+      <p className="footer-note">{withPartition ? copy.footerWithScore : copy.footerNoScore}</p>
+      <SupportMail />
+    </>
   )
 }
 
@@ -1265,6 +1280,7 @@ function AccountView({
       </div>
 
       <div className="account-footer">
+        <SupportMail />
         <button type="button" className="btn btn-ghost account-logout" onClick={onLogOut}>
           {copy.logOut}
         </button>
