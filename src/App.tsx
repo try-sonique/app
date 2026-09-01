@@ -188,11 +188,13 @@ function AuthSlide({
   onChange: _onChange,
   onProfileLoaded,
   onNext,
+  onCancel,
 }: {
   profile: AppState['profile']
   onChange: (key: keyof AppState['profile'], value: string) => void
   onProfileLoaded: (profile: UserProfile) => void
   onNext: () => void
+  onCancel?: () => void
 }) {
   const copy = t()
   const remembered = getRememberedEmail()
@@ -447,6 +449,11 @@ function AuthSlide({
     const returning = Boolean(profile.firstName.trim() || profile.email.trim())
     return (
       <section className="slide">
+        {onCancel ? (
+          <button type="button" className="account-back-link" onClick={onCancel}>
+            ← {copy.accountBack}
+          </button>
+        ) : null}
         <span className="eyebrow">{copy.accessEyebrow}</span>
         <h1>
           {returning
@@ -2447,6 +2454,7 @@ export default function App() {
           setScoreRev((n) => n + 1)
         }}
         onNext={() => setShowAccount(false)}
+        onCancel={() => setShowAccount(false)}
       />
     ) : (
       <AccountView

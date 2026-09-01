@@ -150,7 +150,7 @@ const FR = {
   start: 'Commencer',
 
   // Auth
-  accessEyebrow: 'Slide 2 · Accès',
+  accessEyebrow: 'Compte',
   haveAccount: 'Tu as déjà un compte Sonique ?',
   haveAccountLead: 'Comme ça, tu n’as pas à tout retaper si tu reviens.',
   login: 'Connexion',
@@ -411,7 +411,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   heroTagline: 'Your score. Your level. Your takes — toward your best.',
   start: 'Get started',
 
-  accessEyebrow: 'Step 2 · Access',
+  accessEyebrow: 'Account',
   haveAccount: 'Already have a Sonique account?',
   haveAccountLead: 'So you don’t have to type everything again when you come back.',
   login: 'Log in',
