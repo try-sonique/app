@@ -55,6 +55,9 @@ export function mapAuthError(message: string): string {
   if (m.includes('user already registered') || m.includes('already been registered')) {
     return 'already_registered'
   }
+  if (m.includes('provider is not enabled') || m.includes('unsupported provider')) {
+    return 'google_unavailable'
+  }
   return message
 }
 
@@ -237,6 +240,24 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
     redirectTo: authRedirectUrl(),
   })
   if (error) return { ok: false, error: mapAuthError(error.message) }
+  return { ok: true }
+}
+
+export async function signInWithGoogle(): Promise<AuthResult> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { ok: false, error: 'google_unavailable' }
+  }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: authRedirectUrl() },
+  })
+  if (error) {
+    const mapped = mapAuthError(error.message)
+    if (mapped.toLowerCase().includes('provider') || mapped.toLowerCase().includes('unsupported')) {
+      return { ok: false, error: 'google_unavailable' }
+    }
+    return { ok: false, error: mapped }
+  }
   return { ok: true }
 }
 

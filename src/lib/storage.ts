@@ -5,7 +5,10 @@ const CURRENT_KEY = 'sonique.currentEmail'
 const REMEMBER_EMAIL_KEY = 'sonique.rememberEmail'
 const SESSIONS_KEY = 'sonique.sessions'
 const DB_NAME = 'sonique-db'
+const DB_VERSION = 2
 const DB_STORE = 'recordings'
+const SCORE_STORE = 'scores'
+const SCORES_KEY = 'sonique.scores'
 
 export type StoredSession = {
   id: string
@@ -77,18 +80,120 @@ export function setRememberedEmail(email: string | null) {
   }
 }
 
+export type SavedScore = {
+  id: string
+  email: string
+  pieceName: string
+  fileName: string
+  mime: string
+  savedAt: string
+}
+
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
+    const req = indexedDB.open(DB_NAME, DB_VERSION)
     req.onupgradeneeded = () => {
       const db = req.result
       if (!db.objectStoreNames.contains(DB_STORE)) {
         db.createObjectStore(DB_STORE)
       }
+      if (!db.objectStoreNames.contains(SCORE_STORE)) {
+        db.createObjectStore(SCORE_STORE)
+      }
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
   })
+}
+
+function readScoreIndex(): SavedScore[] {
+  try {
+    const raw = localStorage.getItem(SCORES_KEY)
+    return raw ? (JSON.parse(raw) as SavedScore[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeScoreIndex(list: SavedScore[]) {
+  localStorage.setItem(SCORES_KEY, JSON.stringify(list.slice(0, 40)))
+}
+
+export function listSavedScores(email?: string | null): SavedScore[] {
+  const list = readScoreIndex().sort((a, b) => b.savedAt.localeCompare(a.savedAt))
+  if (!email) return list.filter((s) => !s.email.trim())
+  const key = email.trim().toLowerCase()
+  return list.filter((s) => !s.email.trim() || s.email.trim().toLowerCase() === key)
+}
+
+export function attachSavedScoresToEmail(email: string) {
+  const key = email.trim().toLowerCase()
+  if (!key) return
+  const list = readScoreIndex()
+  let changed = false
+  const next = list.map((s) => {
+    if (!s.email.trim()) {
+      changed = true
+      return { ...s, email: key }
+    }
+    return s
+  })
+  if (changed) writeScoreIndex(next)
+}
+
+export async function saveScoreFile(input: {
+  email: string
+  pieceName: string
+  file: File
+}): Promise<SavedScore | null> {
+  const id = `score-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const entry: SavedScore = {
+    id,
+    email: input.email.trim().toLowerCase(),
+    pieceName: input.pieceName.trim() || input.file.name.replace(/\.[^.]+$/, ''),
+    fileName: input.file.name,
+    mime: input.file.type || 'application/octet-stream',
+    savedAt: new Date().toISOString(),
+  }
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(SCORE_STORE, 'readwrite')
+      tx.objectStore(SCORE_STORE).put(input.file, id)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+    const list = readScoreIndex().filter(
+      (s) =>
+        !(
+          s.pieceName === entry.pieceName &&
+          s.fileName === entry.fileName &&
+          s.email === entry.email
+        ),
+    )
+    list.unshift(entry)
+    writeScoreIndex(list)
+    return entry
+  } catch {
+    return null
+  }
+}
+
+export async function getScoreFile(id: string): Promise<Blob | null> {
+  try {
+    const db = await openDb()
+    const blob = await new Promise<Blob | null>((resolve, reject) => {
+      const tx = db.transaction(SCORE_STORE, 'readonly')
+      const req = tx.objectStore(SCORE_STORE).get(id)
+      req.onsuccess = () => resolve((req.result as Blob) ?? null)
+      req.onerror = () => reject(req.error)
+    })
+    db.close()
+    return blob
+  } catch {
+    return null
+  }
 }
 
 export async function saveRecordingBlob(sessionId: string, blob: Blob) {

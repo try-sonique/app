@@ -56,7 +56,7 @@ export type AppState = {
   feedback: AriaFeedback | null
 }
 
-export const MAX_TAKES = 3
+export const MAX_TAKES = 99
 
 export const initialState: AppState = {
   slide: 1,

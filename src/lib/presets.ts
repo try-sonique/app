@@ -146,7 +146,7 @@ const FR = {
 
   // Welcome
   readyToPlay: 'Prêt·e à jouer',
-  heroTagline: 'L’app qui te permet de jouer tes morceaux préférés.',
+  heroTagline: 'Ta partition. Ton niveau. Tes prises — jusqu’à ta meilleure.',
   start: 'Commencer',
 
   // Auth
@@ -213,9 +213,20 @@ const FR = {
   pianoLevelLead:
     'Aria ne te parle pas comme à un concertiste si tu débutes. Un choix, tu pourras le changer au prochain morceau.',
   pianoLevelBeginner: 'Débutant',
-  pianoLevelBeginnerHint: 'Posture, placement des mains, mains séparées.',
-  pianoLevelPlaying: 'Je joue déjà',
-  pianoLevelPlayingHint: 'Un passage du morceau, un exercice concret.',
+  pianoLevelBeginnerHint: 'Je joue d’une seule main, gauche ou droite.',
+  pianoLevelPlaying: 'Moyen',
+  pianoLevelPlayingHint: 'Je joue des deux mains, sans trop de difficultés.',
+  savedScores: 'Tes partitions',
+  savedScoresEmpty: 'Aucune partition enregistrée pour l’instant. Importe-la une fois — elle reste ici.',
+  savedScoreOpen: 'Reprendre',
+  scoreSaved: 'Partition enregistrée sur cet appareil.',
+  googleContinue: 'Continuer avec Google',
+  googleUnavailable:
+    'Google n’est pas encore branché sur ce projet. Email et mot de passe fonctionnent.',
+  authOr: 'ou',
+  pseudo: 'Pseudonyme',
+  identifier: 'Identifiant (email)',
+  authBoxLead: 'Pour garder tes partitions et tes prises. Tu peux jouer sans ça.',
   suggestedPieces: 'Morceaux prêts',
   beginnerBadge: 'Pour débuter',
   missionToday: 'Aujourd’hui',
@@ -233,7 +244,7 @@ const FR = {
   howStep4Title: 'Enregistre une trace',
   howStep4Body: 'Quand tu es prêt·e, enregistre. Partition syncée sur ta prise.',
   howStep5Title: 'Reçois ton retour',
-  howStep5Body: 'Max 3 essais par morceau. Digère ce qu’Aria t’a dit.',
+  howStep5Body: 'Reviens au même morceau autant que tu veux. La session, c’est d’aller plus loin sur CE morceau.',
   goToPractice: 'Passer à l’entraînement',
   howBeginnerLead:
     'On ne joue pas le morceau entier. D’abord le corps, une main, puis l’autre.',
@@ -261,7 +272,7 @@ const FR = {
 
   // Classic setup
   classicTitle: 'Quel morceau vas-tu travailler ?',
-  classicLead: 'Dis ton niveau, choisis un titre, ou importe ta partition.',
+  classicLead: 'Ta partition, pas un catalogue. Une fois importée, elle reste ici.',
   pieceNameLabel: 'Nom du morceau',
   pieceNamePlaceholder: 'Ex. Clair de Lune',
   dropScore: 'Glisse ta partition ici, ou choisis un fichier',
@@ -327,10 +338,10 @@ const FR = {
   improvements: 'Exercices concrets',
   nextFocus: 'Ta mission pour la prochaine prise',
   strengths: 'Ce qui marche déjà',
-  replayPiece: 'Rejouer le morceau',
+  replayPiece: 'Rejouer ce passage',
   chooseOther: 'Choisir un autre morceau',
   viewSessions: 'Voir mes sessions',
-  takesExhausted: '3 essais atteints. Retour au choix du morceau.',
+  takesExhausted: 'Continue ce morceau. La session n’est pas une limite d’essais.',
 
   // History
   historyEyebrow: 'Mon compte · Sessions',
@@ -397,7 +408,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   footerNoScore: 'Sonique listens to what you play. And answers honestly.',
 
   readyToPlay: 'Ready to play',
-  heroTagline: 'The app that lets you play your favorite pieces.',
+  heroTagline: 'Your score. Your level. Your takes — toward your best.',
   start: 'Get started',
 
   accessEyebrow: 'Step 2 · Access',
@@ -460,9 +471,20 @@ export const EN: { [K in keyof typeof FR]: string } = {
   pianoLevelLead:
     'Aria does not talk to a beginner like a concert pianist. One choice; you can change it on the next piece.',
   pianoLevelBeginner: 'Beginner',
-  pianoLevelBeginnerHint: 'Posture, hand position, hands separate.',
-  pianoLevelPlaying: 'I already play',
-  pianoLevelPlayingHint: 'One passage of the piece, one concrete drill.',
+  pianoLevelBeginnerHint: 'I play with one hand, left or right.',
+  pianoLevelPlaying: 'Intermediate',
+  pianoLevelPlayingHint: 'I play with both hands, without too much trouble.',
+  savedScores: 'Your scores',
+  savedScoresEmpty: 'No score saved yet. Import it once — it stays here.',
+  savedScoreOpen: 'Resume',
+  scoreSaved: 'Score saved on this device.',
+  googleContinue: 'Continue with Google',
+  googleUnavailable:
+    'Google is not wired on this project yet. Email and password still work.',
+  authOr: 'or',
+  pseudo: 'Display name',
+  identifier: 'Sign-in (email)',
+  authBoxLead: 'To keep your scores and takes. You can play without this.',
   suggestedPieces: 'Ready pieces',
   beginnerBadge: 'To start',
   missionToday: 'Today',
@@ -479,7 +501,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   howStep4Title: 'Record a take',
   howStep4Body: 'When you’re ready, record. Score synced to your take.',
   howStep5Title: 'Get your feedback',
-  howStep5Body: 'Max 3 takes per piece. Digest what Aria said.',
+  howStep5Body: 'Come back to the same piece as often as you need. The session is going further on THIS piece.',
   goToPractice: 'Go to practice',
   howBeginnerLead:
     'We do not play the whole piece. First the body, one hand, then the other.',
@@ -505,7 +527,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   startRecording: 'Start recording',
 
   classicTitle: 'Which piece will you work on?',
-  classicLead: 'Upload your score on screen. Or play by ear.',
+  classicLead: 'Your score, not a catalogue. Once imported, it stays here.',
   pieceNameLabel: 'Piece name',
   pieceNamePlaceholder: 'e.g. Clair de Lune',
   dropScore: 'Drop your score here, or choose a file',
@@ -568,10 +590,10 @@ export const EN: { [K in keyof typeof FR]: string } = {
   improvements: 'Concrete drills',
   nextFocus: 'Your job for the next take',
   strengths: 'What already works',
-  replayPiece: 'Replay this piece',
+  replayPiece: 'Play this passage again',
   chooseOther: 'Choose another piece',
   viewSessions: 'View my sessions',
-  takesExhausted: '3 takes used. Back to piece selection.',
+  takesExhausted: 'Keep this piece. A session is not a take limit.',
 
   historyEyebrow: 'My account · Sessions',
   historyTitle: 'Your sessions',

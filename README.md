@@ -1,10 +1,10 @@
 # Sonique
 
-App de pratique musicale avec le coach **Aria** : choisis un morceau, joue avec la partition à l’écran, enregistre une prise, reçois un retour.
+App de pratique piano : **ta** partition, **ton** niveau, des prises jusqu’à ta meilleure — pas un catalogue Beethoven.
 
 Démo publique : https://try-sonique.github.io/app/
 
-L’app est en **français uniquement**.
+Français uniquement.
 
 ## Lancer en local
 
@@ -15,38 +15,23 @@ npm run dev
 
 Ouvre [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
-L’auth utilise le projet Supabase existant (`rzoqsbxiioaescaoyonh`) : Angelina, Ereka, Elise, Elodie et Marie-Odile se reconnectent avec le même email / mot de passe. Les nouvelles inscriptions reçoivent un mail de confirmation.
+Compte (optionnel pour jouer) : email + mot de passe, ou **Continuer avec Google** si le provider est activé dans Supabase. Pas de Facebook / Instagram.
 
-Dans Supabase → Authentication → URL Configuration, ajoute :
+Dans Supabase → Authentication → URL Configuration :
 
 - Site URL : `https://try-sonique.github.io/app/`
-- Redirect URLs :
-  - `https://try-sonique.github.io/app/**`
-  - `https://elodieybs.github.io/Sonique/**`
-  - `http://127.0.0.1:43123/**`
+- Redirect URLs : `https://try-sonique.github.io/app/**` et `http://127.0.0.1:43123/**`
 
-## Flow
+Pour Google : Authentication → Providers → Google (Client ID + secret). Sans ça, le bouton le dit clairement.
 
-1. Accueil → compte
-2. **Niveau piano** (débutant / je joue déjà) puis morceau prêt ou partition importée
-3. Salle de pratique — partition à l’écran, chuchotements d’Aria
-4. Performance — prise enregistrée (micro ; pas de concert démo si tu es débutant)
-5. Retour d’Aria (max 3 prises par morceau)
+## Parcours (couche 1)
 
-### Débutant
+1. Commencer
+2. Niveau piano — **Débutant** (*une main, gauche ou droite*) ou **Moyen** (*les deux mains, sans trop de difficultés*)
+3. Ta partition (importée et **gardée** sur l’appareil) — ou à l’oreille
+4. Entraînement → prise → retour Aria
+5. Rejouer **ce** morceau autant que tu veux. Une session, ce n’est pas 3 essais.
 
-Aria ne commente pas le style du morceau. Elle dit ce qu’un prof dirait en première leçon :
+**Mon compte** est dans le bandeau, pas au milieu du jeu.
 
-1. **Mains séparées** — droite, puis gauche, puis ensemble
-2. **Posture** — milieu du banc, dos, épaules, pieds
-3. **Placement des mains** — doigts ronds, poignet souple
-
-Les phrases sont dans `src/lib/coachScripts.ts`. Ce n’est pas un modèle entraîné : c’est le script.
-
-### Démo entretien
-
-1. Compte
-2. **Débutant** → **Hymne à la joie**
-3. Lire « Comment ça marche » (posture, mains, mains séparées)
-4. Salle : la carte **Aujourd’hui · Mains séparées**
-5. Lancer une prise (micro). Si Aria n’entend pas, elle le dit.
+Guitare / basse : pas encore. Accordeur + micro viendront ensuite.

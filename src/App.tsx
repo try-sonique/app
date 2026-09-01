@@ -10,7 +10,7 @@ import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
-import { DEMO_PIECES, t, type DemoPiece } from './lib/presets'
+import { t } from './lib/presets'
 import {
   beginnerMission,
   readPianoLevel,
@@ -39,17 +39,23 @@ import {
   getCurrentProfile,
   getRememberedEmail,
   getRecordingBlob,
+  getScoreFile,
+  listSavedScores,
   listSessions,
   saveRecordingBlob,
+  saveScoreFile,
   saveSession,
+  attachSavedScoresToEmail,
   attachSessionsToEmail,
   setRememberedEmail,
+  type SavedScore,
   type StoredSession,
 } from './lib/storage'
 import { pushCloudSession, syncAccountSessions } from './lib/sessionCloud'
 import {
   getSessionProfile,
   requestPasswordReset,
+  signInWithGoogle,
   signInWithPassword,
   signOut,
   signUpWithPassword,
@@ -252,7 +258,7 @@ function AuthSlide({
     if (code === 'email_not_confirmed') return copy.emailNotConfirmed
     if (code === 'link_expired') return copy.emailLinkExpired
     if (code === 'already_registered') return copy.alreadyRegistered
-    if (code === 'invalid_credentials') return copy.loginFailed
+    if (code === 'google_unavailable') return copy.googleUnavailable
     if (code === 'not_found') return copy.loginNotFound
     return code
   }
@@ -425,6 +431,17 @@ function AuthSlide({
     }
   }
 
+  const onGoogle = async () => {
+    setAuthError('')
+    setBusy(true)
+    try {
+      const result = await signInWithGoogle()
+      if (!result.ok) setAuthError(friendlyAuthError(result.error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (mode === 'choose') {
     // Only greet by name if THIS browser already has a session — other visitors never see your name.
     const returning = Boolean(profile.firstName.trim() || profile.email.trim())
@@ -436,7 +453,14 @@ function AuthSlide({
             ? `${copy.accessReturning}${profile.firstName.trim() ? `, ${profile.firstName.trim()}` : ''}`
             : copy.haveAccount}
         </h1>
-        <p className="lead">{returning ? copy.accessReturningLead : copy.haveAccountLead}</p>
+        <p className="lead">{returning ? copy.accessReturningLead : copy.authBoxLead}</p>
+        <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
+          <span className="oauth-mark" aria-hidden>
+            G
+          </span>
+          {copy.googleContinue}
+        </button>
+        <p className="auth-or">{copy.authOr}</p>
         <div className="choice-grid" style={{ marginInline: 'auto' }}>
           <button type="button" className="choice" onClick={startLogin}>
             {copy.login}
@@ -464,6 +488,13 @@ function AuthSlide({
         <span className="eyebrow">{copy.loginEyebrow}</span>
         <h1>{awaitingEmailConfirm ? copy.checkEmailTitle : copy.welcomeBack}</h1>
         <p className="lead">{awaitingEmailConfirm ? copy.checkEmailLead : copy.loginLead}</p>
+        <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
+          <span className="oauth-mark" aria-hidden>
+            G
+          </span>
+          {copy.googleContinue}
+        </button>
+        <p className="auth-or">{copy.authOr}</p>
         {authInfo && !onEmailStep ? (
           <p
             className="lead"
@@ -635,13 +666,20 @@ function AuthSlide({
       <span className="eyebrow">{copy.signupEyebrow}</span>
       <h1>{copy.createSpace}</h1>
       <p className="lead">{copy.signupLead}</p>
+      <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
+        <span className="oauth-mark" aria-hidden>
+          G
+        </span>
+        {copy.googleContinue}
+      </button>
+      <p className="auth-or">{copy.authOr}</p>
       <form
         className="stack"
         autoComplete="off"
         onSubmit={(e) => void submitSignup(e)}
       >
         <label className="field">
-          <span>{copy.firstName}</span>
+          <span>{copy.pseudo}</span>
           <input
             type="text"
             name="sonique-signup-firstname"
@@ -652,7 +690,7 @@ function AuthSlide({
           />
         </label>
         <label className="field">
-          <span>{copy.email}</span>
+          <span>{copy.identifier}</span>
           <input
             type="email"
             name="sonique-signup-email"
@@ -707,19 +745,6 @@ function AuthSlide({
             onChange={(e) => setSignupLastName(e.target.value)}
           />
         </label>
-        <label className="field">
-          <span>
-            {copy.phoneOptional} <em className="optional-tag">{copy.optional}</em>
-          </span>
-          <input
-            type="tel"
-            name="sonique-signup-phone"
-            autoComplete="off"
-            placeholder="+33…"
-            value={signupPhone}
-            onChange={(e) => setSignupPhone(e.target.value)}
-          />
-        </label>
         {authError ? (
           <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
             {authError}
@@ -744,9 +769,47 @@ function AuthSlide({
   )
 }
 
-function piecesForLevel(level: PianoLevel | null): DemoPiece[] {
-  if (level === 'beginner') return DEMO_PIECES.filter((p) => p.id === 'ode' || p.id === 'elise')
-  return DEMO_PIECES
+function PianoLevelSlide({
+  pianoLevel,
+  onSelect,
+  onNext,
+}: {
+  pianoLevel: PianoLevel | null
+  onSelect: (level: PianoLevel) => void
+  onNext: () => void
+}) {
+  const copy = t()
+  return (
+    <section className="slide slide-left">
+      <span className="eyebrow">{copy.pianoLevelEyebrow}</span>
+      <h1>{copy.pianoLevelTitle}</h1>
+      <p className="lead">{copy.pianoLevelLead}</p>
+      <div className="choice-grid choice-grid-wide">
+        <button
+          type="button"
+          className={`choice ${pianoLevel === 'beginner' ? 'active' : ''}`}
+          onClick={() => onSelect('beginner')}
+        >
+          {copy.pianoLevelBeginner}
+          <small>{copy.pianoLevelBeginnerHint}</small>
+        </button>
+        <button
+          type="button"
+          className={`choice ${pianoLevel === 'playing' ? 'active' : ''}`}
+          onClick={() => onSelect('playing')}
+        >
+          {copy.pianoLevelPlaying}
+          <small>{copy.pianoLevelPlayingHint}</small>
+        </button>
+      </div>
+      <div className="actions">
+        <button type="button" className="btn btn-primary" disabled={!pianoLevel} onClick={onNext}>
+          {copy.continue}
+        </button>
+      </div>
+      <FooterLine />
+    </section>
+  )
 }
 
 function MissionCard({ takeNumber, pieceName }: { takeNumber: number; pieceName: string }) {
@@ -770,10 +833,8 @@ function PieceSetupClassic({
   partitionName,
   partitionPreview,
   partitionMime,
-  selectedPresetId,
-  pianoLevel,
-  onPianoLevel,
-  onPickPreset,
+  savedScores,
+  onOpenSaved,
   onPieceName,
   onToggleNoPartition,
   onUpload,
@@ -784,22 +845,16 @@ function PieceSetupClassic({
   partitionName: string
   partitionPreview: string | null
   partitionMime: string | null
-  selectedPresetId: string | null
-  pianoLevel: PianoLevel | null
-  onPianoLevel: (level: PianoLevel) => void
-  onPickPreset: (piece: DemoPiece) => void
+  savedScores: SavedScore[]
+  onOpenSaved: (score: SavedScore) => void
   onPieceName: (v: string) => void
   onToggleNoPartition: (checked: boolean) => void
   onUpload: (file: File | null) => void
   onNext: () => void
 }) {
   const noPartition = hasPartition === false
-  const canContinue =
-    Boolean(pianoLevel) &&
-    pieceName.trim().length > 0 &&
-    (noPartition || Boolean(partitionName))
+  const canContinue = pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
   const copy = t()
-  const suggested = piecesForLevel(pianoLevel)
 
   return (
     <section className="slide slide-left">
@@ -809,111 +864,85 @@ function PieceSetupClassic({
 
       <div className="stack">
         <div>
-          <p className="field-label">{copy.pianoLevelTitle}</p>
-          <p className="lead" style={{ margin: '0.35rem 0 0.75rem' }}>
-            {copy.pianoLevelLead}
-          </p>
-          <div className="choice-grid choice-grid-wide">
-            <button
-              type="button"
-              className={`choice ${pianoLevel === 'beginner' ? 'active' : ''}`}
-              onClick={() => onPianoLevel('beginner')}
-            >
-              {copy.pianoLevelBeginner}
-              <small>{copy.pianoLevelBeginnerHint}</small>
-            </button>
-            <button
-              type="button"
-              className={`choice ${pianoLevel === 'playing' ? 'active' : ''}`}
-              onClick={() => onPianoLevel('playing')}
-            >
-              {copy.pianoLevelPlaying}
-              <small>{copy.pianoLevelPlayingHint}</small>
-            </button>
-          </div>
+          <p className="field-label">{copy.savedScores}</p>
+          {savedScores.length === 0 ? (
+            <p className="lead" style={{ margin: '0.4rem 0 0' }}>
+              {copy.savedScoresEmpty}
+            </p>
+          ) : (
+            <div className="preset-grid" style={{ marginTop: '0.65rem' }}>
+              {savedScores.map((score) => (
+                <button
+                  key={score.id}
+                  type="button"
+                  className="preset-card"
+                  onClick={() => onOpenSaved(score)}
+                >
+                  <strong>{score.pieceName}</strong>
+                  <span>
+                    {score.fileName} · {copy.savedScoreOpen}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {pianoLevel ? (
-          <>
-            <div>
-              <p className="field-label">{copy.suggestedPieces}</p>
-              <div className="preset-grid" style={{ marginTop: '0.65rem' }}>
-                {suggested.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={`preset-card ${selectedPresetId === p.id ? 'active' : ''}`}
-                    onClick={() => onPickPreset(p)}
-                  >
-                    <strong>
-                      {p.title}
-                      {p.id === 'ode' ? (
-                        <span className="beginner-badge">{copy.beginnerBadge}</span>
-                      ) : null}
-                    </strong>
-                    <span>{p.blurb.fr}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+        <label className="field">
+          <span>{copy.pieceNameLabel}</span>
+          <input
+            type="text"
+            value={pieceName}
+            onChange={(e) => onPieceName(e.target.value)}
+            placeholder={copy.pieceNamePlaceholder}
+          />
+        </label>
 
-            <label className="field">
-              <span>{copy.pieceNameLabel}</span>
-              <input
-                type="text"
-                value={pieceName}
-                onChange={(e) => onPieceName(e.target.value)}
-                placeholder={copy.pieceNamePlaceholder}
-              />
-            </label>
+        <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
+          <div className="upload-icon" aria-hidden>
+            ♫
+          </div>
+          <strong>{copy.dropScore}</strong>
+          <p className="lead" style={{ margin: 0 }}>
+            {copy.uploadHint}
+          </p>
+          <input
+            type="file"
+            accept="image/*,.pdf,.svg"
+            disabled={noPartition}
+            onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
+          />
+          {partitionName && !noPartition ? (
+            <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
+              {copy.fileLabel} : {partitionName}
+            </p>
+          ) : null}
+        </div>
 
-            <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
-              <div className="upload-icon" aria-hidden>
-                ♫
-              </div>
-              <strong>{copy.dropScore}</strong>
-              <p className="lead" style={{ margin: 0 }}>
-                {copy.uploadHint}
-              </p>
-              <input
-                type="file"
-                accept="image/*,.pdf,.svg"
-                disabled={noPartition}
-                onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
-              />
-              {partitionName && !noPartition ? (
-                <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
-                  {copy.fileLabel} : {partitionName}
-                </p>
-              ) : null}
-            </div>
-
-            {!noPartition && partitionPreview ? (
-              <div className="stage partition-stage">
-                <p className="partition-label">{copy.previewLabel}</p>
-                <PartitionViewer
-                  src={partitionPreview}
-                  mime={partitionMime}
-                  name={partitionName}
-                />
-              </div>
-            ) : null}
-
-            <label className="check-row">
-              <input
-                type="checkbox"
-                checked={noPartition}
-                onChange={(e) => onToggleNoPartition(e.target.checked)}
-              />
-              <div>
-                <strong>{copy.noScoreContinue}</strong>
-                <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-                  {copy.noScoreContinueHint}
-                </p>
-              </div>
-            </label>
-          </>
+        {!noPartition && partitionPreview ? (
+          <div className="stage partition-stage">
+            <p className="partition-label">{copy.previewLabel}</p>
+            <PartitionViewer
+              src={partitionPreview}
+              mime={partitionMime}
+              name={partitionName}
+            />
+          </div>
         ) : null}
+
+        <label className="check-row">
+          <input
+            type="checkbox"
+            checked={noPartition}
+            onChange={(e) => onToggleNoPartition(e.target.checked)}
+          />
+          <div>
+            <strong>{copy.noScoreContinue}</strong>
+            <p className="lead" style={{ margin: '0.25rem 0 0' }}>
+              {copy.noScoreContinueHint}
+            </p>
+          </div>
+        </label>
       </div>
 
       <div className="actions">
@@ -1367,7 +1396,7 @@ function RecordStage({
               <span>{copy.listening}</span>
             </div>
             <span className="takes-pill">
-              {copy.takeOf} {takesUsed + 1}/{MAX_TAKES}
+              {copy.takeOf} {takesUsed + 1}
             </span>
           </div>
           <div className="stage stage-score stage-score-live">
@@ -1406,7 +1435,7 @@ function RecordStage({
             <p className="perf-piece-meta">
               <span className="perf-piece-name">{pieceName}</span>
               <span className="perf-take-chip">
-                {copy.takeOf} {takesUsed + 1}/{MAX_TAKES}
+                {copy.takeOf} {takesUsed + 1}
               </span>
             </p>
             <p className="lead perf-ready-lead">
@@ -1534,7 +1563,6 @@ function Report({
 }) {
   const feedback = state.feedback
   if (!feedback) return null
-  const exhausted = feedback.takesLeft <= 0
   const copy = t()
   const strengths = (feedback.strengths || []).slice(0, 3)
   const weaknesses = (feedback.weaknesses || []).slice(0, 3)
@@ -1545,7 +1573,7 @@ function Report({
       <span className="eyebrow">{copy.reportEyebrow}</span>
       <h1>{feedback.headline}</h1>
       <div className="takes-pill">
-        {copy.takesLeft} : {feedback.takesLeft}/{MAX_TAKES}
+        {copy.takeOf} {state.takesUsed}
       </div>
 
       <div className="report-card report-card-compact">
@@ -1589,24 +1617,17 @@ function Report({
       </div>
 
       <div className="actions">
-        {!exhausted ? (
-          <button type="button" className="btn btn-gold" onClick={onReplay}>
-            {copy.replayPiece}
-          </button>
-        ) : (
-          <button type="button" className="btn btn-gold" onClick={onNewPiece}>
-            {copy.chooseOther}
-          </button>
-        )}
+        <button type="button" className="btn btn-gold" onClick={onReplay}>
+          {copy.replayPiece}
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={onNewPiece}>
+          {copy.chooseOther}
+        </button>
         <button type="button" className="btn btn-ghost" onClick={onOpenHistory}>
           {copy.viewSessions}
         </button>
       </div>
-      {exhausted ? (
-        <p className="footer-note">{copy.takesExhausted}</p>
-      ) : (
-        <FooterLine withPartition={state.hasPartition === true} />
-      )}
+      <FooterLine withPartition={state.hasPartition === true} />
     </section>
   )
 }
@@ -2156,6 +2177,7 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false)
   const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
+  const [scoreRev, setScoreRev] = useState(0)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -2178,11 +2200,13 @@ export default function App() {
       const existing = getCurrentProfile()
       if (existing) {
         attachSessionsToEmail(existing.email)
+        attachSavedScoresToEmail(existing.email)
         setState((s) => ({ ...s, profile: existing }))
       }
       const remote = await getSessionProfile()
       if (remote) {
         attachSessionsToEmail(remote.email)
+        attachSavedScoresToEmail(remote.email)
         setState((s) => ({ ...s, profile: remote }))
         await syncAccountSessions(remote.email)
         setHistoryRev((n) => n + 1)
@@ -2362,9 +2386,15 @@ export default function App() {
         }
       }
       const preview = URL.createObjectURL(file)
+      const pieceName = s.pieceName || file.name.replace(/\.[^.]+$/, '')
+      void saveScoreFile({
+        email: s.profile.email,
+        pieceName,
+        file,
+      }).then(() => setScoreRev((n) => n + 1))
       return {
         ...s,
-        pieceName: s.pieceName || file.name.replace(/\.[^.]+$/, ''),
+        pieceName,
         partitionName: file.name,
         partitionPreview: preview,
         partitionMime:
@@ -2381,10 +2411,44 @@ export default function App() {
     })
   }
 
+  const openSavedScore = (score: SavedScore) => {
+    void (async () => {
+      const blob = await getScoreFile(score.id)
+      if (!blob) return
+      setState((s) => {
+        revokeIfBlob(s.partitionPreview)
+        return {
+          ...s,
+          pieceName: score.pieceName,
+          partitionName: score.fileName,
+          partitionPreview: URL.createObjectURL(blob),
+          partitionMime: score.mime,
+          selectedPresetId: null,
+          previewAudio: null,
+          performanceAudio: null,
+          hasPartition: true,
+        }
+      })
+    })()
+  }
+
   let body: ReactNode = null
 
   if (showAccount) {
-    body = (
+    body = !state.profile.email.trim() ? (
+      <AuthSlide
+        profile={state.profile}
+        onChange={() => {}}
+        onProfileLoaded={(profile) => {
+          attachSessionsToEmail(profile.email)
+          attachSavedScoresToEmail(profile.email)
+          setState((s) => ({ ...s, profile }))
+          void syncAccountSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
+          setScoreRev((n) => n + 1)
+        }}
+        onNext={() => setShowAccount(false)}
+      />
+    ) : (
       <AccountView
         key={`account-${historyRev}`}
         profile={state.profile}
@@ -2432,15 +2496,11 @@ export default function App() {
     )
   else if (state.slide === 2) {
     body = (
-      <AuthSlide
-        profile={state.profile}
-        onChange={(key, value) =>
-          setState((s) => ({ ...s, profile: { ...s.profile, [key]: value } }))
-        }
-        onProfileLoaded={(profile) => {
-          attachSessionsToEmail(profile.email)
-          setState((s) => ({ ...s, profile }))
-          void syncAccountSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
+      <PianoLevelSlide
+        pianoLevel={state.pianoLevel}
+        onSelect={(level) => {
+          writePianoLevel(level)
+          patch({ pianoLevel: level })
         }}
         onNext={() => go(3)}
       />
@@ -2448,60 +2508,14 @@ export default function App() {
   } else if (state.slide === 3) {
     body = (
       <PieceSetupClassic
+        key={`scores-${scoreRev}`}
         pieceName={state.pieceName}
         hasPartition={state.hasPartition}
         partitionName={state.partitionName}
         partitionPreview={state.partitionPreview}
         partitionMime={state.partitionMime}
-        selectedPresetId={state.selectedPresetId}
-        pianoLevel={state.pianoLevel}
-        onPianoLevel={(level) => {
-          writePianoLevel(level)
-          setState((s) => {
-            const keep = piecesForLevel(level).some((p) => p.id === s.selectedPresetId)
-            if (keep) return { ...s, pianoLevel: level }
-            const presetSrc = s.selectedPresetId && !s.partitionPreview?.startsWith('blob:')
-            if (!presetSrc) return { ...s, pianoLevel: level }
-            return {
-              ...s,
-              pianoLevel: level,
-              pieceName: '',
-              partitionName: '',
-              partitionPreview: null,
-              partitionMime: null,
-              selectedPresetId: null,
-              previewAudio: null,
-              performanceAudio: null,
-              practicePeekSec: null,
-              scrollCapRatio: null,
-              repeatEverySec: null,
-              scrollDurationSec: null,
-              scrollKeyframes: null,
-              hasPartition: null,
-            }
-          })
-        }}
-        onPickPreset={(p) => {
-          setState((s) => {
-            revokeIfBlob(s.partitionPreview)
-            return {
-              ...s,
-              pieceName: p.title,
-              partitionName: p.title,
-              partitionPreview: p.partitionSrc,
-              partitionMime: p.mime,
-              selectedPresetId: p.id,
-              previewAudio: p.audioSrc ?? null,
-              performanceAudio: p.performanceAudioSrc ?? null,
-              practicePeekSec: p.practicePeekSec ?? null,
-              scrollCapRatio: p.scrollCapRatio ?? null,
-              repeatEverySec: p.repeatEverySec ?? null,
-              scrollDurationSec: p.scrollDurationSec ?? null,
-              scrollKeyframes: p.scrollKeyframes ?? null,
-              hasPartition: true,
-            }
-          })
-        }}
+        savedScores={listSavedScores(state.profile.email)}
+        onOpenSaved={openSavedScore}
         onPieceName={(pieceName) => patch({ pieceName })}
         onToggleNoPartition={(checked) =>
           setState((s) => {
@@ -2628,26 +2642,25 @@ export default function App() {
             setShowHistory(false)
             setShowAccount(false)
             // Ne pas renvoyer à l’accueil après connexion (bug ressenti slide 2→1)
-            if (state.profile.email.trim()) go(3)
+            if (state.pianoLevel) go(3)
+            else if (state.slide > 1) go(2)
             else go(1)
           }}
-          aria-label={state.profile.email.trim() ? t().backToPiece : t().backHome}
+          aria-label={state.pianoLevel ? t().backToPiece : t().backHome}
         >
           Sonique
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {state.profile.email ? (
-            <button
-              type="button"
-              className="top-link"
-              onClick={() => {
-                setShowHistory(false)
-                setShowAccount(true)
-              }}
-            >
-              {t().myAccount}
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="top-link"
+            onClick={() => {
+              setShowHistory(false)
+              setShowAccount(true)
+            }}
+          >
+            {t().myAccount}
+          </button>
           {!showHistory && !showAccount && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
         </div>
       </header>

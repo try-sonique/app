@@ -805,7 +805,9 @@ export function analyzePerformance(input: {
 
   let nextFocus: string
   if (takesLeft <= 0) {
-    nextFocus = 'Trois essais faits. Garde un seul exercice de ce retour.'
+    nextFocus = top
+      ? `${top.drill}. ${top.success}`
+      : 'Garde un seul exercice de ce retour. Reprends le même passage.'
   } else if (top) {
     nextFocus = `${top.drill}. ${top.success}`
   } else {
