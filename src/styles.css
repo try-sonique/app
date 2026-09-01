@@ -2254,21 +2254,13 @@ h2 {
   grid-template-columns: 1fr;
   gap: 0.7rem;
   width: 100%;
-  margin-top: 0.35rem;
+  margin-top: 1.15rem;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 720px) {
   .instrument-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
   }
-
-  .welcome-instrument-bass {
-    grid-column: 1 / -1;
-  }
-}
-
-.welcome-instrument-bass {
-  opacity: 0.96;
 }
 
 .welcome-instrument strong {

@@ -235,9 +235,7 @@ function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => v
 
   return (
     <section className="slide slide-left slide-instrument">
-      <span className="eyebrow">{copy.instrumentEyebrow}</span>
       <h1>{copy.instrumentTitle}</h1>
-      <p className="lead">{copy.instrumentLead}</p>
       <div className="instrument-grid">
         <button type="button" className="welcome-instrument" onClick={() => onPick('piano')}>
           <strong>{copy.welcomePiano}</strong>
@@ -247,11 +245,7 @@ function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => v
           <strong>{copy.welcomeGuitar}</strong>
           <small>{copy.welcomeGuitarHint}</small>
         </button>
-        <button
-          type="button"
-          className="welcome-instrument welcome-instrument-bass"
-          onClick={() => onPick('bass')}
-        >
+        <button type="button" className="welcome-instrument" onClick={() => onPick('bass')}>
           <strong>{copy.welcomeBass}</strong>
           <small>{copy.welcomeBassHint}</small>
         </button>
