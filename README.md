@@ -15,17 +15,24 @@ npm run dev
 
 Ouvre [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
+## GitHub, Supabase, domaine
+
+Ce n’est pas l’un ou l’autre.
+
+- **GitHub** = le code, et aujourd’hui le site (`try-sonique.github.io/app/`). Ça ne disparaît pas avec un nom de domaine.
+- **Supabase** = comptes, Google, sessions. Ça ne disparaît pas non plus. Le lien moche `….supabase.co` sur l’écran Google, c’est le backend d’auth, pas le site.
+- **sonique.co** plus tard = une adresse plus propre **par-dessus** les deux. Le site peut rester sur GitHub Pages (ou Vercel). Auth peut afficher `sonique.co` au lieu de `….supabase.co`. Tu ne supprimes ni GitHub ni Supabase.
+
 ## Connexion
 
-1. Accueil (slogan)
-2. **Bienvenue sur Sonique** — Google, Facebook, e-mail (lien, pas de mot de passe). Tu peux **Continuer sans compte**.
+1. Accueil : **Piano**, **Guitare** ou **Basse**.
+2. **Bienvenue sur Sonique** — Google ou e-mail (lien, pas de mot de passe). Tu peux **Continuer sans compte**.
 
 Dans l’en-tête : **Se connecter** (puis **Mon compte** une fois connectée).
 
 - **Google** : ouvre le sélecteur de comptes Google (« Sélectionnez un compte »). Tant que le provider n’est pas allumé dans Supabase, le bouton le dit sur Sonique — plus de page JSON.
-- **Facebook** : même principe, avec une app Meta.
-- **Instagram** : pas de sélecteur web comme Google. Facebook (Meta) est la porte.
 - **E-mail** : un lien dans la boîte, pas un mot de passe.
+- **Facebook / Instagram** : pas maintenant. Facebook demanderait une app Meta (comme Google Cloud). Instagram n’a pas de sélecteur web comme Google.
 
 ### Allumer Google (pour avoir l’écran « Sélectionnez un compte »)
 
@@ -46,8 +53,9 @@ Ce n’est pas un réglage dans le code. Il faut une app Google + le provider da
 
 Le texte « Accéder à l’application … » vient de Google (nom de l’appli / page d’accueil sur l’écran de consentement). **sonique.co** n’apparaîtra que quand le domaine existera et sera mis dans cet écran. En attendant, mets la page GitHub comme page d’accueil : `https://try-sonique.github.io/app/`. Google affichera plutôt **Sonique**.
 
-Facebook : Meta for Developers → app → Facebook Login → même callback Supabase, puis Providers → Facebook dans Supabase. Instagram n’a pas cet écran-là sur le web.
+Facebook / Instagram : plus tard, si besoin. Meta for Developers → app → Facebook Login → même callback Supabase, puis Providers → Facebook dans Supabase. Instagram n’a pas cet écran-là sur le web.
 
-## Parcours piano
+## Parcours
 
-Après la connexion (ou sans compte) : niveau **Débutant** / **Moyen**, ta partition, entraînement → prise → retour Aria.
+- **Piano** : après connexion (ou sans compte) → niveau **Débutant** / **Moyen** → ta partition → entraînement → prise → retour Aria.
+- **Guitare / basse** : micro + accordeur. Aria vérifie qu’on t’entend et que tu es accordé. Ce n’est pas le coaching notes du piano.

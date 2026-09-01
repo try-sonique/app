@@ -2236,6 +2236,12 @@ h2 {
   border-color: var(--gold);
 }
 
+.welcome-instrument-primary {
+  grid-column: 1 / -1;
+  padding: 1.2rem 1.25rem;
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+
 .welcome-instrument strong {
   font-family: var(--font-display);
   font-size: 1.15rem;

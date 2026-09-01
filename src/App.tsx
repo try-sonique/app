@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { AuthGate } from './components/AuthGate'
 import { PartitionViewer } from './components/PartitionViewer'
+import { StringsStudio } from './components/StringsStudio'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
@@ -62,6 +63,7 @@ import {
   type ArrangementKind,
   type AppState,
   type AriaFeedback,
+  type InstrumentKind,
   type UserProfile,
 } from './types'
 
@@ -167,10 +169,34 @@ function FooterLine({ withPartition }: { withPartition?: boolean }) {
   )
 }
 
+const INSTRUMENT_KEY = 'sonique.instrument'
+
+function readInstrument(): InstrumentKind {
+  try {
+    const v = sessionStorage.getItem(INSTRUMENT_KEY)
+    if (v === 'guitar' || v === 'bass' || v === 'piano') return v
+  } catch {
+    /* ignore */
+  }
+  return 'piano'
+}
+
+function writeInstrument(kind: InstrumentKind) {
+  try {
+    sessionStorage.setItem(INSTRUMENT_KEY, kind)
+  } catch {
+    /* ignore */
+  }
+}
+
+function isStrings(kind: InstrumentKind): kind is 'guitar' | 'bass' {
+  return kind === 'guitar' || kind === 'bass'
+}
+
 function Welcome({
-  onNext,
+  onPick,
 }: {
-  onNext: () => void
+  onPick: (instrument: InstrumentKind) => void
 }) {
   const copy = t()
 
@@ -180,9 +206,25 @@ function Welcome({
         <span className="eyebrow">{copy.readyToPlay}</span>
         <p className="hero-brand">Sonique</p>
         <p className="hero-tagline">{copy.heroTagline}</p>
-        <button type="button" className="btn btn-hero" onClick={onNext}>
-          {copy.start}
-        </button>
+        <p className="welcome-instruments-lead">{copy.welcomeInstrumentsLead}</p>
+        <div className="welcome-instruments">
+          <button
+            type="button"
+            className="welcome-instrument welcome-instrument-primary"
+            onClick={() => onPick('piano')}
+          >
+            <strong>{copy.welcomePiano}</strong>
+            <small>{copy.welcomePianoHint}</small>
+          </button>
+          <button type="button" className="welcome-instrument" onClick={() => onPick('guitar')}>
+            <strong>{copy.welcomeGuitar}</strong>
+            <small>{copy.welcomeGuitarHint}</small>
+          </button>
+          <button type="button" className="welcome-instrument" onClick={() => onPick('bass')}>
+            <strong>{copy.welcomeBass}</strong>
+            <small>{copy.welcomeBassHint}</small>
+          </button>
+        </div>
       </div>
       <FooterLine />
     </section>
@@ -1578,7 +1620,10 @@ function HistoryView({
 export default function App() {
   const [state, setState] = useState<AppState>(() => {
     const existing = getCurrentProfile()
-    return existing ? { ...initialState, profile: existing } : initialState
+    const instrument = readInstrument()
+    return existing
+      ? { ...initialState, profile: existing, instrument }
+      : { ...initialState, instrument }
   })
   const [theme, setTheme] = useState<ThemeId>(() => {
     if (!SHOW_THEME_DOCK) return 'noir'
@@ -1637,7 +1682,11 @@ export default function App() {
         }))
         return
       }
-      setState((s) => ({ ...s, pianoLevel: s.pianoLevel ?? readPianoLevel() }))
+      setState((s) => ({
+        ...s,
+        pianoLevel: s.pianoLevel ?? readPianoLevel(),
+        instrument: readInstrument(),
+      }))
       const existing = getCurrentProfile()
       if (existing) {
         attachSessionsToEmail(existing.email)
@@ -1684,7 +1733,8 @@ export default function App() {
     void (async () => {
       await signOut()
       setAuthSkipped(false)
-      setState({ ...initialState, slide: 1, pianoLevel: readPianoLevel() })
+      writeInstrument('piano')
+      setState({ ...initialState, slide: 1, pianoLevel: readPianoLevel(), instrument: 'piano' })
     })()
   }
 
@@ -1946,7 +1996,15 @@ export default function App() {
       />
     )
   } else if (state.slide === 1)
-    body = <Welcome onNext={() => go(2)} />
+    body = (
+      <Welcome
+        onPick={(instrument) => {
+          writeInstrument(instrument)
+          patch({ instrument })
+          go(2)
+        }}
+      />
+    )
   else if (state.slide === 2 && !state.profile.email.trim() && !authSkipped) {
     body = (
       <AuthGate
@@ -1962,6 +2020,17 @@ export default function App() {
         onNext={() => setAuthSkipped(true)}
         onCancel={() => go(1)}
         onSkip={() => setAuthSkipped(true)}
+      />
+    )
+  } else if (state.slide === 2 && isStrings(state.instrument)) {
+    body = (
+      <StringsStudio
+        instrument={state.instrument}
+        onBack={() => {
+          writeInstrument('piano')
+          patch({ instrument: 'piano' })
+          go(1)
+        }}
       />
     )
   } else if (state.slide === 2) {
@@ -2115,12 +2184,23 @@ export default function App() {
               go(1)
               return
             }
-            // Ne pas renvoyer à l’accueil après connexion (bug ressenti slide 2→1)
+            if (isStrings(state.instrument) || state.slide <= 2) {
+              writeInstrument('piano')
+              patch({ instrument: 'piano' })
+              go(1)
+              return
+            }
+            // Dans le parcours piano, le logo ramène au morceau — pas à l’accueil.
             if (state.pianoLevel) go(3)
-            else if (state.slide > 1) go(2)
             else go(1)
           }}
-          aria-label={state.pianoLevel ? t().backToPiece : t().backHome}
+          aria-label={
+            isStrings(state.instrument) || state.slide <= 2
+              ? t().backHome
+              : state.pianoLevel
+                ? t().backToPiece
+                : t().backHome
+          }
         >
           Sonique
         </button>
@@ -2141,6 +2221,7 @@ export default function App() {
           {!showHistory &&
           !showAccount &&
           state.slide > 1 &&
+          !isStrings(state.instrument) &&
           !(state.slide === 2 && !state.profile.email.trim() && !authSkipped) ? (
             <PhaseNav phase={phase} />
           ) : null}
