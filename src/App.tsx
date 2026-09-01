@@ -961,8 +961,8 @@ function PracticeStage({
   const [refPlaying, setRefPlaying] = useState(false)
   const [refProgress, setRefProgress] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const cue = useAriaCues(active, 'practice', pieceId, !partitionPreview)
   const { energy, denied } = usePlayEnergy(active && !refPlaying)
+  const cue = useAriaCues(active && !refPlaying, 'practice', pieceId, !partitionPreview, energy > 0.07)
   const peekSec = Math.max(6, practicePeekSec ?? 12)
   const hasScore = Boolean(partitionPreview)
 
@@ -1140,8 +1140,14 @@ function RecordStage({
   const [whispersOn, setWhispersOn] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const recording = demoSync ? demoPlaying : micRecording
-  const cue = useAriaCues(recording && whispersOn, 'record', pieceId)
   const { energy } = usePlayEnergy(!demoSync && micRecording)
+  const cue = useAriaCues(
+    recording && whispersOn,
+    'record',
+    pieceId,
+    false,
+    demoSync || energy > 0.07,
+  )
 
   const stopDemo = () => {
     audioRef.current?.pause()

@@ -15,6 +15,7 @@ export function useAriaCues(
   mode: 'practice' | 'record',
   pieceId?: string | null,
   byEar = false,
+  heard = true,
 ) {
   const [cue, setCue] = useState<Cue | null>(null)
   const index = useRef(0)
@@ -22,6 +23,17 @@ export function useAriaCues(
   useEffect(() => {
     if (!active) {
       setCue(null)
+      return
+    }
+
+    if (!heard) {
+      setCue({
+        text:
+          mode === 'record'
+            ? 'Je n’entends pas. Rapproche le micro, puis joue.'
+            : 'Je t’écoute dès que tu joues. Là, c’est trop calme.',
+        tone: 'warn',
+      })
       return
     }
 
@@ -37,9 +49,9 @@ export function useAriaCues(
     }
 
     tick()
-    const id = window.setInterval(tick, mode === 'practice' ? 4500 : 3800)
+    const id = window.setInterval(tick, mode === 'practice' ? 6000 : 5000)
     return () => window.clearInterval(id)
-  }, [active, mode, pieceId, byEar])
+  }, [active, mode, pieceId, byEar, heard])
 
   return cue
 }
@@ -84,15 +96,6 @@ function uniquePush(list: string[], value: string | undefined, max = 6) {
   if (list.some((x) => x.toLowerCase() === value.toLowerCase())) return
   if (list.length >= max) return
   list.push(value)
-}
-
-/** Fill list up to `need` from `source` without hanging on duplicates. */
-function fillTo(target: string[], source: string[], need: number, seed: number) {
-  if (target.length >= need || !source.length) return
-  for (const item of pickN(source, seed, source.length)) {
-    if (target.length >= need) return
-    uniquePush(target, item, need)
-  }
 }
 
 /** Stable “character” hints from the piece title (not a real music model). */
@@ -711,12 +714,29 @@ export function analyzePerformance(input: {
   const en = false
   const takesLeft = Math.max(0, input.maxTakes - input.takesUsed)
   const name = input.firstName.trim() || copy.you
-  const piece = input.pieceName.trim() || (en ? 'your piece' : 'ton morceau')
+  const piece = input.pieceName.trim() || 'ton morceau'
   const take = input.takesUsed
   const pieceId = input.meta?.pieceId ?? null
   const features = input.meta?.features ?? null
-  const seed = hashStr(`${piece}|${pieceId ?? ''}|${take}|${input.hasPartition}`)
+  const silent = !features || features.weakSignal || features.durationSec < 1.2
 
+  if (silent) {
+    return {
+      headline: piece,
+      greeting: `${name}, je n’ai pas assez entendu « ${piece} ».`,
+      overview: 'Sans une prise claire, je ne peux pas te dire quoi corriger.',
+      atmosphere: '',
+      technique: '',
+      rhythm: '',
+      strengths: [],
+      weaknesses: ['Cette prise est trop courte ou trop faible pour entendre une ligne.'],
+      improvements: ['Micro près de l’instrument. Un seul passage, vingt secondes, sans t’arrêter.'],
+      nextFocus: 'Prochaine prise : vingt secondes du passage que tu travailles. Micro près. Ensuite on corrige.',
+      takesLeft,
+    }
+  }
+
+  const seed = hashStr(`${piece}|${pieceId ?? ''}|${take}|${input.hasPartition}`)
   const base = presetPack(pieceId, en) ?? titleFlavor(piece, en)
   const signals = signalNotes(features, input.meta, en)
 
@@ -725,89 +745,45 @@ export function analyzePerformance(input: {
   const improvements: string[] = [...signals.improvements]
   const hasRanked = signals.ranked.length > 0
 
-  // Only borrow piece flavor when this take didn’t yield enough signal issues
   if (!hasRanked) {
-    for (const w of pickN(base.weaknesses, seed + 17 + take * 5, 2)) uniquePush(weaknesses, w)
-    for (const i of pickN(base.improvements, seed + 41 + take * 7, 2)) uniquePush(improvements, i)
+    const w = pickN(base.weaknesses, seed + 17 + take * 5, 1)[0]
+    const i = pickN(base.improvements, seed + 41 + take * 7, 1)[0]
+    if (w) uniquePush(weaknesses, w)
+    if (i) uniquePush(improvements, i)
   }
-  if (strengths.length < 2) {
-    for (const s of pickN(base.strengths, seed + take * 3, 2)) uniquePush(strengths, s)
-  }
-
-  if (take >= 2 && strengths.length < 3) {
-    uniquePush(
-      strengths,
-      en
-        ? `Take ${take}: compare to take ${take - 1}. Keep only what already stabilized.`
-        : `Essai ${take}: compare à l’essai ${take - 1}. Garde seulement ce qui s’est stabilisé.`,
-    )
-  }
-
-  fillTo(strengths, base.strengths, 2, seed + 91)
-  if (!hasRanked) {
-    fillTo(weaknesses, base.weaknesses, 3, seed + 193)
-    fillTo(improvements, base.improvements, 3, seed + 281)
+  if (strengths.length < 1) {
+    const s = pickN(base.strengths, seed + take * 3, 1)[0]
+    if (s) uniquePush(strengths, s)
   }
 
   const dur = features?.durationSec
-  const dens =
-    features && !features.weakSignal && features.attacksPerSec >= 0.2
-      ? en
-        ? `${features.attacksPerSec.toFixed(1)} attacks/s`
-        : `${features.attacksPerSec.toFixed(1)} attaques/s`
-      : null
-
   const top = signals.ranked[0]
-  let greeting: string
-  if (signals.honesty.length && (!features || features.weakSignal)) {
-    greeting = en
-      ? `${name}, on “${piece}”: ${signals.honesty[0]}`
-      : `${name}, sur « ${piece} »: ${signals.honesty[0]}`
-  } else if (top) {
-    greeting = en
-      ? `${name}, take ${take} on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priority: ${top.weakness.replace(/\.$/, '')}.`
-      : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}${dens ? ` · ${dens}` : ''}. Priorité: ${top.weakness.replace(/\.$/, '')}.`
-  } else {
-    const topIssue = weaknesses[0]
-      ? stripTipLabel(weaknesses[0]).replace(/\.$/, '')
-      : en
-        ? 'one clean joint'
-        : 'un joint propre'
-    greeting = en
-      ? `${name}, take ${take} on “${piece}”${dur ? ` (${Math.round(dur)}s)` : ''}. Priority: ${topIssue}.`
-      : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}. Priorité: ${topIssue}.`
-  }
+  const greeting = top
+    ? `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}. ${top.weakness.replace(/\.$/, '')}.`
+    : `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}.`
 
   let nextFocus: string
   if (takesLeft <= 0) {
-    nextFocus = en
-      ? '3 takes done. Keep one drill from this report. Rest or switch pieces.'
-      : '3 essais faits. Garde un exercice de ce retour. Repose-toi ou change de morceau.'
+    nextFocus = 'Trois essais faits. Garde un seul exercice de ce retour.'
   } else if (top) {
-    nextFocus = en
-      ? `Take ${take + 1}: only this. ${top.drill}. ${top.success}.`
-      : `Essai ${take + 1}: uniquement ça. ${top.drill}. ${top.success}.`
+    nextFocus = `${top.drill}. ${top.success}`
   } else {
     const primaryDrill = improvements[0]
       ? stripTipLabel(improvements[0])
-      : en
-        ? 'one short passage, steady tempo only'
-        : 'un passage court, tempo stable seulement'
-    nextFocus = en
-      ? `Take ${take + 1}: only this. ${primaryDrill}`
-      : `Essai ${take + 1}: uniquement ça. ${primaryDrill}`
+      : 'Un passage court, tempo stable, rien d’autre.'
+    nextFocus = primaryDrill
   }
 
   return {
     headline: piece,
     greeting,
-    overview: signals.honesty[0] || '',
+    overview: '',
     atmosphere: '',
     technique: '',
-    rhythm: dens || '',
-    strengths: strengths.slice(0, 3),
-    weaknesses: weaknesses.slice(0, 3),
-    improvements: improvements.slice(0, 3),
+    rhythm: '',
+    strengths: strengths.slice(0, 2),
+    weaknesses: weaknesses.slice(0, 2),
+    improvements: improvements.slice(0, 2),
     nextFocus,
     takesLeft,
   }
