@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { t } from '../lib/presets'
-import { getRememberedEmail, setRememberedEmail } from '../lib/storage'
 import { signInWithEmailLink, signInWithSocial } from '../lib/supabaseAuth'
 import type { AppState, UserProfile } from '../types'
 
@@ -92,10 +91,8 @@ export function AuthGate({
   onSkip?: () => void
 }) {
   const copy = t()
-  const remembered = getRememberedEmail()
   const [mode, setMode] = useState<AuthMode>('login')
-  const [loginEmail, setLoginEmail] = useState(remembered)
-  const [rememberEmail, setRememberEmail] = useState(Boolean(remembered))
+  const [loginEmail, setLoginEmail] = useState('')
   const [signupFirstName, setSignupFirstName] = useState('')
   const [signupEmail, setSignupEmail] = useState('')
   const [authError, setAuthError] = useState('')
@@ -131,13 +128,7 @@ export function AuthGate({
     return code
   }
 
-  const persistRemember = (email: string) => {
-    if (rememberEmail) setRememberedEmail(email)
-    else setRememberedEmail(null)
-  }
-
   const afterLinkSent = (email: string) => {
-    persistRemember(email)
     writeLastAuth('email')
     setLastAuth('email')
     setAwaitingLink(true)
@@ -306,14 +297,6 @@ export function AuthGate({
                 }}
                 required
               />
-            </label>
-            <label className="check-row">
-              <input
-                type="checkbox"
-                checked={rememberEmail}
-                onChange={(e) => setRememberEmail(e.target.checked)}
-              />
-              <span>{copy.rememberEmail}</span>
             </label>
             <button type="submit" className="btn auth-continue" disabled={busy || !loginEmail.trim()}>
               {busy ? copy.authBusy : copy.continueWithEmail}
