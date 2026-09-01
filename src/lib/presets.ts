@@ -1,6 +1,6 @@
 import type { ScrollKeyframe } from './audioFeatures'
 
-export type Locale = 'fr' | 'en'
+export type Locale = 'fr'
 
 export type DemoPiece = {
   id: string
@@ -319,7 +319,8 @@ const FR = {
   you: 'toi',
 } as const
 
-const EN: { [K in keyof typeof FR]: string } = {
+/** Conservé pour référence ; l’app n’expose plus l’anglais. */
+export const EN: { [K in keyof typeof FR]: string } = {
   phasePiece: 'Piece',
   phasePlay: 'Play',
   phaseFeedback: 'Feedback',
@@ -536,32 +537,14 @@ const EN: { [K in keyof typeof FR]: string } = {
 
 export type CopyKey = keyof typeof FR
 
-const LOCALE_KEY = 'sonique.locale'
-
 export function getLocale(): Locale {
-  try {
-    const saved = localStorage.getItem(LOCALE_KEY)
-    if (saved === 'en' || saved === 'fr') return saved
-  } catch {
-    /* ignore */
-  }
-  const raw = (import.meta.env.VITE_LOCALE as string) || 'fr'
-  return raw === 'en' ? 'en' : 'fr'
-}
-
-export function setLocale(locale: Locale) {
-  try {
-    localStorage.setItem(LOCALE_KEY, locale)
-  } catch {
-    /* ignore */
-  }
-  document.documentElement.lang = locale
+  return 'fr'
 }
 
 export function t() {
-  return getLocale() === 'en' ? EN : FR
+  return FR
 }
 
 export function pieceBlurb(piece: DemoPiece) {
-  return piece.blurb[getLocale()]
+  return piece.blurb.fr
 }

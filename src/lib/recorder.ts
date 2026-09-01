@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getLocale } from './presets'
-
-function recMsg(fr: string, en: string) {
-  return getLocale() === 'en' ? en : fr
+function recMsg(fr: string, en?: string) {
+  void en
+  return fr
 }
 
 type RecorderStatus = 'idle' | 'recording' | 'denied' | 'unsupported' | 'error'

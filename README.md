@@ -4,6 +4,8 @@ App de pratique musicale avec le coach **Aria** : choisis un morceau, joue avec 
 
 Démo publique : https://try-sonique.github.io/app/
 
+L’app est en **français uniquement**.
+
 ## Lancer en local
 
 ```bash

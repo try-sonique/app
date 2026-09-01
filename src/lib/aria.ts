@@ -2,16 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import type { AriaFeedback } from '../types'
 import type { AudioFeatures } from './audioFeatures'
 import {
-  BY_EAR_CUES_EN,
   BY_EAR_CUES_FR,
   PIECE_CUES,
-  PRACTICE_CUES_EN,
   PRACTICE_CUES_FR,
-  RECORD_CUES_EN,
   RECORD_CUES_FR,
   type Cue,
 } from './ariaCues'
-import { getLocale, t } from './presets'
+import { t } from './presets'
 
 export function useAriaCues(
   active: boolean,
@@ -21,7 +18,6 @@ export function useAriaCues(
 ) {
   const [cue, setCue] = useState<Cue | null>(null)
   const index = useRef(0)
-  const locale = getLocale()
 
   useEffect(() => {
     if (!active) {
@@ -29,22 +25,9 @@ export function useAriaCues(
       return
     }
 
-    const piecePool =
-      pieceId && PIECE_CUES[pieceId]
-        ? locale === 'en'
-          ? PIECE_CUES[pieceId].en
-          : PIECE_CUES[pieceId].fr
-        : []
-    const base =
-      byEar && !pieceId
-        ? locale === 'en'
-          ? BY_EAR_CUES_EN
-          : BY_EAR_CUES_FR
-        : locale === 'en'
-          ? PRACTICE_CUES_EN
-          : PRACTICE_CUES_FR
-    const record = locale === 'en' ? RECORD_CUES_EN : RECORD_CUES_FR
-    const pool = mode === 'practice' ? [...piecePool, ...base] : record
+    const piecePool = pieceId && PIECE_CUES[pieceId] ? PIECE_CUES[pieceId].fr : []
+    const base = byEar && !pieceId ? BY_EAR_CUES_FR : PRACTICE_CUES_FR
+    const pool = mode === 'practice' ? [...piecePool, ...base] : RECORD_CUES_FR
 
     index.current = 0
     const tick = () => {
@@ -56,7 +39,7 @@ export function useAriaCues(
     tick()
     const id = window.setInterval(tick, mode === 'practice' ? 4500 : 3800)
     return () => window.clearInterval(id)
-  }, [active, mode, locale, pieceId, byEar])
+  }, [active, mode, pieceId, byEar])
 
   return cue
 }
@@ -146,9 +129,9 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
             'Certaines transitions arrivent tôt. le théâtre a besoin d’un temps',
           ],
           improvements: [
-            'Piste caractère : marque 2 changements d’humeur, ne joue que la mesure avant/après',
-            'Piste contraste : une passe tout doux, une passe tout fort, puis assemble',
-            'Piste appui : fige 1 temps à chaque jointure de section, puis relâche',
+            'Exercice caractère : marque 2 changements d’humeur, ne joue que la mesure avant/après',
+            'Exercice contraste : une passe tout doux, une passe tout fort, puis assemble',
+            'Exercice appui : fige 1 temps à chaque jointure de section, puis relâche',
           ],
         }
   }
@@ -183,9 +166,9 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
             'Sustain / pédale peut brouiller le medium une mesure',
           ],
           improvements: [
-            'Piste couleur : 4 mesures pp → p seulement. écoute les harmoniques',
-            'Piste fin : chante la dernière note de chaque phrase, puis retrouve-la',
-            'Piste souffle : marque deux mesures respiration et protège-les',
+            'Exercice couleur : 4 mesures pp → p seulement. écoute les harmoniques',
+            'Exercice fin : chante la dernière note de chaque phrase, puis retrouve-la',
+            'Exercice souffle : marque deux mesures respiration et protège-les',
           ],
         }
   }
@@ -210,19 +193,19 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
         }
       : {
           strengths: [
-            'Le pulse danse déjà. la main gauche porte la pièce',
+            'La pulsation danse déjà. la main gauche porte la pièce',
             'La syncope a du caractère, pas seulement de la justesse',
             'Tu assumes le groove au lieu de le lisser',
           ],
           weaknesses: [
-            'Quand la droite densifie, le pulse accélère d’un cheveu',
+            'Quand la main droite joue plus de notes, le tempo accélère d’un cheveu',
             'Certains contretemps arrivent tôt. le swing s’aplatit un instant',
             'Les fins de phrase coupent au lieu de basculer',
           ],
           improvements: [
-            'Piste groove : main gauche seule, métronome sur 2 et 4, puis mélodie',
-            'Piste swing : compte 1-e-2-e sur 8 mesures, puis coupe la voix',
-            'Piste appui : exagère le dernier contretemps de chaque unité de 4',
+            'Exercice groove : main gauche seule, métronome sur 2 et 4, puis mélodie',
+            'Exercice swing : compte 1-e-2-e sur 8 mesures, puis coupe la voix',
+            'Exercice appui : exagère le dernier contretemps de chaque unité de 4',
           ],
         }
   }
@@ -249,7 +232,7 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
           strengths: [
             'Tu apportes du poids sans crier chaque mesure',
             'L’élan est clair. la prise n’excuse pas sa puissance',
-            'Les accents sculptent déjà une forme dans la densité',
+            'Les accents sculptent déjà une forme dans les passages plus chargés',
           ],
           weaknesses: [
             'Les passages denses écrasent parfois le joint plus doux',
@@ -257,9 +240,9 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
             'La récupération après un geste fort est courte',
           ],
           improvements: [
-            'Piste puissance : un geste fort, puis une mesure-réponse volontairement douce',
-            'Piste hiérarchie : entoure 3 accents seulement ; le reste les sert',
-            'Piste récupération : une demi-respiration avant chaque mesure la plus dense',
+            'Exercice puissance : un geste fort, puis une mesure-réponse volontairement douce',
+            'Exercice hiérarchie : entoure 3 accents seulement ; le reste les sert',
+            'Exercice récupération : une demi-respiration avant chaque mesure la plus dense',
           ],
         }
   }
@@ -292,12 +275,12 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
         'Pulse consistency dips when the texture thickens',
       ]
     : [
-        'Aux changements de densité, le rythme flotte un instant',
-        'Les tenues perdent un peu de corps en fin de phrase',
+        'Quand l’écriture s’épaissit, le tempo flotte un instant',
+        'Les notes tenues perdent un peu de corps en fin de phrase',
         'Les enchaînements sont encore précipités par endroits',
         'Le milieu de la prise est moins clair que le début',
         'Certains gestes démarrent fort puis perdent leur forme',
-        'La stabilité du pulse baisse quand la texture s’épaissit',
+        'La pulsation se déforme quand les deux mains jouent plus serré',
       ]
   const improvementsPool = en
     ? [
@@ -309,12 +292,12 @@ function titleFlavor(pieceName: string, en: boolean): PiecePack {
         'Listen tip: record 20 seconds, listen back once, then replay only that',
       ]
     : [
-        'Piste rythme : isole 2 mesures fragiles, métronome lent, 3 répétitions',
-        'Piste son : tenues doux → medium sans tomber à la fin',
-        'Piste forme : un passage difficile, lent, doigts posés, puis une vraie prise',
-        'Piste focus : une fenêtre de 4 mesures, ignore le reste de la page',
-        'Piste pulse : tape le temps du pied une passe, puis arrête',
-        'Piste écoute : 20 secondes, réécoute une fois, puis rejoue seulement ça',
+        'Exercice rythme : 2 mesures fragiles, métronome lent, 3 fois propres',
+        'Exercice son : tenues piano → mezzo, sans lâcher la dernière note',
+        'Exercice : le passage difficile, lent, mains posées, puis une vraie prise',
+        'Exercice : 4 mesures seulement. Le reste de la page, tu l’ignores.',
+        'Exercice tempo : une passe en tapant le temps du pied, puis sans taper',
+        'Exercice : 20 secondes, tu réécoutes une fois, tu rejoues seulement ça',
       ]
   return {
     strengths: pickN(strengthsPool, seed, 3),
@@ -350,14 +333,14 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
             'La ligne droite flotte au-dessus d’une main gauche calme',
           ],
           weaknesses: [
-            'Aux changements de densité, la pédale brouille un instant les voix internes',
+            'Quand il y a plus de notes, la pédale brouille un instant les voix internes',
             'Les tenues s’amincissent juste avant l’harmonie suivante',
             'Le medium peut être couvert quand la basse s’approfondit',
           ],
           improvements: [
-            'Piste couleur : 4 premières mesures doux → un peu plus plein',
-            'Piste pédale : change sur l’harmonie, pas sur chaque note',
-            'Piste souffle : marque 2 mesures respiration, puis ne rejoue que celles-là',
+            'Exercice couleur : 4 premières mesures doux → un peu plus plein',
+            'Exercice pédale : change sur l’harmonie, pas sur chaque note',
+            'Exercice souffle : marque 2 mesures respiration, puis ne rejoue que celles-là',
           ],
         }
   }
@@ -392,9 +375,9 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
             'Les fins de phrase coupent au lieu de basculer',
           ],
           improvements: [
-            'Piste swing : compte 1-e-2-e à voix haute sur 8 mesures',
-            'Piste stride : main gauche seule, métronome sur 2 et 4',
-            'Piste appui : exagère le dernier contretemps de chaque unité de 4',
+            'Exercice swing : compte 1-e-2-e à voix haute sur 8 mesures',
+            'Exercice stride : main gauche seule, métronome sur 2 et 4',
+            'Exercice appui : exagère le dernier contretemps de chaque unité de 4',
           ],
         }
   }
@@ -429,9 +412,9 @@ function presetPack(pieceId: string | null, en: boolean): PiecePack | null {
             'Les formules Alberti de gauche passent plus fort que la mélodie',
           ],
           improvements: [
-            'Piste motif : 3 passes lentes de la cellule d’ouverture',
-            'Piste pont : isole les 2 mesures avant le milieu, métronome −20 %',
-            'Piste balance : mélodie plus forte / accompagnement plus doux',
+            'Exercice motif : 3 passes lentes de la cellule d’ouverture',
+            'Exercice pont : isole les 2 mesures avant le milieu, métronome −20 %',
+            'Exercice balance : mélodie plus forte / accompagnement plus doux',
           ],
         }
   }
@@ -705,7 +688,7 @@ function stripTipLabel(s: string): string {
   return s
     .replace(/^(Do this:\s*|À faire:\s*)/i, '')
     .replace(
-      /^(Pulse tip:\s*|Tone tip:\s*|Listen tip:\s*|Rhythm tip:\s*|Shape tip:\s*|Focus tip:\s*|Space tip:\s*|Flow tip:\s*|Close tip:\s*|Tempo tip:\s*|Contrast tip:\s*|Groove tip:\s*|Swing tip:\s*|Landing tip:\s*|Color tip:\s*|Ending tip:\s*|Character tip:\s*|Power tip:\s*|Hierarchy tip:\s*|Recovery tip:\s*|Piste [^:]+:\s*)/i,
+      /^(Pulse tip:\s*|Tone tip:\s*|Listen tip:\s*|Rhythm tip:\s*|Shape tip:\s*|Focus tip:\s*|Space tip:\s*|Flow tip:\s*|Close tip:\s*|Tempo tip:\s*|Contrast tip:\s*|Groove tip:\s*|Swing tip:\s*|Landing tip:\s*|Color tip:\s*|Ending tip:\s*|Character tip:\s*|Power tip:\s*|Hierarchy tip:\s*|Recovery tip:\s*|Piste [^:]+:\s*|Exercice [^:]+:\s*)/i,
       '',
     )
     .trim()
@@ -725,7 +708,7 @@ export function analyzePerformance(input: {
   meta?: PerformanceMeta
 }): AriaFeedback {
   const copy = t()
-  const en = getLocale() === 'en'
+  const en = false
   const takesLeft = Math.max(0, input.maxTakes - input.takesUsed)
   const name = input.firstName.trim() || copy.you
   const piece = input.pieceName.trim() || (en ? 'your piece' : 'ton morceau')
