@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { ErrorBoundary } from './ErrorBoundary'
-import { getLocale } from './lib/presets'
 import { seedHistoryIfRequested } from './lib/seedHistory'
 import './styles.css'
 
@@ -18,6 +17,7 @@ if (params.has('reset')) {
     localStorage.removeItem('sonique.currentEmail')
     localStorage.removeItem('sonique.rememberEmail')
     localStorage.removeItem('sonique.sessions')
+    localStorage.removeItem('sonique.locale')
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith('sb-') && key.includes('auth-token')) {
         localStorage.removeItem(key)
@@ -32,12 +32,13 @@ if (params.has('reset')) {
   window.history.replaceState({}, '', next)
 }
 
-const locale = getLocale()
-document.documentElement.lang = locale
-document.title =
-  locale === 'en'
-    ? 'Sonique — Play your favorite pieces'
-    : 'Sonique — Joue tes morceaux préférés'
+document.documentElement.lang = 'fr'
+document.title = 'Sonique — Joue tes morceaux préférés'
+try {
+  localStorage.removeItem('sonique.locale')
+} catch {
+  /* ignore */
+}
 
 // Auth email links sometimes land with #error=... (expired confirm link, etc.)
 try {

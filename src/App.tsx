@@ -10,7 +10,7 @@ import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
-import { getLocale, setLocale, t, type Locale } from './lib/presets'
+import { t } from './lib/presets'
 
 function downloadScoreFile(src: string, title: string) {
   const ext = src.includes('.png') ? 'png' : src.includes('.pdf') ? 'pdf' : 'jpg'
@@ -37,7 +37,6 @@ import {
 import { pushCloudSession, syncAccountSessions } from './lib/sessionCloud'
 import {
   getSessionProfile,
-  isSupabaseConfigured,
   requestPasswordReset,
   signInWithPassword,
   signOut,
@@ -141,54 +140,16 @@ function FooterLine({ withPartition }: { withPartition?: boolean }) {
   )
 }
 
-function LanguageSwitch({
-  locale,
-  onChange,
-  compact = false,
-}: {
-  locale: Locale
-  onChange: (locale: Locale) => void
-  compact?: boolean
-}) {
-  const copy = t()
-  return (
-    <div className={`lang-switch ${compact ? 'is-compact' : ''}`}>
-      {!compact ? <p className="lang-switch-label">{copy.chooseLanguage}</p> : null}
-      <div className="lang-switch-row" role="group" aria-label={copy.accountLanguage}>
-        <button
-          type="button"
-          className={`lang-pill ${locale === 'fr' ? 'is-active' : ''}`}
-          onClick={() => onChange('fr')}
-        >
-          {copy.langFr}
-        </button>
-        <button
-          type="button"
-          className={`lang-pill ${locale === 'en' ? 'is-active' : ''}`}
-          onClick={() => onChange('en')}
-        >
-          {copy.langEn}
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function Welcome({
   onNext,
-  locale,
-  onLocaleChange,
 }: {
   onNext: () => void
-  locale: Locale
-  onLocaleChange: (locale: Locale) => void
 }) {
   const copy = t()
 
   return (
     <section className="slide slide-welcome">
       <div className="welcome-core">
-        <LanguageSwitch locale={locale} onChange={onLocaleChange} />
         <span className="eyebrow">{copy.readyToPlay}</span>
         <p className="hero-brand">Sonique</p>
         <p className="hero-tagline">{copy.heroTagline}</p>
@@ -474,11 +435,6 @@ function AuthSlide({
             <small>{copy.firstTimeHint}</small>
           </button>
         </div>
-        {!isSupabaseConfigured ? (
-          <p className="footer-note" style={{ opacity: 0.7 }}>
-            Auth local (keys not set yet)
-          </p>
-        ) : null}
         <p className="footer-note">
           Support :{' '}
           <a className="support" href="mailto:sonique@contact.co">
@@ -1541,16 +1497,12 @@ function Report({
 
 function AccountView({
   profile,
-  locale,
-  onLocaleChange,
   onProfileSaved,
   onBack,
   onOpenSessions,
   onLogOut,
 }: {
   profile: UserProfile
-  locale: Locale
-  onLocaleChange: (locale: Locale) => void
   onProfileSaved: (profile: UserProfile) => void
   onBack: () => void
   onOpenSessions: () => void
@@ -1743,11 +1695,6 @@ function AccountView({
       </div>
 
       <div className="account-section">
-        <h2 className="account-section-title">{copy.accountLanguage}</h2>
-        <LanguageSwitch locale={locale} onChange={onLocaleChange} compact />
-      </div>
-
-      <div className="account-section">
         <h2 className="account-section-title">{copy.accountSecurity}</h2>
         <ul className="account-list">
           <li className="account-list-item">
@@ -1828,7 +1775,7 @@ function groupSessionsByPiece(sessions: StoredSession[]) {
 
 function formatSessionWhen(iso: string) {
   const copy = t()
-  const locale = getLocale() === 'en' ? 'en-US' : 'fr-FR'
+  const locale = 'fr-FR'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
   const now = new Date()
@@ -2073,7 +2020,6 @@ export default function App() {
     const existing = getCurrentProfile()
     return existing ? { ...initialState, profile: existing } : initialState
   })
-  const [locale, setLocaleState] = useState<Locale>(() => getLocale())
   const [theme, setTheme] = useState<ThemeId>(() => {
     if (!SHOW_THEME_DOCK) return 'noir'
     const saved = localStorage.getItem('sonique-theme') as ThemeId | null
@@ -2093,15 +2039,6 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false)
   const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
-
-  const changeLocale = (next: Locale) => {
-    setLocale(next)
-    setLocaleState(next)
-    document.title =
-      next === 'en'
-        ? 'Sonique — Play your favorite pieces'
-        : 'Sonique — Joue tes morceaux préférés'
-  }
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -2330,8 +2267,6 @@ export default function App() {
       <AccountView
         key={`account-${historyRev}`}
         profile={state.profile}
-        locale={locale}
-        onLocaleChange={changeLocale}
         onProfileSaved={(profile) => setState((s) => ({ ...s, profile }))}
         onBack={() => setShowAccount(false)}
         onOpenSessions={() => {
@@ -2372,11 +2307,7 @@ export default function App() {
     )
   } else if (state.slide === 1)
     body = (
-      <Welcome
-        locale={locale}
-        onLocaleChange={changeLocale}
-        onNext={() => go(2)}
-      />
+      <Welcome onNext={() => go(2)} />
     )
   else if (state.slide === 2) {
     body = (
