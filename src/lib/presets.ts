@@ -23,6 +23,21 @@ export type DemoPiece = {
 
 export const DEMO_PIECES: DemoPiece[] = [
   {
+    id: 'ode',
+    title: 'Hymne à la joie',
+    blurb: {
+      fr: 'Beethoven. Extrait simple — d’abord la main droite, puis la gauche.',
+      en: 'Beethoven. Simple excerpt — right hand, then left.',
+    },
+    partitionSrc: './presets/ode-to-joy.svg',
+    audioSrc: './presets/ode-to-joy.wav',
+    performanceAudioSrc: './presets/ode-to-joy.wav',
+    practicePeekSec: 12,
+    mime: 'image/svg+xml',
+    scrollCapRatio: 0.55,
+    scrollDurationSec: 40,
+  },
+  {
     id: 'elise',
     title: 'Lettre à Élise',
     blurb: {
@@ -193,6 +208,17 @@ const FR = {
   orUploadOwn: 'Ou importe ta propre partition',
   backToPresets: 'Retour aux morceaux proposés',
   stepPiece: 'Étape 1 · Morceau',
+  pianoLevelEyebrow: 'Ton niveau',
+  pianoLevelTitle: 'Où en es-tu au piano ?',
+  pianoLevelLead:
+    'Aria ne te parle pas comme à un concertiste si tu débutes. Un choix, tu pourras le changer au prochain morceau.',
+  pianoLevelBeginner: 'Débutant',
+  pianoLevelBeginnerHint: 'Posture, placement des mains, mains séparées.',
+  pianoLevelPlaying: 'Je joue déjà',
+  pianoLevelPlayingHint: 'Un passage du morceau, un exercice concret.',
+  suggestedPieces: 'Morceaux prêts',
+  beginnerBadge: 'Pour débuter',
+  missionToday: 'Aujourd’hui',
 
   // How it works
   withScore: 'Avec partition',
@@ -209,6 +235,19 @@ const FR = {
   howStep5Title: 'Reçois ton retour',
   howStep5Body: 'Max 3 essais par morceau. Digère ce qu’Aria t’a dit.',
   goToPractice: 'Passer à l’entraînement',
+  howBeginnerLead:
+    'On ne joue pas le morceau entier. D’abord le corps, une main, puis l’autre.',
+  howBeginner1Title: 'Assieds-toi',
+  howBeginner1Body: 'Milieu du banc. Dos droit, épaules basses, pieds à plat.',
+  howBeginner2Title: 'Place tes mains',
+  howBeginner2Body: 'Doigts ronds, poignet souple, pouce sur le côté. Pas une main plate.',
+  howBeginner3Title: 'Mains séparées',
+  howBeginner3Body:
+    'D’abord la main droite, puis la gauche, sur les mêmes mesures. Ensemble seulement après.',
+  howBeginner4Title: 'Une courte prise',
+  howBeginner4Body: 'Quelques mesures, micro près. Aria se tait si elle n’entend pas.',
+  howBeginner5Title: 'Une mission',
+  howBeginner5Body: 'Un seul exercice pour la prochaine fois. Pas dix conseils.',
 
   // No partition (legacy copy keys kept for type parity)
   noScoreEyebrow: 'Sans partition',
@@ -222,7 +261,7 @@ const FR = {
 
   // Classic setup
   classicTitle: 'Quel morceau vas-tu travailler ?',
-  classicLead: 'Importe ta partition à l’écran. Ou joue à l’oreille.',
+  classicLead: 'Dis ton niveau, choisis un titre, ou importe ta partition.',
   pieceNameLabel: 'Nom du morceau',
   pieceNamePlaceholder: 'Ex. Clair de Lune',
   dropScore: 'Glisse ta partition ici, ou choisis un fichier',
@@ -416,6 +455,17 @@ export const EN: { [K in keyof typeof FR]: string } = {
   orUploadOwn: 'Or upload your own score',
   backToPresets: 'Back to suggested pieces',
   stepPiece: 'Step 1 · Piece',
+  pianoLevelEyebrow: 'Your level',
+  pianoLevelTitle: 'Where are you at the piano?',
+  pianoLevelLead:
+    'Aria does not talk to a beginner like a concert pianist. One choice; you can change it on the next piece.',
+  pianoLevelBeginner: 'Beginner',
+  pianoLevelBeginnerHint: 'Posture, hand position, hands separate.',
+  pianoLevelPlaying: 'I already play',
+  pianoLevelPlayingHint: 'One passage of the piece, one concrete drill.',
+  suggestedPieces: 'Ready pieces',
+  beginnerBadge: 'To start',
+  missionToday: 'Today',
 
   withScore: 'With score',
   howTitle: 'How it works',
@@ -431,6 +481,19 @@ export const EN: { [K in keyof typeof FR]: string } = {
   howStep5Title: 'Get your feedback',
   howStep5Body: 'Max 3 takes per piece. Digest what Aria said.',
   goToPractice: 'Go to practice',
+  howBeginnerLead:
+    'We do not play the whole piece. First the body, one hand, then the other.',
+  howBeginner1Title: 'Sit down',
+  howBeginner1Body: 'Middle of the bench. Straight back, low shoulders, feet flat.',
+  howBeginner2Title: 'Place your hands',
+  howBeginner2Body: 'Rounded fingers, soft wrist, thumb on the side. Not a flat hand.',
+  howBeginner3Title: 'Hands separate',
+  howBeginner3Body:
+    'Right hand first, then left, on the same bars. Together only after that.',
+  howBeginner4Title: 'A short take',
+  howBeginner4Body: 'A few bars, mic close. Aria stays quiet if she cannot hear.',
+  howBeginner5Title: 'One job',
+  howBeginner5Body: 'One drill for next time. Not ten tips.',
 
   noScoreEyebrow: 'No score',
   noScoreTitle: 'Help Sonique listen',

@@ -28,7 +28,25 @@ Dans Supabase → Authentication → URL Configuration, ajoute :
 ## Flow
 
 1. Accueil → compte
-2. Importer une partition (ou un preset)
+2. **Niveau piano** (débutant / je joue déjà) puis morceau prêt ou partition importée
 3. Salle de pratique — partition à l’écran, chuchotements d’Aria
-4. Performance — prise enregistrée
+4. Performance — prise enregistrée (micro ; pas de concert démo si tu es débutant)
 5. Retour d’Aria (max 3 prises par morceau)
+
+### Débutant
+
+Aria ne commente pas le style du morceau. Elle dit ce qu’un prof dirait en première leçon :
+
+1. **Mains séparées** — droite, puis gauche, puis ensemble
+2. **Posture** — milieu du banc, dos, épaules, pieds
+3. **Placement des mains** — doigts ronds, poignet souple
+
+Les phrases sont dans `src/lib/coachScripts.ts`. Ce n’est pas un modèle entraîné : c’est le script.
+
+### Démo entretien
+
+1. Compte
+2. **Débutant** → **Hymne à la joie**
+3. Lire « Comment ça marche » (posture, mains, mains séparées)
+4. Salle : la carte **Aujourd’hui · Mains séparées**
+5. Lancer une prise (micro). Si Aria n’entend pas, elle le dit.

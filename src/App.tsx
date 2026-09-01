@@ -10,10 +10,22 @@ import { PartitionViewer } from './components/PartitionViewer'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
-import { t } from './lib/presets'
+import { DEMO_PIECES, t, type DemoPiece } from './lib/presets'
+import {
+  beginnerMission,
+  readPianoLevel,
+  writePianoLevel,
+  type PianoLevel,
+} from './lib/coachScripts'
 
 function downloadScoreFile(src: string, title: string) {
-  const ext = src.includes('.png') ? 'png' : src.includes('.pdf') ? 'pdf' : 'jpg'
+  const ext = src.includes('.svg')
+    ? 'svg'
+    : src.includes('.png')
+      ? 'png'
+      : src.includes('.pdf')
+        ? 'pdf'
+        : 'jpg'
   const a = document.createElement('a')
   a.href = src
   a.download = `${title.replace(/[^\w]+/g, '-').toLowerCase()}-score.${ext}`
@@ -732,12 +744,36 @@ function AuthSlide({
   )
 }
 
+function piecesForLevel(level: PianoLevel | null): DemoPiece[] {
+  if (level === 'beginner') return DEMO_PIECES.filter((p) => p.id === 'ode' || p.id === 'elise')
+  return DEMO_PIECES
+}
+
+function MissionCard({ takeNumber, pieceName }: { takeNumber: number; pieceName: string }) {
+  const copy = t()
+  const mission = beginnerMission(Math.max(1, takeNumber))
+  return (
+    <aside className="mission-card" aria-live="polite">
+      <span className="mission-kicker">
+        {copy.missionToday}
+        {pieceName ? ` · ${pieceName}` : ''}
+      </span>
+      <strong>{mission.title}</strong>
+      <p>{mission.drill}</p>
+    </aside>
+  )
+}
+
 function PieceSetupClassic({
   pieceName,
   hasPartition,
   partitionName,
   partitionPreview,
   partitionMime,
+  selectedPresetId,
+  pianoLevel,
+  onPianoLevel,
+  onPickPreset,
   onPieceName,
   onToggleNoPartition,
   onUpload,
@@ -748,6 +784,10 @@ function PieceSetupClassic({
   partitionName: string
   partitionPreview: string | null
   partitionMime: string | null
+  selectedPresetId: string | null
+  pianoLevel: PianoLevel | null
+  onPianoLevel: (level: PianoLevel) => void
+  onPickPreset: (piece: DemoPiece) => void
   onPieceName: (v: string) => void
   onToggleNoPartition: (checked: boolean) => void
   onUpload: (file: File | null) => void
@@ -755,8 +795,11 @@ function PieceSetupClassic({
 }) {
   const noPartition = hasPartition === false
   const canContinue =
-    pieceName.trim().length > 0 && (noPartition || Boolean(partitionName))
+    Boolean(pianoLevel) &&
+    pieceName.trim().length > 0 &&
+    (noPartition || Boolean(partitionName))
   const copy = t()
+  const suggested = piecesForLevel(pianoLevel)
 
   return (
     <section className="slide slide-left">
@@ -765,61 +808,112 @@ function PieceSetupClassic({
       <p className="lead">{copy.classicLead}</p>
 
       <div className="stack">
-        <label className="field">
-          <span>{copy.pieceNameLabel}</span>
-          <input
-            type="text"
-            value={pieceName}
-            onChange={(e) => onPieceName(e.target.value)}
-            placeholder={copy.pieceNamePlaceholder}
-          />
-        </label>
-
-        <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
-          <div className="upload-icon" aria-hidden>
-            ♫
-          </div>
-          <strong>{copy.dropScore}</strong>
-          <p className="lead" style={{ margin: 0 }}>
-            {copy.uploadHint}
+        <div>
+          <p className="field-label">{copy.pianoLevelTitle}</p>
+          <p className="lead" style={{ margin: '0.35rem 0 0.75rem' }}>
+            {copy.pianoLevelLead}
           </p>
-          <input
-            type="file"
-            accept="image/*,.pdf"
-            disabled={noPartition}
-            onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
-          />
-          {partitionName && !noPartition ? (
-            <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
-              {copy.fileLabel} : {partitionName}
-            </p>
-          ) : null}
+          <div className="choice-grid choice-grid-wide">
+            <button
+              type="button"
+              className={`choice ${pianoLevel === 'beginner' ? 'active' : ''}`}
+              onClick={() => onPianoLevel('beginner')}
+            >
+              {copy.pianoLevelBeginner}
+              <small>{copy.pianoLevelBeginnerHint}</small>
+            </button>
+            <button
+              type="button"
+              className={`choice ${pianoLevel === 'playing' ? 'active' : ''}`}
+              onClick={() => onPianoLevel('playing')}
+            >
+              {copy.pianoLevelPlaying}
+              <small>{copy.pianoLevelPlayingHint}</small>
+            </button>
+          </div>
         </div>
 
-        {!noPartition && partitionPreview ? (
-          <div className="stage partition-stage">
-            <p className="partition-label">{copy.previewLabel}</p>
-            <PartitionViewer
-              src={partitionPreview}
-              mime={partitionMime}
-              name={partitionName}
-            />
-          </div>
-        ) : null}
+        {pianoLevel ? (
+          <>
+            <div>
+              <p className="field-label">{copy.suggestedPieces}</p>
+              <div className="preset-grid" style={{ marginTop: '0.65rem' }}>
+                {suggested.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`preset-card ${selectedPresetId === p.id ? 'active' : ''}`}
+                    onClick={() => onPickPreset(p)}
+                  >
+                    <strong>
+                      {p.title}
+                      {p.id === 'ode' ? (
+                        <span className="beginner-badge">{copy.beginnerBadge}</span>
+                      ) : null}
+                    </strong>
+                    <span>{p.blurb.fr}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={noPartition}
-            onChange={(e) => onToggleNoPartition(e.target.checked)}
-          />
-          <div>
-            <strong>{copy.noScoreContinue}</strong>
-            <p className="lead" style={{ margin: '0.25rem 0 0' }}>
-              {copy.noScoreContinueHint}
-            </p>
-          </div>
-        </label>
+            <label className="field">
+              <span>{copy.pieceNameLabel}</span>
+              <input
+                type="text"
+                value={pieceName}
+                onChange={(e) => onPieceName(e.target.value)}
+                placeholder={copy.pieceNamePlaceholder}
+              />
+            </label>
+
+            <div className="upload" style={{ opacity: noPartition ? 0.4 : 1 }}>
+              <div className="upload-icon" aria-hidden>
+                ♫
+              </div>
+              <strong>{copy.dropScore}</strong>
+              <p className="lead" style={{ margin: 0 }}>
+                {copy.uploadHint}
+              </p>
+              <input
+                type="file"
+                accept="image/*,.pdf,.svg"
+                disabled={noPartition}
+                onChange={(e) => onUpload(e.target.files?.[0] ?? null)}
+              />
+              {partitionName && !noPartition ? (
+                <p className="footer-note" style={{ margin: 0, paddingTop: 0 }}>
+                  {copy.fileLabel} : {partitionName}
+                </p>
+              ) : null}
+            </div>
+
+            {!noPartition && partitionPreview ? (
+              <div className="stage partition-stage">
+                <p className="partition-label">{copy.previewLabel}</p>
+                <PartitionViewer
+                  src={partitionPreview}
+                  mime={partitionMime}
+                  name={partitionName}
+                />
+              </div>
+            ) : null}
+
+            <label className="check-row">
+              <input
+                type="checkbox"
+                checked={noPartition}
+                onChange={(e) => onToggleNoPartition(e.target.checked)}
+              />
+              <div>
+                <strong>{copy.noScoreContinue}</strong>
+                <p className="lead" style={{ margin: '0.25rem 0 0' }}>
+                  {copy.noScoreContinueHint}
+                </p>
+              </div>
+            </label>
+          </>
+        ) : null}
       </div>
 
       <div className="actions">
@@ -875,52 +969,49 @@ function NoPartitionQuestions({
   )
 }
 
-function HowItWorks({ firstName, onNext }: { firstName: string; onNext: () => void }) {
+function HowItWorks({
+  firstName,
+  beginner,
+  onNext,
+}: {
+  firstName: string
+  beginner: boolean
+  onNext: () => void
+}) {
   const copy = t()
   const name = firstName || copy.you
+  const steps = beginner
+    ? [
+        { title: copy.howBeginner1Title, body: copy.howBeginner1Body },
+        { title: copy.howBeginner2Title, body: copy.howBeginner2Body },
+        { title: copy.howBeginner3Title, body: copy.howBeginner3Body },
+        { title: copy.howBeginner4Title, body: copy.howBeginner4Body },
+        { title: copy.howBeginner5Title, body: copy.howBeginner5Body },
+      ]
+    : [
+        { title: copy.howStep1Title, body: copy.howStep1Body },
+        { title: copy.howStep2Title, body: copy.howStep2Body },
+        { title: copy.howStep3Title, body: copy.howStep3Body },
+        { title: copy.howStep4Title, body: copy.howStep4Body },
+        { title: copy.howStep5Title, body: copy.howStep5Body },
+      ]
   return (
     <section className="slide slide-left">
       <span className="eyebrow">{copy.withScore}</span>
       <h1>
         {copy.howTitle}, {name} ?
       </h1>
-      <p className="lead">{copy.howLead}</p>
+      <p className="lead">{beginner ? copy.howBeginnerLead : copy.howLead}</p>
       <ol className="steps">
-        <li>
-          <span className="step-num">1</span>
-          <div>
-            <strong>{copy.howStep1Title}</strong>
-            <p>{copy.howStep1Body}</p>
-          </div>
-        </li>
-        <li>
-          <span className="step-num">2</span>
-          <div>
-            <strong>{copy.howStep2Title}</strong>
-            <p>{copy.howStep2Body}</p>
-          </div>
-        </li>
-        <li>
-          <span className="step-num">3</span>
-          <div>
-            <strong>{copy.howStep3Title}</strong>
-            <p>{copy.howStep3Body}</p>
-          </div>
-        </li>
-        <li>
-          <span className="step-num">4</span>
-          <div>
-            <strong>{copy.howStep4Title}</strong>
-            <p>{copy.howStep4Body}</p>
-          </div>
-        </li>
-        <li>
-          <span className="step-num">5</span>
-          <div>
-            <strong>{copy.howStep5Title}</strong>
-            <p>{copy.howStep5Body}</p>
-          </div>
-        </li>
+        {steps.map((step, i) => (
+          <li key={step.title}>
+            <span className="step-num">{i + 1}</span>
+            <div>
+              <strong>{step.title}</strong>
+              <p>{step.body}</p>
+            </div>
+          </li>
+        ))}
       </ol>
       <div className="actions">
         <button type="button" className="btn btn-primary" onClick={onNext}>
@@ -943,6 +1034,8 @@ function PracticeStage({
   scrollCapRatio,
   repeatEverySec,
   scrollKeyframes,
+  pianoLevel,
+  takesUsed,
   onNext,
 }: {
   pieceName: string
@@ -955,6 +1048,8 @@ function PracticeStage({
   scrollCapRatio?: number
   repeatEverySec?: number
   scrollKeyframes?: { t: number; p: number }[] | null
+  pianoLevel: PianoLevel | null
+  takesUsed: number
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
@@ -962,7 +1057,14 @@ function PracticeStage({
   const [refProgress, setRefProgress] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const { energy, denied } = usePlayEnergy(active && !refPlaying)
-  const cue = useAriaCues(active && !refPlaying, 'practice', pieceId, !partitionPreview, energy > 0.07)
+  const cue = useAriaCues(
+    active && !refPlaying,
+    'practice',
+    pieceId,
+    !partitionPreview,
+    energy > 0.07,
+    pianoLevel,
+  )
   const peekSec = Math.max(6, practicePeekSec ?? 12)
   const hasScore = Boolean(partitionPreview)
 
@@ -1038,6 +1140,9 @@ function PracticeStage({
         {hasScore && !refPlaying ? (
           <p className="play-subnote">{copy.practiceNote}</p>
         ) : null}
+        {pianoLevel === 'beginner' ? (
+          <MissionCard takeNumber={takesUsed + 1} pieceName={pieceName} />
+        ) : null}
         <div className="meta-row">
           <span>{pieceName}</span>
           {refPlaying ? <span className="ref-pill">{copy.refOn}</span> : null}
@@ -1112,6 +1217,7 @@ function RecordStage({
   scrollDurationSec,
   scrollKeyframes,
   demoSync,
+  pianoLevel,
   onFinish,
 }: {
   pieceName: string
@@ -1128,6 +1234,7 @@ function RecordStage({
   scrollKeyframes?: { t: number; p: number }[] | null
   /** V2 YC : joue l’audio + scroll sync au lieu d’un micro silencieux */
   demoSync?: boolean
+  pianoLevel: PianoLevel | null
   onFinish: (audioBlob: Blob | null, meta?: Omit<PerformanceMeta, 'features'>) => void
 }) {
   const copy = t()
@@ -1147,6 +1254,7 @@ function RecordStage({
     pieceId,
     false,
     demoSync || energy > 0.07,
+    pianoLevel,
   )
 
   const stopDemo = () => {
@@ -1308,6 +1416,9 @@ function RecordStage({
                   ? copy.perfLeadMic
                   : copy.perfLeadEar}
             </p>
+            {pianoLevel === 'beginner' ? (
+              <MissionCard takeNumber={takesUsed + 1} pieceName={pieceName} />
+            ) : null}
             <div className="perf-ready-actions">
               <button
                 type="button"
@@ -2063,6 +2174,7 @@ export default function App() {
         }))
         return
       }
+      setState((s) => ({ ...s, pianoLevel: s.pianoLevel ?? readPianoLevel() }))
       const existing = getCurrentProfile()
       if (existing) {
         attachSessionsToEmail(existing.email)
@@ -2093,7 +2205,7 @@ export default function App() {
     setShowAccount(false)
     void (async () => {
       await signOut()
-      setState({ ...initialState, slide: 2 })
+      setState({ ...initialState, slide: 2, pianoLevel: readPianoLevel() })
     })()
   }
 
@@ -2125,6 +2237,7 @@ export default function App() {
             hasPartition: s.hasPartition === true,
             firstName: s.profile.firstName,
             arrangement: s.arrangement,
+            pianoLevel: s.pianoLevel,
             takesUsed,
             maxTakes: MAX_TAKES,
             meta: fullMeta,
@@ -2154,6 +2267,7 @@ export default function App() {
             hasPartition: s.hasPartition === true,
             firstName: s.profile.firstName,
             arrangement: s.arrangement,
+            pianoLevel: s.pianoLevel,
             takesUsed,
             maxTakes: MAX_TAKES,
             meta: {
@@ -2179,6 +2293,7 @@ export default function App() {
         hasPartition: s.hasPartition === true,
         firstName: s.profile.firstName,
         arrangement: s.arrangement,
+        pianoLevel: s.pianoLevel,
         takesUsed,
         maxTakes: MAX_TAKES,
         meta: {
@@ -2338,6 +2453,55 @@ export default function App() {
         partitionName={state.partitionName}
         partitionPreview={state.partitionPreview}
         partitionMime={state.partitionMime}
+        selectedPresetId={state.selectedPresetId}
+        pianoLevel={state.pianoLevel}
+        onPianoLevel={(level) => {
+          writePianoLevel(level)
+          setState((s) => {
+            const keep = piecesForLevel(level).some((p) => p.id === s.selectedPresetId)
+            if (keep) return { ...s, pianoLevel: level }
+            const presetSrc = s.selectedPresetId && !s.partitionPreview?.startsWith('blob:')
+            if (!presetSrc) return { ...s, pianoLevel: level }
+            return {
+              ...s,
+              pianoLevel: level,
+              pieceName: '',
+              partitionName: '',
+              partitionPreview: null,
+              partitionMime: null,
+              selectedPresetId: null,
+              previewAudio: null,
+              performanceAudio: null,
+              practicePeekSec: null,
+              scrollCapRatio: null,
+              repeatEverySec: null,
+              scrollDurationSec: null,
+              scrollKeyframes: null,
+              hasPartition: null,
+            }
+          })
+        }}
+        onPickPreset={(p) => {
+          setState((s) => {
+            revokeIfBlob(s.partitionPreview)
+            return {
+              ...s,
+              pieceName: p.title,
+              partitionName: p.title,
+              partitionPreview: p.partitionSrc,
+              partitionMime: p.mime,
+              selectedPresetId: p.id,
+              previewAudio: p.audioSrc ?? null,
+              performanceAudio: p.performanceAudioSrc ?? null,
+              practicePeekSec: p.practicePeekSec ?? null,
+              scrollCapRatio: p.scrollCapRatio ?? null,
+              repeatEverySec: p.repeatEverySec ?? null,
+              scrollDurationSec: p.scrollDurationSec ?? null,
+              scrollKeyframes: p.scrollKeyframes ?? null,
+              hasPartition: true,
+            }
+          })
+        }}
         onPieceName={(pieceName) => patch({ pieceName })}
         onToggleNoPartition={(checked) =>
           setState((s) => {
@@ -2364,7 +2528,13 @@ export default function App() {
       />
     )
   } else if (state.slide === 4 && withPartition) {
-    body = <HowItWorks firstName={state.profile.firstName} onNext={() => go(5)} />
+    body = (
+      <HowItWorks
+        firstName={state.profile.firstName}
+        beginner={state.pianoLevel === 'beginner'}
+        onNext={() => go(5)}
+      />
+    )
   } else if (state.slide === 4 && !withPartition) {
     body = (
       <NoPartitionQuestions
@@ -2386,6 +2556,8 @@ export default function App() {
         scrollCapRatio={state.scrollCapRatio ?? undefined}
         repeatEverySec={state.repeatEverySec ?? undefined}
         scrollKeyframes={state.scrollKeyframes}
+        pianoLevel={state.pianoLevel}
+        takesUsed={state.takesUsed}
         onNext={() => go(6)}
       />
     )
@@ -2404,7 +2576,8 @@ export default function App() {
         repeatEverySec={state.repeatEverySec}
         scrollDurationSec={state.scrollDurationSec}
         scrollKeyframes={state.scrollKeyframes}
-        demoSync={IS_YC_FLOW && Boolean(state.performanceAudio)}
+        demoSync={IS_YC_FLOW && Boolean(state.performanceAudio) && state.pianoLevel !== 'beginner'}
+        pianoLevel={state.pianoLevel}
         onFinish={finishTake}
       />
     )
@@ -2419,6 +2592,7 @@ export default function App() {
         hasPartition={false}
         takesUsed={state.takesUsed}
         demoSync={false}
+        pianoLevel={state.pianoLevel}
         onFinish={finishTake}
       />
     )

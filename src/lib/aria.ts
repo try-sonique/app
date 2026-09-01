@@ -8,6 +8,7 @@ import {
   RECORD_CUES_FR,
   type Cue,
 } from './ariaCues'
+import { beginnerMission, BEGINNER_PRACTICE_CUES, BEGINNER_RECORD_CUES, type PianoLevel } from './coachScripts'
 import { t } from './presets'
 
 export function useAriaCues(
@@ -16,6 +17,7 @@ export function useAriaCues(
   pieceId?: string | null,
   byEar = false,
   heard = true,
+  pianoLevel: PianoLevel | null = null,
 ) {
   const [cue, setCue] = useState<Cue | null>(null)
   const index = useRef(0)
@@ -37,9 +39,15 @@ export function useAriaCues(
       return
     }
 
-    const piecePool = pieceId && PIECE_CUES[pieceId] ? PIECE_CUES[pieceId].fr : []
-    const base = byEar && !pieceId ? BY_EAR_CUES_FR : PRACTICE_CUES_FR
-    const pool = mode === 'practice' ? [...piecePool, ...base] : RECORD_CUES_FR
+    const beginner = pianoLevel === 'beginner'
+    const piecePool = !beginner && pieceId && PIECE_CUES[pieceId] ? PIECE_CUES[pieceId].fr : []
+    const base = beginner
+      ? BEGINNER_PRACTICE_CUES
+      : byEar && !pieceId
+        ? BY_EAR_CUES_FR
+        : PRACTICE_CUES_FR
+    const pool =
+      mode === 'practice' ? [...piecePool, ...base] : beginner ? BEGINNER_RECORD_CUES : RECORD_CUES_FR
 
     index.current = 0
     const tick = () => {
@@ -49,9 +57,9 @@ export function useAriaCues(
     }
 
     tick()
-    const id = window.setInterval(tick, mode === 'practice' ? 6000 : 5000)
+    const id = window.setInterval(tick, beginner ? (mode === 'practice' ? 8000 : 6000) : mode === 'practice' ? 6000 : 5000)
     return () => window.clearInterval(id)
-  }, [active, mode, pieceId, byEar, heard])
+  }, [active, mode, pieceId, byEar, heard, pianoLevel])
 
   return cue
 }
@@ -709,6 +717,7 @@ export function analyzePerformance(input: {
   takesUsed: number
   maxTakes: number
   meta?: PerformanceMeta
+  pianoLevel?: PianoLevel | null
 }): AriaFeedback {
   const copy = t()
   const en = false
@@ -719,6 +728,8 @@ export function analyzePerformance(input: {
   const pieceId = input.meta?.pieceId ?? null
   const features = input.meta?.features ?? null
   const silent = !features || features.weakSignal || features.durationSec < 1.2
+  const beginner = input.pianoLevel === 'beginner'
+  const mission = beginner ? beginnerMission(take) : null
 
   if (silent) {
     return {
@@ -731,7 +742,37 @@ export function analyzePerformance(input: {
       strengths: [],
       weaknesses: ['Cette prise est trop courte ou trop faible pour entendre une ligne.'],
       improvements: ['Micro près de l’instrument. Un seul passage, vingt secondes, sans t’arrêter.'],
-      nextFocus: 'Prochaine prise : vingt secondes du passage que tu travailles. Micro près. Ensuite on corrige.',
+      nextFocus: mission
+        ? `Micro près, vingt secondes. Puis : ${mission.drill}`
+        : 'Prochaine prise : vingt secondes du passage que tu travailles. Micro près. Ensuite on corrige.',
+      takesLeft,
+    }
+  }
+
+  if (beginner && mission) {
+    const signals = signalNotes(features, input.meta, en)
+    const strengths: string[] = [...signals.strengths].slice(0, 1)
+    if (!strengths.length) {
+      uniquePush(
+        strengths,
+        'Tu as joué un passage. À ton niveau, une petite prise vaut mieux que tout le morceau.',
+      )
+    }
+    const weaknesses: string[] = [...signals.weaknesses].slice(0, 1)
+    if (!weaknesses.length) uniquePush(weaknesses, mission.weakness)
+    const improvements = [`${mission.title} : ${mission.drill}`]
+    const dur = features?.durationSec
+    return {
+      headline: piece,
+      greeting: `${name}, essai ${take} sur « ${piece} »${dur ? ` (${Math.round(dur)}s)` : ''}. Aujourd’hui : ${mission.title.toLowerCase()}.`,
+      overview: '',
+      atmosphere: '',
+      technique: '',
+      rhythm: '',
+      strengths: strengths.slice(0, 2),
+      weaknesses: weaknesses.slice(0, 2),
+      improvements: improvements.slice(0, 2),
+      nextFocus: `${mission.drill} ${mission.success}`,
       takesLeft,
     }
   }
