@@ -193,11 +193,26 @@ function isStrings(kind: InstrumentKind): kind is 'guitar' | 'bass' {
   return kind === 'guitar' || kind === 'bass'
 }
 
-function Welcome({
-  onPick,
-}: {
-  onPick: (instrument: InstrumentKind) => void
-}) {
+const PICKED_KEY = 'sonique.instrumentPicked'
+
+function readInstrumentPicked(): boolean {
+  try {
+    return sessionStorage.getItem(PICKED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeInstrumentPicked(picked: boolean) {
+  try {
+    if (picked) sessionStorage.setItem(PICKED_KEY, '1')
+    else sessionStorage.removeItem(PICKED_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+function Welcome({ onNext }: { onNext: () => void }) {
   const copy = t()
 
   return (
@@ -206,25 +221,40 @@ function Welcome({
         <span className="eyebrow">{copy.readyToPlay}</span>
         <p className="hero-brand">Sonique</p>
         <p className="hero-tagline">{copy.heroTagline}</p>
-        <p className="welcome-instruments-lead">{copy.welcomeInstrumentsLead}</p>
-        <div className="welcome-instruments">
-          <button
-            type="button"
-            className="welcome-instrument welcome-instrument-primary"
-            onClick={() => onPick('piano')}
-          >
-            <strong>{copy.welcomePiano}</strong>
-            <small>{copy.welcomePianoHint}</small>
-          </button>
-          <button type="button" className="welcome-instrument" onClick={() => onPick('guitar')}>
-            <strong>{copy.welcomeGuitar}</strong>
-            <small>{copy.welcomeGuitarHint}</small>
-          </button>
-          <button type="button" className="welcome-instrument" onClick={() => onPick('bass')}>
-            <strong>{copy.welcomeBass}</strong>
-            <small>{copy.welcomeBassHint}</small>
-          </button>
-        </div>
+        <button type="button" className="btn btn-hero" onClick={onNext}>
+          {copy.start}
+        </button>
+      </div>
+      <FooterLine />
+    </section>
+  )
+}
+
+function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => void }) {
+  const copy = t()
+
+  return (
+    <section className="slide slide-left slide-instrument">
+      <span className="eyebrow">{copy.instrumentEyebrow}</span>
+      <h1>{copy.instrumentTitle}</h1>
+      <p className="lead">{copy.instrumentLead}</p>
+      <div className="instrument-grid">
+        <button type="button" className="welcome-instrument" onClick={() => onPick('piano')}>
+          <strong>{copy.welcomePiano}</strong>
+          <small>{copy.welcomePianoHint}</small>
+        </button>
+        <button type="button" className="welcome-instrument" onClick={() => onPick('guitar')}>
+          <strong>{copy.welcomeGuitar}</strong>
+          <small>{copy.welcomeGuitarHint}</small>
+        </button>
+        <button
+          type="button"
+          className="welcome-instrument welcome-instrument-bass"
+          onClick={() => onPick('bass')}
+        >
+          <strong>{copy.welcomeBass}</strong>
+          <small>{copy.welcomeBassHint}</small>
+        </button>
       </div>
       <FooterLine />
     </section>
@@ -1643,6 +1673,7 @@ export default function App() {
   })
   const [showAccount, setShowAccount] = useState(false)
   const [authSkipped, setAuthSkipped] = useState(false)
+  const [instrumentPicked, setInstrumentPicked] = useState(readInstrumentPicked)
   const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
   const [scoreRev, setScoreRev] = useState(0)
@@ -1664,6 +1695,9 @@ export default function App() {
           phone: '',
         }
         saveProfile(preview)
+        writeInstrument('piano')
+        writeInstrumentPicked(true)
+        setInstrumentPicked(true)
         setState((s) => ({
           ...s,
           slide: 3,
@@ -1706,6 +1740,10 @@ export default function App() {
           /* ignore */
         }
         setAuthSkipped(true)
+        if (afterAuth) {
+          writeInstrumentPicked(false)
+          setInstrumentPicked(false)
+        }
         setState((s) => ({
           ...s,
           profile: remote,
@@ -1734,6 +1772,8 @@ export default function App() {
       await signOut()
       setAuthSkipped(false)
       writeInstrument('piano')
+      writeInstrumentPicked(false)
+      setInstrumentPicked(false)
       setState({ ...initialState, slide: 1, pianoLevel: readPianoLevel(), instrument: 'piano' })
     })()
   }
@@ -1998,9 +2038,9 @@ export default function App() {
   } else if (state.slide === 1)
     body = (
       <Welcome
-        onPick={(instrument) => {
-          writeInstrument(instrument)
-          patch({ instrument })
+        onNext={() => {
+          writeInstrumentPicked(false)
+          setInstrumentPicked(false)
           go(2)
         }}
       />
@@ -2022,14 +2062,24 @@ export default function App() {
         onSkip={() => setAuthSkipped(true)}
       />
     )
+  } else if (state.slide === 2 && !instrumentPicked) {
+    body = (
+      <InstrumentSlide
+        onPick={(instrument) => {
+          writeInstrument(instrument)
+          writeInstrumentPicked(true)
+          setInstrumentPicked(true)
+          patch({ instrument })
+        }}
+      />
+    )
   } else if (state.slide === 2 && isStrings(state.instrument)) {
     body = (
       <StringsStudio
         instrument={state.instrument}
         onBack={() => {
-          writeInstrument('piano')
-          patch({ instrument: 'piano' })
-          go(1)
+          writeInstrumentPicked(false)
+          setInstrumentPicked(false)
         }}
       />
     )
@@ -2184,10 +2234,13 @@ export default function App() {
               go(1)
               return
             }
-            if (isStrings(state.instrument) || state.slide <= 2) {
-              writeInstrument('piano')
-              patch({ instrument: 'piano' })
+            if (state.slide === 2 && !instrumentPicked) {
               go(1)
+              return
+            }
+            if (state.slide === 2 && instrumentPicked) {
+              writeInstrumentPicked(false)
+              setInstrumentPicked(false)
               return
             }
             // Dans le parcours piano, le logo ramène au morceau — pas à l’accueil.
@@ -2195,7 +2248,7 @@ export default function App() {
             else go(1)
           }}
           aria-label={
-            isStrings(state.instrument) || state.slide <= 2
+            state.slide <= 2
               ? t().backHome
               : state.pianoLevel
                 ? t().backToPiece
@@ -2220,9 +2273,8 @@ export default function App() {
           )}
           {!showHistory &&
           !showAccount &&
-          state.slide > 1 &&
-          !isStrings(state.instrument) &&
-          !(state.slide === 2 && !state.profile.email.trim() && !authSkipped) ? (
+          state.slide > 2 &&
+          !isStrings(state.instrument) ? (
             <PhaseNav phase={phase} />
           ) : null}
         </div>

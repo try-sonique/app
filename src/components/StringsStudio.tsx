@@ -8,6 +8,7 @@ import {
   type ChatMsg,
   type StringSnapshot,
 } from '../lib/stringsCoach'
+import { extractAudioFeatures } from '../lib/audioFeatures'
 import { formatTime, useMediaRecorder } from '../lib/recorder'
 import { useStringListen } from '../lib/tuner'
 import { t } from '../lib/presets'
@@ -75,9 +76,26 @@ export function StringsStudio({
   const onRecord = async () => {
     if (recording) {
       const blob = await stop()
+      if (!blob || blob.size < 1200) {
+        setMessages((m) => [
+          ...m,
+          { id: uid(), from: 'aria', text: afterPlayback({ heardOnTake: false }) },
+        ])
+        return
+      }
+      const features = await extractAudioFeatures(blob)
       setMessages((m) => [
         ...m,
-        { id: uid(), from: 'aria', text: afterPlayback(Boolean(blob && blob.size > 1200)) },
+        {
+          id: uid(),
+          from: 'aria',
+          text: afterPlayback({
+            heardOnTake: true,
+            rmsMean: features.rmsMean,
+            silenceRatio: features.silenceRatio,
+            weakSignal: features.weakSignal,
+          }),
+        },
       ])
       return
     }

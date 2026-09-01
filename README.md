@@ -25,8 +25,9 @@ Ce n’est pas l’un ou l’autre.
 
 ## Connexion
 
-1. Accueil : **Piano**, **Guitare** ou **Basse**.
+1. Accueil (slogan) → **Commencer**.
 2. **Bienvenue sur Sonique** — Google ou e-mail (lien, pas de mot de passe). Tu peux **Continuer sans compte**.
+3. **Tu joues quoi ?** — Piano et guitare d’abord, basse en dessous (souvent sans partition).
 
 Dans l’en-tête : **Se connecter** (puis **Mon compte** une fois connectée).
 
@@ -57,5 +58,5 @@ Facebook / Instagram : plus tard, si besoin. Meta for Developers → app → Fac
 
 ## Parcours
 
-- **Piano** : après connexion (ou sans compte) → niveau **Débutant** / **Moyen** → ta partition → entraînement → prise → retour Aria.
-- **Guitare / basse** : micro + accordeur. Aria vérifie qu’on t’entend et que tu es accordé. Ce n’est pas le coaching notes du piano.
+- **Piano** : niveau **Débutant** / **Moyen · Confirmé** (même chemin Aria pour moyen et confirmé : les deux mains) → ta partition → entraînement → prise → retour Aria.
+- **Guitare / basse** : micro + accordeur. Aria dit deux choses : tu es accordé, et le son de ta prise tient-il pour te réécouter. Ce n’est pas le coaching notes du piano. Pas de voix, pas de Grok.

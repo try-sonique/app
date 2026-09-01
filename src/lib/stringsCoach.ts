@@ -27,7 +27,7 @@ function instrumentWord(instrument: 'guitar' | 'bass') {
 
 export function openingLine(instrument: 'guitar' | 'bass') {
   const w = instrumentWord(instrument)
-  return `Je ne suis pas prof de ${w}. Je t’écoute pour deux choses : est-ce qu’on t’entend, et est-ce que tu es accordé. Joue une corde à vide près du micro.`
+  return `Je ne suis pas prof de ${w}. Deux choses : tu es accordé, et ta prise est assez nette pour te réécouter. Joue une corde à vide près du micro.`
 }
 
 export function liveLine(snap: StringSnapshot, last: string | null): string | null {
@@ -61,8 +61,8 @@ export function replyToMusician(text: string, snap: StringSnapshot) {
   const q = text.trim().toLowerCase()
   const w = instrumentWord(snap.instrument)
 
-  if (/riff|solo|tablature|doigt|gamme|cours|apprendre|grok|chatgpt/.test(q)) {
-    return `Je n’enseigne pas la ${w}. Pas de doigtés, pas de riffs. Seulement : est-ce qu’on t’entend, et est-ce que tu es accordé.`
+  if (/riff|solo|tablature|doigt|gamme|cours|apprendre|grok|chatgpt|voix|eleven/.test(q)) {
+    return `Je n’enseigne pas la ${w}. Pas de doigtés, pas de riffs, pas de voix magique. Seulement : tu es accordé, et le son de ta prise tient-il.`
   }
 
   if (/entend|micro|son|volume|enregistre|prise|écoute/.test(q)) {
@@ -89,7 +89,7 @@ export function replyToMusician(text: string, snap: StringSnapshot) {
   }
 
   if (/pourquoi|c’est tout|c'est tout|seulement/.test(q)) {
-    return 'Parce que sans un son audible et un instrument accordé, le reste ne sert à rien. Le coaching notes, c’est le piano pour l’instant.'
+    return 'Parce que sans un instrument accordé et un son qu’on peut réécouter, le reste ne sert à rien. Le coaching notes, c’est le piano pour l’instant.'
   }
 
   if (snap.denied) return 'Autorise le micro. Ensuite je te réponds sur ce que j’entends vraiment.'
@@ -97,12 +97,23 @@ export function replyToMusician(text: string, snap: StringSnapshot) {
   if (snap.note?.string && snap.note.inTune) {
     return `${snap.note.string.label} est juste, et je t’entends. Tu peux enregistrer une courte prise pour te réécouter.`
   }
-  return 'Deux questions seulement : on t’entend ? tu es accordé ? Pose-les, ou joue — je te réponds sur ce que le micro capte.'
+  return 'Deux questions : tu es accordé ? le son de ta prise tient-il ? Pose-les, ou joue — je te réponds sur ce que le micro capte.'
 }
 
-export function afterPlayback(heardOnTake: boolean) {
-  if (!heardOnTake) {
+export function afterPlayback(opts: {
+  heardOnTake: boolean
+  rmsMean?: number
+  silenceRatio?: number
+  weakSignal?: boolean
+}) {
+  if (!opts.heardOnTake || opts.weakSignal) {
     return 'Cette prise est trop faible. Tu ne pourras pas te réécouter. Rapproche le micro, refais vingt secondes.'
   }
-  return 'Tu peux te réécouter. Si le son te paraît lointain ou étouffé, rapproche le micro avant la prochaine prise.'
+  if (opts.silenceRatio != null && opts.silenceRatio > 0.55) {
+    return 'Beaucoup de silence. Joue plus près, ou plus longtemps d’une traite. Le son, c’est le matériau — pas un détail.'
+  }
+  if (opts.rmsMean != null && opts.rmsMean < 0.045) {
+    return 'On t’entend, mais c’est mince. Pour une prise utile, rapproche le micro de la caisse ou de l’ampli.'
+  }
+  return 'Le niveau tient. Réécoute : si c’est lointain, étouffé ou saturé, change le micro avant la prochaine.'
 }

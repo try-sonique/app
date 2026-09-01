@@ -154,9 +154,13 @@ const FR = {
   welcomePianoHint: 'Tes morceaux. Partition, prise, Aria.',
   welcomeGuitar: 'Guitare',
   welcomeBass: 'Basse',
-  welcomeGuitarHint: 'On t’entend ? Tu es accordé ?',
-  welcomeBassHint: 'On t’entend ? Tu es accordé ?',
-  welcomeInstrumentsLead: 'Piano : tes morceaux. Guitare et basse : le son de ta prise.',
+  welcomeGuitarHint: 'Tu es accordé ? Ta prise est-elle assez nette pour te réécouter ?',
+  welcomeBassHint: 'Souvent sans partition. Accordé, et un son qu’on entend.',
+  welcomeInstrumentsLead: 'Piano et guitare d’abord. La basse, souvent à l’oreille.',
+  instrumentEyebrow: 'Ton instrument',
+  instrumentTitle: 'Tu joues quoi ?',
+  instrumentLead:
+    'Piano et guitare d’abord — ce sont les plus joués ici. La basse, souvent sans partition, à l’oreille.',
 
   // Auth (écran type Cursor : icônes + e-mail)
   welcomeToSonique: 'Bienvenue sur Sonique',
@@ -240,11 +244,11 @@ const FR = {
   pianoLevelEyebrow: 'Ton niveau',
   pianoLevelTitle: 'Où en es-tu au piano ?',
   pianoLevelLead:
-    'Aria ne te parle pas comme à un concertiste si tu débutes. Un choix, tu pourras le changer au prochain morceau.',
+    'Aria ne te parle pas comme à un concertiste si tu débutes. Moyen et confirmé, c’est le même chemin : les deux mains.',
   pianoLevelBeginner: 'Débutant',
   pianoLevelBeginnerHint: 'Je joue d’une seule main, gauche ou droite.',
-  pianoLevelPlaying: 'Moyen',
-  pianoLevelPlayingHint: 'Je joue des deux mains, sans trop de difficultés.',
+  pianoLevelPlaying: 'Moyen / Confirmé',
+  pianoLevelPlayingHint: 'Je joue des deux mains. Aria ne me parle pas comme à un débutant.',
   savedScores: 'Tes partitions',
   savedScoresEmpty: 'Aucune partition enregistrée pour l’instant. Importe-la une fois — elle reste ici.',
   savedScoreOpen: 'Reprendre',
@@ -270,9 +274,9 @@ const FR = {
   missionToday: 'Aujourd’hui',
 
   // Guitare / basse
-  stringsTitle: 'On t’entend ? Tu es accordé ?',
+  stringsTitle: 'Accordé, et un son qui tient',
   stringsLead:
-    'Aria n’est pas prof de guitare ni de basse. Elle t’écoute pour deux choses : est-ce que ta prise est audible, et est-ce que tu es accordé. Ensuite tu te réécoutes.',
+    'Aria n’est pas prof de guitare ni de basse. Deux choses seulement : tu es accordé, et ta prise est assez nette pour te réécouter. Ensuite tu t’écoutes. Pas de doigtés.',
   stringsHear: 'Est-ce qu’on t’entend',
   stringsTune: 'Accordeur',
   stringsHeard: 'Je t’entends.',
@@ -476,9 +480,13 @@ export const EN: { [K in keyof typeof FR]: string } = {
   welcomePianoHint: 'Your pieces. Score, take, Aria.',
   welcomeGuitar: 'Guitar',
   welcomeBass: 'Bass',
-  welcomeGuitarHint: 'Can we hear you? Are you in tune?',
-  welcomeBassHint: 'Can we hear you? Are you in tune?',
-  welcomeInstrumentsLead: 'Piano: your pieces. Guitar and bass: the sound of your take.',
+  welcomeGuitarHint: 'Are you in tune? Is the take clear enough to listen back?',
+  welcomeBassHint: 'Often without a score. In tune, and a sound we can hear.',
+  welcomeInstrumentsLead: 'Piano and guitar first. Bass, often by ear.',
+  instrumentEyebrow: 'Your instrument',
+  instrumentTitle: 'What do you play?',
+  instrumentLead:
+    'Piano and guitar first — those are the most played here. Bass, often without a score, by ear.',
 
   welcomeToSonique: 'Welcome to Sonique',
   authGateLead: 'The app that lets you play your favorite pieces.',
@@ -558,11 +566,11 @@ export const EN: { [K in keyof typeof FR]: string } = {
   pianoLevelEyebrow: 'Your level',
   pianoLevelTitle: 'Where are you at the piano?',
   pianoLevelLead:
-    'Aria does not talk to a beginner like a concert pianist. One choice; you can change it on the next piece.',
+    'Aria does not talk to a beginner like a concert pianist. Intermediate and confirmed share the same path: both hands.',
   pianoLevelBeginner: 'Beginner',
   pianoLevelBeginnerHint: 'I play with one hand, left or right.',
-  pianoLevelPlaying: 'Intermediate',
-  pianoLevelPlayingHint: 'I play with both hands, without too much trouble.',
+  pianoLevelPlaying: 'Intermediate / Confirmed',
+  pianoLevelPlayingHint: 'I play with both hands. Aria does not talk to me like a beginner.',
   savedScores: 'Your scores',
   savedScoresEmpty: 'No score saved yet. Import it once — it stays here.',
   savedScoreOpen: 'Resume',
@@ -587,9 +595,9 @@ export const EN: { [K in keyof typeof FR]: string } = {
   beginnerBadge: 'To start',
   missionToday: 'Today',
 
-  stringsTitle: 'Can we hear you? Are you in tune?',
+  stringsTitle: 'In tune, and a take that holds',
   stringsLead:
-    'Aria is not a guitar or bass teacher. She listens for two things: is your take audible, and are you in tune. Then you listen back.',
+    'Aria is not a guitar or bass teacher. Two things only: you are in tune, and the take is clear enough to listen back. Then you listen. No fingerings.',
   stringsHear: 'Can we hear you',
   stringsTune: 'Tuner',
   stringsHeard: 'I can hear you.',
