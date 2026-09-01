@@ -1,10 +1,10 @@
 # Sonique
 
-App de pratique piano : **ta** partition, **ton** niveau, des prises jusqu’à ta meilleure — pas un catalogue Beethoven.
+L’app qui te laisse jouer tes morceaux préférés.
 
 Démo publique : https://try-sonique.github.io/app/
 
-Français uniquement.
+Français uniquement. Coach **Aria**.
 
 ## Lancer en local
 
@@ -15,7 +15,11 @@ npm run dev
 
 Ouvre [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
-Compte (optionnel pour jouer) : email + mot de passe, ou **Continuer avec Google** si le provider est activé dans Supabase. Pas de Facebook / Instagram.
+## Compte
+
+Optionnel pour jouer. Dans l’en-tête : **Connexion** (puis **Mon compte** une fois connecté).
+
+Écran type « Welcome » : icône **Google**, puis e-mail → **Continuer avec l’e-mail** → mot de passe. Pas de Facebook / Instagram (pas branchés).
 
 Dans Supabase → Authentication → URL Configuration :
 
@@ -24,14 +28,18 @@ Dans Supabase → Authentication → URL Configuration :
 
 Pour Google : Authentication → Providers → Google (Client ID + secret). Sans ça, le bouton le dit clairement.
 
-## Parcours (couche 1)
+## Parcours
 
-1. Commencer
-2. Niveau piano — **Débutant** (*une main, gauche ou droite*) ou **Moyen** (*les deux mains, sans trop de difficultés*)
-3. Ta partition (importée et **gardée** sur l’appareil) — ou à l’oreille
-4. Entraînement → prise → retour Aria
-5. Rejouer **ce** morceau autant que tu veux. Une session, ce n’est pas 3 essais.
+**Piano** (Commencer)
 
-**Mon compte** est dans le bandeau, pas au milieu du jeu.
+1. Niveau — **Débutant** (*une main*) ou **Moyen** (*les deux mains*)
+2. Ta partition (importée et gardée) — ou à l’oreille
+3. Entraînement → prise → retour Aria
 
-Guitare / basse : pas encore. Accordeur + micro viendront ensuite.
+**Guitare** et **Basse** (deux cases à l’accueil)
+
+Aria n’enseigne pas ces instruments. Elle parle avec toi sur deux points : **est-ce qu’on t’entend** (prise audible, réécoute) et **est-ce que tu es accordé** (accordeur). Ce n’est pas une API Grok : les réponses viennent de ce que le micro capte.
+
+## Compte (rappel)
+
+Le compte n’est pas au milieu du jeu. Il sert à garder partitions et prises.

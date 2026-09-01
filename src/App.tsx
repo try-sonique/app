@@ -3,10 +3,11 @@ import {
   useEffect,
   useRef,
   useState,
-  type FormEvent,
   type ReactNode,
 } from 'react'
+import { AuthGate } from './components/AuthGate'
 import { PartitionViewer } from './components/PartitionViewer'
+import { StringsStudio } from './components/StringsStudio'
 import { analyzePerformance, useAriaCues, type PerformanceMeta } from './lib/aria'
 import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
@@ -37,30 +38,24 @@ function downloadScoreFile(src: string, title: string) {
 import { formatTime, useMediaRecorder } from './lib/recorder'
 import {
   getCurrentProfile,
-  getRememberedEmail,
   getRecordingBlob,
   getScoreFile,
   listSavedScores,
   listSessions,
+  saveProfile,
   saveRecordingBlob,
   saveScoreFile,
   saveSession,
   attachSavedScoresToEmail,
   attachSessionsToEmail,
-  setRememberedEmail,
   type SavedScore,
   type StoredSession,
 } from './lib/storage'
 import { pushCloudSession, syncAccountSessions } from './lib/sessionCloud'
 import {
   getSessionProfile,
-  requestPasswordReset,
-  signInWithGoogle,
-  signInWithPassword,
   signOut,
-  signUpWithPassword,
   updateUserProfile,
-  resendSignupEmail,
 } from './lib/supabaseAuth'
 import {
   MAX_TAKES,
@@ -159,9 +154,13 @@ function FooterLine({ withPartition }: { withPartition?: boolean }) {
 }
 
 function Welcome({
-  onNext,
+  onStartPiano,
+  onGuitar,
+  onBass,
 }: {
-  onNext: () => void
+  onStartPiano: () => void
+  onGuitar: () => void
+  onBass: () => void
 }) {
   const copy = t()
 
@@ -171,497 +170,26 @@ function Welcome({
         <span className="eyebrow">{copy.readyToPlay}</span>
         <p className="hero-brand">Sonique</p>
         <p className="hero-tagline">{copy.heroTagline}</p>
-        <button type="button" className="btn btn-hero" onClick={onNext}>
+        <button type="button" className="btn btn-hero" onClick={onStartPiano}>
           {copy.start}
         </button>
+        <p className="welcome-instruments-lead">{copy.welcomeInstrumentsLead}</p>
+        <div className="welcome-instruments">
+          <button type="button" className="welcome-instrument" onClick={onGuitar}>
+            <strong>{copy.welcomeGuitar}</strong>
+            <small>{copy.welcomeGuitarHint}</small>
+          </button>
+          <button type="button" className="welcome-instrument" onClick={onBass}>
+            <strong>{copy.welcomeBass}</strong>
+            <small>{copy.welcomeBassHint}</small>
+          </button>
+        </div>
       </div>
       <FooterLine />
     </section>
   )
 }
 
-
-type AuthMode = 'login' | 'signup'
-
-function AuthSlide({
-  profile,
-  onChange: _onChange,
-  onProfileLoaded,
-  onNext,
-  onCancel,
-}: {
-  profile: AppState['profile']
-  onChange: (key: keyof AppState['profile'], value: string) => void
-  onProfileLoaded: (profile: UserProfile) => void
-  onNext: () => void
-  onCancel?: () => void
-}) {
-  const copy = t()
-  const remembered = getRememberedEmail()
-  const [mode, setMode] = useState<AuthMode>('login')
-  const [loginEmail, setLoginEmail] = useState(remembered)
-  const [rememberEmail, setRememberEmail] = useState(Boolean(remembered))
-  const [loginPassword, setLoginPassword] = useState('')
-  const [signupFirstName, setSignupFirstName] = useState('')
-  const [signupLastName, setSignupLastName] = useState('')
-  const [signupEmail, setSignupEmail] = useState('')
-  const [signupPhone, setSignupPhone] = useState('')
-  const [signupPassword, setSignupPassword] = useState('')
-  const [signupPassword2, setSignupPassword2] = useState('')
-  const [authError, setAuthError] = useState('')
-  const [authInfo, setAuthInfo] = useState('')
-  /** After signup with Confirm email on — keep email visible + guide to inbox first */
-  const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false)
-  const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
-        sessionStorage.removeItem('sonique.authFlash')
-        setMode('login')
-        setAuthError(copy.emailLinkExpired)
-      }
-    } catch {
-      /* ignore */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot flash on mount
-  }, [])
-
-  const signupValid = Boolean(
-    signupFirstName.trim() &&
-      signupEmail.trim() &&
-      signupPassword.length >= 6 &&
-      signupPassword === signupPassword2,
-  )
-
-  const blankSignupFields = () => {
-    setSignupFirstName('')
-    setSignupLastName('')
-    setSignupEmail('')
-    setSignupPhone('')
-    setSignupPassword('')
-    setSignupPassword2('')
-    setLoginPassword('')
-    setAuthError('')
-    setAuthInfo('')
-    setAwaitingEmailConfirm(false)
-  }
-
-  const persistRememberPreference = (email: string) => {
-    if (rememberEmail) setRememberedEmail(email)
-    else setRememberedEmail(null)
-  }
-
-  const friendlyAuthError = (code?: string) => {
-    if (!code) return copy.loginFailed
-    if (code === 'rate_limited') return copy.emailRateLimited
-    if (code === 'email_not_confirmed') return copy.emailNotConfirmed
-    if (code === 'link_expired') return copy.emailLinkExpired
-    if (code === 'already_registered') return copy.alreadyRegistered
-    if (code === 'google_unavailable') return copy.googleUnavailable
-    if (code === 'not_found') return copy.loginNotFound
-    return code
-  }
-
-  const submitSignup = async (e: FormEvent) => {
-    e.preventDefault()
-    setAuthError('')
-    setAuthInfo('')
-    if (signupPassword.length < 6) {
-      setAuthError(copy.passwordTooShort)
-      return
-    }
-    if (signupPassword !== signupPassword2) {
-      setAuthError(copy.passwordMismatch)
-      return
-    }
-    if (!signupFirstName.trim() || !signupEmail.trim()) return
-    setBusy(true)
-    try {
-      const draft: UserProfile = {
-        firstName: signupFirstName.trim(),
-        lastName: signupLastName.trim(),
-        email: signupEmail.trim(),
-        phone: signupPhone.trim(),
-      }
-      const result = await signUpWithPassword({ profile: draft, password: signupPassword })
-      if (!result.ok || !result.profile) {
-        const msg = friendlyAuthError(result.error)
-        setAuthError(msg)
-        if (result.error === 'already_registered') {
-          const email = draft.email.trim().toLowerCase()
-          setLoginEmail(email)
-          setRememberEmail(true)
-          setRememberedEmail(email)
-          setMode('login')
-          setAuthInfo(msg)
-          setAuthError('')
-        }
-        return
-      }
-      onProfileLoaded(result.profile)
-      if (result.needsEmailConfirm) {
-        const email = result.profile.email
-        blankSignupFields()
-        setLoginEmail(email)
-        setRememberEmail(true)
-        setRememberedEmail(email)
-        setLoginPassword('')
-        setAwaitingEmailConfirm(true)
-        setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
-        setMode('login')
-        return
-      }
-      setRememberedEmail(result.profile.email)
-      onNext()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const submitLogin = async (e: FormEvent) => {
-    e.preventDefault()
-    setAuthError('')
-    if (!loginEmail.trim() || !loginPassword) {
-      setAuthError(copy.loginFailed)
-      return
-    }
-    setBusy(true)
-    try {
-      const email = loginEmail.trim().toLowerCase()
-      persistRememberPreference(email)
-      const result = await signInWithPassword({ email, password: loginPassword })
-      if (!result.ok || !result.profile) {
-        setAuthError(friendlyAuthError(result.error))
-        if (result.error === 'email_not_confirmed' || awaitingEmailConfirm) {
-          setAuthInfo(copy.checkEmailConfirm.replace('{email}', email))
-          setAwaitingEmailConfirm(true)
-        }
-        return
-      }
-      setAwaitingEmailConfirm(false)
-      setAuthInfo('')
-      onProfileLoaded(result.profile)
-      onNext()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const onForgot = async () => {
-    setAuthError('')
-    setAuthInfo('')
-    if (!loginEmail.trim()) {
-      setAuthError(copy.loginFailed)
-      return
-    }
-    setBusy(true)
-    try {
-      const result = await requestPasswordReset(loginEmail)
-      if (!result.ok) {
-        setAuthError(friendlyAuthError(result.error))
-        return
-      }
-      setAuthInfo(copy.resetSent)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const onResendConfirm = async () => {
-    setAuthError('')
-    if (!loginEmail.trim()) {
-      setAuthError(copy.loginFailed)
-      return
-    }
-    setBusy(true)
-    try {
-      const result = await resendSignupEmail(loginEmail)
-      if (!result.ok) {
-        setAuthError(friendlyAuthError(result.error))
-        return
-      }
-      setAuthInfo(copy.resendConfirmSent)
-      setAwaitingEmailConfirm(true)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const startSignup = () => {
-    blankSignupFields()
-    void signOut()
-    setMode('signup')
-  }
-
-  const startLogin = () => {
-    const saved = getRememberedEmail()
-    setLoginEmail(saved)
-    setRememberEmail(Boolean(saved))
-    setLoginPassword('')
-    setAuthError('')
-    setAuthInfo('')
-    setAwaitingEmailConfirm(false)
-    setMode('login')
-    try {
-      if (sessionStorage.getItem('sonique.authFlash') === 'link_expired') {
-        sessionStorage.removeItem('sonique.authFlash')
-        setAuthError(copy.emailLinkExpired)
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  const onGoogle = async () => {
-    setAuthError('')
-    setBusy(true)
-    try {
-      const result = await signInWithGoogle()
-      if (!result.ok) setAuthError(friendlyAuthError(result.error))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const returning = Boolean(profile.firstName.trim() || profile.email.trim())
-
-  if (mode === 'login') {
-    return (
-      <section className="slide slide-left">
-        {onCancel ? (
-          <button type="button" className="account-back-link" onClick={onCancel}>
-            ← {copy.accountBack}
-          </button>
-        ) : null}
-        <span className="eyebrow">{copy.accessEyebrow}</span>
-        <h1>
-          {awaitingEmailConfirm
-            ? copy.checkEmailTitle
-            : returning && profile.firstName.trim()
-              ? `${copy.accessReturning}, ${profile.firstName.trim()}`
-              : copy.haveAccount}
-        </h1>
-        <p className="lead">{awaitingEmailConfirm ? copy.checkEmailLead : copy.loginLead}</p>
-        <p className="footer-note" style={{ paddingTop: 0 }}>
-          {copy.authBoxLead}
-        </p>
-        <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
-          <span className="oauth-mark" aria-hidden>
-            G
-          </span>
-          {copy.googleContinue}
-        </button>
-        <p className="auth-or">{copy.authOr}</p>
-        {authInfo ? (
-          <p
-            className="lead"
-            style={{
-              margin: '0 0 1rem',
-              padding: '0.85rem 1rem',
-              borderRadius: 8,
-              background: 'rgba(255, 214, 90, 0.12)',
-              border: '1px solid rgba(255, 214, 90, 0.35)',
-            }}
-          >
-            {authInfo}
-          </p>
-        ) : null}
-        <form className="stack" autoComplete="off" onSubmit={(e) => void submitLogin(e)}>
-          <label className="field">
-            <span>{copy.identifier}</span>
-            <input
-              type="email"
-              name="sonique-login-email"
-              autoComplete="username"
-              value={loginEmail}
-              readOnly={awaitingEmailConfirm && Boolean(loginEmail)}
-              onChange={(e) => {
-                setLoginEmail(e.target.value)
-                setAuthError('')
-              }}
-              required
-            />
-          </label>
-          <label className="field">
-            <span>
-              {copy.password}
-              {awaitingEmailConfirm ? (
-                <em className="optional-tag"> ({copy.afterEmailConfirm})</em>
-              ) : null}
-            </span>
-            <input
-              type="password"
-              name="sonique-login-password"
-              autoComplete="current-password"
-              value={loginPassword}
-              onChange={(e) => {
-                setLoginPassword(e.target.value)
-                setAuthError('')
-              }}
-              required
-            />
-          </label>
-          <label className="check-row">
-            <input
-              type="checkbox"
-              checked={rememberEmail}
-              onChange={(e) => setRememberEmail(e.target.checked)}
-            />
-            <span>{copy.rememberEmail}</span>
-          </label>
-          {authError ? (
-            <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
-              {authError}
-            </p>
-          ) : null}
-          <div className="actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={busy || !loginEmail.trim() || !loginPassword}
-            >
-              {busy ? copy.authBusy : copy.signIn}
-            </button>
-          </div>
-        </form>
-        {awaitingEmailConfirm ? (
-          <button
-            type="button"
-            className="linkish"
-            style={{ marginTop: '1rem' }}
-            disabled={busy}
-            onClick={() => void onResendConfirm()}
-          >
-            {copy.resendConfirmEmail}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          className="linkish"
-          style={{ marginTop: '0.75rem' }}
-          disabled={busy}
-          onClick={() => void onForgot()}
-        >
-          {copy.forgotPassword}
-        </button>
-        <button
-          type="button"
-          className="linkish"
-          style={{ marginTop: '0.5rem' }}
-          onClick={startSignup}
-        >
-          {copy.createAccountLink}
-        </button>
-      </section>
-    )
-  }
-
-  return (
-    <section className="slide slide-left">
-      {onCancel ? (
-        <button type="button" className="account-back-link" onClick={onCancel}>
-          ← {copy.accountBack}
-        </button>
-      ) : null}
-      <span className="eyebrow">{copy.signupEyebrow}</span>
-      <h1>{copy.createSpace}</h1>
-      <p className="lead">{copy.signupLead}</p>
-      <button type="button" className="btn btn-oauth" disabled={busy} onClick={() => void onGoogle()}>
-        <span className="oauth-mark" aria-hidden>
-          G
-        </span>
-        {copy.googleContinue}
-      </button>
-      <p className="auth-or">{copy.authOr}</p>
-      <form
-        className="stack"
-        autoComplete="off"
-        onSubmit={(e) => void submitSignup(e)}
-      >
-        <label className="field">
-          <span>{copy.pseudo}</span>
-          <input
-            type="text"
-            name="sonique-signup-firstname"
-            autoComplete="off"
-            value={signupFirstName}
-            onChange={(e) => setSignupFirstName(e.target.value)}
-            required
-          />
-        </label>
-        <label className="field">
-          <span>{copy.identifier}</span>
-          <input
-            type="email"
-            name="sonique-signup-email"
-            autoComplete="off"
-            value={signupEmail}
-            onChange={(e) => setSignupEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label className="field">
-          <span>
-            {copy.password}
-            <em className="optional-tag"> ({copy.passwordHint})</em>
-          </span>
-          <input
-            type="password"
-            name="sonique-signup-password"
-            autoComplete="new-password"
-            value={signupPassword}
-            onChange={(e) => {
-              setSignupPassword(e.target.value)
-              setAuthError('')
-            }}
-            required
-            minLength={6}
-          />
-        </label>
-        <label className="field">
-          <span>{copy.passwordConfirm}</span>
-          <input
-            type="password"
-            name="sonique-signup-password2"
-            autoComplete="new-password"
-            value={signupPassword2}
-            onChange={(e) => {
-              setSignupPassword2(e.target.value)
-              setAuthError('')
-            }}
-            required
-            minLength={6}
-          />
-        </label>
-        {authError ? (
-          <p className="lead" style={{ color: 'var(--warn)', margin: 0 }}>
-            {authError}
-          </p>
-        ) : null}
-        <div className="actions">
-          <button type="submit" className="btn btn-primary" disabled={busy || !signupValid}>
-            {busy ? copy.authBusy : copy.createAndContinue}
-          </button>
-        </div>
-      </form>
-      <button
-        type="button"
-        className="linkish"
-        style={{ marginTop: '0.85rem' }}
-        onClick={startLogin}
-      >
-        {copy.alreadyAccountLink}
-      </button>
-      <p className="footer-note">
-        Support :{' '}
-        <a className="support" href="mailto:sonique@contact.co">
-          sonique@contact.co
-        </a>
-      </p>
-    </section>
-  )
-}
 
 function PianoLevelSlide({
   pianoLevel,
@@ -2081,6 +1609,28 @@ export default function App() {
 
   useEffect(() => {
     const boot = async () => {
+      if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('demoBeginner')) {
+        writePianoLevel('beginner')
+        const preview = {
+          firstName: 'Élodie',
+          lastName: '',
+          email: 'preview@sonique.local',
+          phone: '',
+        }
+        saveProfile(preview)
+        setState((s) => ({
+          ...s,
+          slide: 3,
+          instrument: 'piano',
+          pianoLevel: 'beginner',
+          profile: preview,
+        }))
+        return
+      }
+      if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('demoStrings')) {
+        setState((s) => ({ ...s, slide: 2, instrument: 'guitar' }))
+        return
+      }
       if (sessionStorage.getItem('sonique.forceFresh') === '1') {
         sessionStorage.removeItem('sonique.forceFresh')
         await signOut()
@@ -2123,7 +1673,7 @@ export default function App() {
     setShowAccount(false)
     void (async () => {
       await signOut()
-      setState({ ...initialState, slide: 2, pianoLevel: readPianoLevel() })
+      setState({ ...initialState, slide: 1, pianoLevel: readPianoLevel() })
     })()
   }
 
@@ -2330,9 +1880,8 @@ export default function App() {
 
   if (showAccount) {
     body = !state.profile.email.trim() ? (
-      <AuthSlide
+      <AuthGate
         profile={state.profile}
-        onChange={() => {}}
         onProfileLoaded={(profile) => {
           attachSessionsToEmail(profile.email)
           attachSavedScoresToEmail(profile.email)
@@ -2387,9 +1936,29 @@ export default function App() {
     )
   } else if (state.slide === 1)
     body = (
-      <Welcome onNext={() => go(2)} />
+      <Welcome
+        onStartPiano={() => {
+          patch({ instrument: 'piano' })
+          go(2)
+        }}
+        onGuitar={() => {
+          patch({ instrument: 'guitar', pianoLevel: null })
+          go(2)
+        }}
+        onBass={() => {
+          patch({ instrument: 'bass', pianoLevel: null })
+          go(2)
+        }}
+      />
     )
-  else if (state.slide === 2) {
+  else if (state.slide === 2 && state.instrument !== 'piano') {
+    body = (
+      <StringsStudio
+        instrument={state.instrument}
+        onBack={() => go(1)}
+      />
+    )
+  } else if (state.slide === 2) {
     body = (
       <PianoLevelSlide
         pianoLevel={state.pianoLevel}
@@ -2536,27 +2105,35 @@ export default function App() {
           onClick={() => {
             setShowHistory(false)
             setShowAccount(false)
+            if (state.instrument !== 'piano') {
+              go(1)
+              return
+            }
             // Ne pas renvoyer à l’accueil après connexion (bug ressenti slide 2→1)
             if (state.pianoLevel) go(3)
             else if (state.slide > 1) go(2)
             else go(1)
           }}
-          aria-label={state.pianoLevel ? t().backToPiece : t().backHome}
+          aria-label={state.instrument !== 'piano' || !state.pianoLevel ? t().backHome : t().backToPiece}
         >
           Sonique
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            type="button"
-            className="top-link"
-            onClick={() => {
-              setShowHistory(false)
-              setShowAccount(true)
-            }}
-          >
-            {t().myAccount}
-          </button>
-          {!showHistory && !showAccount && state.slide > 1 ? <PhaseNav phase={phase} /> : null}
+          {showAccount && !state.profile.email.trim() ? null : (
+            <button
+              type="button"
+              className="top-link"
+              onClick={() => {
+                setShowHistory(false)
+                setShowAccount(true)
+              }}
+            >
+              {state.profile.email.trim() ? t().myAccount : t().headerSignIn}
+            </button>
+          )}
+          {!showHistory && !showAccount && state.slide > 1 && state.instrument === 'piano' ? (
+            <PhaseNav phase={phase} />
+          ) : null}
         </div>
       </header>
       {body}

@@ -1,6 +1,7 @@
 import type { PianoLevel } from './lib/coachScripts'
 
 export type ArrangementKind = 'arrangement' | 'original' | null
+export type InstrumentKind = 'piano' | 'guitar' | 'bass'
 export type { PianoLevel }
 
 export type UserProfile = {
@@ -50,6 +51,8 @@ export type AppState = {
   arrangement: ArrangementKind
   /** Débutant = posture, mains, mains séparées. Déjà jouer = retour sur le passage. */
   pianoLevel: PianoLevel | null
+  /** Piano = parcours partition. Guitare / basse = micro + accordeur. */
+  instrument: InstrumentKind
   takesUsed: number
   isRecording: boolean
   liveCue: string | null
@@ -81,6 +84,7 @@ export const initialState: AppState = {
   scrollKeyframes: null,
   arrangement: null,
   pianoLevel: null,
+  instrument: 'piano',
   takesUsed: 0,
   isRecording: false,
   liveCue: null,
