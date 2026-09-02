@@ -159,12 +159,18 @@ function SupportMail() {
   )
 }
 
-function FooterLine({ withPartition }: { withPartition?: boolean }) {
+function FooterLine({
+  withPartition,
+  support = true,
+}: {
+  withPartition?: boolean
+  support?: boolean
+}) {
   const copy = t()
   return (
     <>
       <p className="footer-note">{withPartition ? copy.footerWithScore : copy.footerNoScore}</p>
-      <SupportMail />
+      {support ? <SupportMail /> : null}
     </>
   )
 }
@@ -225,7 +231,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
           {copy.start}
         </button>
       </div>
-      <FooterLine />
+      <FooterLine support={false} />
     </section>
   )
 }
