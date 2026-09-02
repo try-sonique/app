@@ -602,10 +602,18 @@ html[data-themes='full'] .slide {
 
 .instrument-rule {
   width: min(42%, 8rem);
-  height: 2px;
+  height: 3px;
   margin: 0.15rem auto;
-  background: var(--gold);
-  box-shadow: 0 0 10px var(--gold-glow);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(232, 192, 74, 0),
+    #e8c04a 18%,
+    #f6dc7a 50%,
+    #e8c04a 82%,
+    rgba(232, 192, 74, 0)
+  );
+  box-shadow: 0 0 14px rgba(232, 192, 74, 0.7), 0 0 3px #f0d060;
 }
 
 .instrument-pane {
@@ -638,10 +646,21 @@ html[data-themes='full'] .slide {
   }
 
   .instrument-rule {
-    width: 2px;
+    width: 3px;
     height: auto;
-    margin: 0;
+    min-height: 14rem;
+    margin: 0.35rem 0;
     align-self: stretch;
+    justify-self: center;
+    background: linear-gradient(
+      180deg,
+      rgba(232, 192, 74, 0),
+      #e8c04a 12%,
+      #f6dc7a 50%,
+      #e8c04a 88%,
+      rgba(232, 192, 74, 0)
+    );
+    box-shadow: 0 0 16px rgba(232, 192, 74, 0.8), 0 0 4px #e8c04a;
   }
 }
 
