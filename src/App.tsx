@@ -224,7 +224,6 @@ function Welcome({ onNext }: { onNext: () => void }) {
         <button type="button" className="btn btn-hero" onClick={onNext}>
           {copy.start}
         </button>
-        <p className="welcome-start-hint">{copy.startHint}</p>
       </div>
       <FooterLine />
     </section>
@@ -260,7 +259,6 @@ function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => v
     <section className="slide slide-instrument">
       <div className="instrument-core">
         <h1>{copy.instrumentTitle}</h1>
-        <p className="instrument-lead">{copy.instrumentLead}</p>
         <div className="instrument-grid">
           <button
             type="button"
@@ -269,7 +267,6 @@ function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => v
             onClick={() => onPick('piano')}
           >
             <strong>{copy.welcomePiano}</strong>
-            <small>{copy.welcomePianoHint}</small>
           </button>
           <button
             type="button"
@@ -278,7 +275,6 @@ function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => v
             onClick={() => onPick('guitar')}
           >
             <strong>{copy.welcomeGuitar}</strong>
-            <small>{copy.welcomeGuitarHint}</small>
           </button>
           <button
             type="button"
@@ -287,7 +283,6 @@ function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => v
             onClick={() => onPick('bass')}
           >
             <strong>{copy.welcomeBass}</strong>
-            <small>{copy.welcomeBassHint}</small>
           </button>
         </div>
       </div>

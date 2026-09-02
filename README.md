@@ -27,7 +27,7 @@ Ce n’est pas l’un ou l’autre.
 
 1. Accueil (slogan) → **Commencer**.
 2. **Connexion** — Google ou e-mail (lien, pas de mot de passe). Pour jouer, tu te connectes d’abord.
-3. **Quel instrument joues-tu ?** — Piano, guitare ou basse. Un choix, tu n’es pas coincé.
+3. **Quel instrument joues-tu ?** — Piano, guitare ou basse.
 
 Dans l’en-tête : **Se connecter** sur l’accueil. **Mon compte** seulement une fois que tu joues.
 
