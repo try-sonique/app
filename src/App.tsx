@@ -2285,8 +2285,22 @@ export default function App() {
           Sonique
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {(showAccount && !state.profile.email.trim()) ||
-          (state.slide === 2 && !playGateDone && !state.profile.email.trim() && !showAccount) ? null : (
+          {showAccount || (state.slide === 2 && !playGateDone) ? null : state.slide === 1 ? (
+            <button
+              type="button"
+              className="top-link"
+              onClick={() => {
+                setShowHistory(false)
+                setShowAccount(false)
+                writeInstrumentPicked(false)
+                setInstrumentPicked(false)
+                setPlayGateDone(false)
+                go(2)
+              }}
+            >
+              {t().headerSignIn}
+            </button>
+          ) : (
             <button
               type="button"
               className="top-link"
@@ -2295,7 +2309,7 @@ export default function App() {
                 setShowAccount(true)
               }}
             >
-              {state.profile.email.trim() ? t().myAccount : t().headerSignIn}
+              {t().myAccount}
             </button>
           )}
           {!showHistory &&

@@ -26,10 +26,10 @@ Ce n’est pas l’un ou l’autre.
 ## Connexion
 
 1. Accueil (slogan) → **Commencer**.
-2. **Connexion** — Google ou e-mail (lien, pas de mot de passe). Pour jouer, tu te connectes d’abord. **Mon compte**, en haut, garde tes prises.
+2. **Connexion** — Google ou e-mail (lien, pas de mot de passe). Pour jouer, tu te connectes d’abord.
 3. **Quel est ton instrument ?** — Piano, guitare ou basse.
 
-Dans l’en-tête : **Se connecter** (puis **Mon compte** une fois connectée).
+Dans l’en-tête : **Se connecter** sur l’accueil. **Mon compte** seulement une fois que tu joues.
 
 - **Google** : ouvre le sélecteur de comptes Google (« Sélectionnez un compte »). Tant que le provider n’est pas allumé dans Supabase, le bouton le dit sur Sonique — plus de page JSON.
 - **E-mail** : un lien dans la boîte, pas un mot de passe.
