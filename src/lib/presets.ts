@@ -249,9 +249,9 @@ const FR = {
   pianoLevelLead:
     'Aria ne te parle pas comme à un concertiste si tu débutes. Moyen et confirmé, c’est le même chemin : les deux mains.',
   pianoLevelBeginner: 'Débutant',
-  pianoLevelBeginnerHint: 'Je joue d’une seule main, gauche ou droite.',
+  pianoLevelBeginnerHint: 'Une main.',
   pianoLevelPlaying: 'Moyen / Confirmé',
-  pianoLevelPlayingHint: 'Je joue des deux mains. Aria ne me parle pas comme à un débutant.',
+  pianoLevelPlayingHint: 'Les deux mains.',
   savedScores: 'Tes partitions',
   savedScoresEmpty: 'Aucune partition enregistrée pour l’instant. Importe-la une fois — elle reste ici.',
   savedScoreOpen: 'Reprendre',
@@ -575,9 +575,9 @@ export const EN: { [K in keyof typeof FR]: string } = {
   pianoLevelLead:
     'Aria does not talk to a beginner like a concert pianist. Intermediate and confirmed share the same path: both hands.',
   pianoLevelBeginner: 'Beginner',
-  pianoLevelBeginnerHint: 'I play with one hand, left or right.',
+  pianoLevelBeginnerHint: 'One hand.',
   pianoLevelPlaying: 'Intermediate / Confirmed',
-  pianoLevelPlayingHint: 'I play with both hands. Aria does not talk to me like a beginner.',
+  pianoLevelPlayingHint: 'Both hands.',
   savedScores: 'Your scores',
   savedScoresEmpty: 'No score saved yet. Import it once — it stays here.',
   savedScoreOpen: 'Resume',

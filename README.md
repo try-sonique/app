@@ -27,7 +27,8 @@ Ce n’est pas l’un ou l’autre.
 
 1. Accueil (slogan) → **Commencer**.
 2. **Connexion** — Google ou e-mail (lien, pas de mot de passe). Pour jouer, tu te connectes d’abord.
-3. **Quel instrument joues-tu ?** — Trois dessins (piano, guitare, basse). Le mail de support n’est plus sur l’accueil ni sur la connexion.
+3. **Quel instrument joues-tu ?** — Trois dessins (piano, guitare, basse).
+4. **Piano** — niveau (Débutant / Moyen), puis le morceau, puis on joue. Aria chuchote pendant le jeu. Pas de leçon écrite à l’écran.
 
 Dans l’en-tête : **Se connecter** sur l’accueil. **Mon compte** seulement une fois que tu joues.
 

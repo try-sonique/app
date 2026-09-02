@@ -14,7 +14,6 @@ import { extractAudioFeatures, mapScrollProgress } from './lib/audioFeatures'
 import { usePlayEnergy } from './lib/playEnergy'
 import { t } from './lib/presets'
 import {
-  beginnerMission,
   readPianoLevel,
   writePianoLevel,
   type PianoLevel,
@@ -113,9 +112,9 @@ function ThemeDock({
 
 type Phase = 'partition' | 'jouer' | 'retour'
 
-function phaseFromSlide(slide: number, _hasPartition: boolean | null): Phase {
-  // Same phases with or without score: setup → practice/record → feedback
-  if (slide <= 4) return 'partition'
+function phaseFromSlide(slide: number, hasPartition: boolean | null): Phase {
+  if (slide <= 3) return 'partition'
+  if (slide === 4 && hasPartition === false) return 'partition'
   if (slide <= 6) return 'jouer'
   return 'retour'
 }
@@ -316,9 +315,7 @@ function PianoLevelSlide({
   const copy = t()
   return (
     <section className="slide slide-left">
-      <span className="eyebrow">{copy.pianoLevelEyebrow}</span>
       <h1>{copy.pianoLevelTitle}</h1>
-      <p className="lead">{copy.pianoLevelLead}</p>
       <div className="choice-grid choice-grid-wide">
         <button
           type="button"
@@ -337,31 +334,13 @@ function PianoLevelSlide({
           <small>{copy.pianoLevelPlayingHint}</small>
         </button>
       </div>
-      {pianoLevel === 'beginner' ? (
-        <p className="lead aria-sentence">{copy.howBeginnerLead}</p>
-      ) : null}
       <div className="actions">
         <button type="button" className="btn btn-primary" disabled={!pianoLevel} onClick={onNext}>
           {copy.continue}
         </button>
       </div>
-      <FooterLine />
+      <FooterLine support={false} />
     </section>
-  )
-}
-
-function MissionCard({ takeNumber, pieceName }: { takeNumber: number; pieceName: string }) {
-  const copy = t()
-  const mission = beginnerMission(Math.max(1, takeNumber))
-  return (
-    <aside className="mission-card" aria-live="polite">
-      <span className="mission-kicker">
-        {copy.missionToday}
-        {pieceName ? ` · ${pieceName}` : ''}
-      </span>
-      <strong>{mission.title}</strong>
-      <p>{mission.drill}</p>
-    </aside>
   )
 }
 
@@ -536,60 +515,6 @@ function NoPartitionQuestions({
   )
 }
 
-function HowItWorks({
-  firstName,
-  beginner,
-  onNext,
-}: {
-  firstName: string
-  beginner: boolean
-  onNext: () => void
-}) {
-  const copy = t()
-  const name = firstName || copy.you
-  const steps = beginner
-    ? [
-        { title: copy.howBeginner1Title, body: copy.howBeginner1Body },
-        { title: copy.howBeginner2Title, body: copy.howBeginner2Body },
-        { title: copy.howBeginner3Title, body: copy.howBeginner3Body },
-        { title: copy.howBeginner4Title, body: copy.howBeginner4Body },
-        { title: copy.howBeginner5Title, body: copy.howBeginner5Body },
-      ]
-    : [
-        { title: copy.howStep1Title, body: copy.howStep1Body },
-        { title: copy.howStep2Title, body: copy.howStep2Body },
-        { title: copy.howStep3Title, body: copy.howStep3Body },
-        { title: copy.howStep4Title, body: copy.howStep4Body },
-        { title: copy.howStep5Title, body: copy.howStep5Body },
-      ]
-  return (
-    <section className="slide slide-left">
-      <span className="eyebrow">{copy.withScore}</span>
-      <h1>
-        {copy.howTitle}, {name} ?
-      </h1>
-      <p className="lead">{beginner ? copy.howBeginnerLead : copy.howLead}</p>
-      <ol className="steps">
-        {steps.map((step, i) => (
-          <li key={step.title}>
-            <span className="step-num">{i + 1}</span>
-            <div>
-              <strong>{step.title}</strong>
-              <p>{step.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <div className="actions">
-        <button type="button" className="btn btn-primary" onClick={onNext}>
-          {copy.goToPractice}
-        </button>
-      </div>
-      <FooterLine withPartition />
-    </section>
-  )
-}
-
 function PracticeStage({
   pieceName,
   pieceId,
@@ -602,7 +527,6 @@ function PracticeStage({
   repeatEverySec,
   scrollKeyframes,
   pianoLevel,
-  takesUsed,
   onNext,
 }: {
   pieceName: string
@@ -616,7 +540,6 @@ function PracticeStage({
   repeatEverySec?: number
   scrollKeyframes?: { t: number; p: number }[] | null
   pianoLevel: PianoLevel | null
-  takesUsed: number
   onNext: () => void
 }) {
   const [active, setActive] = useState(true)
@@ -706,9 +629,6 @@ function PracticeStage({
         </p>
         {hasScore && !refPlaying ? (
           <p className="play-subnote">{copy.practiceNote}</p>
-        ) : null}
-        {pianoLevel === 'beginner' ? (
-          <MissionCard takeNumber={takesUsed + 1} pieceName={pieceName} />
         ) : null}
         <div className="meta-row">
           <span>{pieceName}</span>
@@ -983,9 +903,6 @@ function RecordStage({
                   ? copy.perfLeadMic
                   : copy.perfLeadEar}
             </p>
-            {pianoLevel === 'beginner' ? (
-              <MissionCard takeNumber={takesUsed + 1} pieceName={pieceName} />
-            ) : null}
             <div className="perf-ready-actions">
               <button
                 type="button"
@@ -2179,15 +2096,24 @@ export default function App() {
           })
         }
         onUpload={onUpload}
-        onNext={() => go(4)}
+        onNext={() => go(state.hasPartition === false ? 4 : 5)}
       />
     )
   } else if (state.slide === 4 && withPartition) {
     body = (
-      <HowItWorks
-        firstName={state.profile.firstName}
-        beginner={state.pianoLevel === 'beginner'}
-        onNext={() => go(5)}
+      <PracticeStage
+        pieceName={state.pieceName}
+        pieceId={state.selectedPresetId}
+        partitionPreview={state.partitionPreview}
+        partitionMime={state.partitionMime}
+        partitionName={state.partitionName}
+        previewAudio={state.previewAudio}
+        practicePeekSec={state.practicePeekSec}
+        scrollCapRatio={state.scrollCapRatio ?? undefined}
+        repeatEverySec={state.repeatEverySec ?? undefined}
+        scrollKeyframes={state.scrollKeyframes}
+        pianoLevel={state.pianoLevel}
+        onNext={() => go(6)}
       />
     )
   } else if (state.slide === 4 && !withPartition) {
@@ -2212,7 +2138,6 @@ export default function App() {
         repeatEverySec={state.repeatEverySec ?? undefined}
         scrollKeyframes={state.scrollKeyframes}
         pianoLevel={state.pianoLevel}
-        takesUsed={state.takesUsed}
         onNext={() => go(6)}
       />
     )
