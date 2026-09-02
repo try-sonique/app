@@ -150,6 +150,10 @@ const FR = {
   readyToPlay: 'Prêt·e à jouer',
   heroTagline: 'L’app qui te laisse jouer tes morceaux préférés.',
   start: 'Commencer',
+  startHint: 'D’abord tu te connectes. Ensuite tu joues.',
+  alreadyInTitle: 'Tu es connectée',
+  alreadyInLead: 'La session est ouverte. Continue pour choisir ton instrument.',
+  alreadyInContinue: 'Continuer',
   welcomePiano: 'Piano',
   welcomePianoHint: 'Tes morceaux.',
   welcomeGuitar: 'Guitare',
@@ -163,7 +167,7 @@ const FR = {
 
   // Auth (écran type Cursor : icônes + e-mail)
   welcomeToSonique: 'Bienvenue sur Sonique',
-  authGateLead: 'L’app qui te laisse jouer tes morceaux préférés.',
+  authGateLead: 'Pour jouer, connecte-toi d’abord. Google ou e-mail.',
   continueWithEmail: 'Continuer avec l’e-mail',
   emailLabel: 'E-mail',
   emailPlaceholder: 'Votre adresse e-mail',
@@ -174,7 +178,7 @@ const FR = {
   authTerms: 'Conditions d’utilisation',
   authPrivacy: 'Politique de confidentialité',
   authTermsBody:
-    'Sonique t’aide à travailler tes morceaux. Le compte est optionnel : il sert à garder tes partitions et tes prises. Pas de vente de tes enregistrements.',
+    'Sonique t’aide à travailler tes morceaux. Pour jouer, tu te connectes d’abord. Mon compte, en haut, garde tes partitions et tes prises.',
   authPrivacyBody:
     'Email et prises restent liés à ton compte. Rien n’est partagé à des réseaux sociaux. Google, si tu l’utilises, ne sert qu’à ouvrir la session.',
   authRecent: 'Récent',
@@ -476,6 +480,10 @@ export const EN: { [K in keyof typeof FR]: string } = {
   readyToPlay: 'Ready to play',
   heroTagline: 'The app that lets you play your favorite pieces.',
   start: 'Get started',
+  startHint: 'First you sign in. Then you play.',
+  alreadyInTitle: 'You’re signed in',
+  alreadyInLead: 'Your session is open. Continue to choose your instrument.',
+  alreadyInContinue: 'Continue',
   welcomePiano: 'Piano',
   welcomePianoHint: 'Your pieces.',
   welcomeGuitar: 'Guitar',
@@ -488,7 +496,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   instrumentLead: 'Piano, guitar or bass.',
 
   welcomeToSonique: 'Welcome to Sonique',
-  authGateLead: 'The app that lets you play your favorite pieces.',
+  authGateLead: 'To play, sign in first. Google or email.',
   continueWithEmail: 'Continue with email',
   emailLabel: 'Email',
   emailPlaceholder: 'Your email address',
@@ -499,7 +507,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   authTerms: 'Terms of use',
   authPrivacy: 'Privacy policy',
   authTermsBody:
-    'Sonique helps you practice your pieces. An account is optional: it keeps your scores and takes. We don’t sell your recordings.',
+    'Sonique helps you practice your pieces. To play, you sign in first. My account, at the top, keeps your scores and takes.',
   authPrivacyBody:
     'Email and takes stay tied to your account. Nothing is shared with social networks. Google, if you use it, only opens the session.',
   authRecent: 'Recent',

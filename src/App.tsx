@@ -224,12 +224,35 @@ function Welcome({ onNext }: { onNext: () => void }) {
         <button type="button" className="btn btn-hero" onClick={onNext}>
           {copy.start}
         </button>
+        <p className="welcome-start-hint">{copy.startHint}</p>
       </div>
       <FooterLine />
     </section>
   )
 }
 
+function ReadyToPlay({
+  firstName,
+  onContinue,
+}: {
+  firstName: string
+  onContinue: () => void
+}) {
+  const copy = t()
+  const name = firstName.trim()
+  return (
+    <section className="slide auth-gate">
+      <div className="auth-gate-core">
+        <h1>{name ? `${copy.alreadyInTitle}, ${name}` : copy.alreadyInTitle}</h1>
+        <p className="auth-gate-tagline">{copy.alreadyInLead}</p>
+        <button type="button" className="btn btn-hero" onClick={onContinue}>
+          {copy.alreadyInContinue}
+        </button>
+      </div>
+      <FooterLine />
+    </section>
+  )
+}
 function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => void }) {
   const copy = t()
 
@@ -1669,7 +1692,7 @@ export default function App() {
     return false
   })
   const [showAccount, setShowAccount] = useState(false)
-  const [authSkipped, setAuthSkipped] = useState(false)
+  const [playGateDone, setPlayGateDone] = useState(false)
   const [instrumentPicked, setInstrumentPicked] = useState(readInstrumentPicked)
   const [historyFromAccount, setHistoryFromAccount] = useState(false)
   const [historyRev, setHistoryRev] = useState(0)
@@ -1695,6 +1718,7 @@ export default function App() {
         writeInstrument('piano')
         writeInstrumentPicked(true)
         setInstrumentPicked(true)
+        setPlayGateDone(true)
         setState((s) => ({
           ...s,
           slide: 3,
@@ -1723,7 +1747,6 @@ export default function App() {
         attachSessionsToEmail(existing.email)
         attachSavedScoresToEmail(existing.email)
         setState((s) => ({ ...s, profile: existing }))
-        setAuthSkipped(true)
       }
       const remote = await getSessionProfile()
       if (remote) {
@@ -1736,7 +1759,7 @@ export default function App() {
         } catch {
           /* ignore */
         }
-        setAuthSkipped(true)
+        setPlayGateDone(Boolean(afterAuth))
         if (afterAuth) {
           writeInstrumentPicked(false)
           setInstrumentPicked(false)
@@ -1767,7 +1790,7 @@ export default function App() {
     setShowAccount(false)
     void (async () => {
       await signOut()
-      setAuthSkipped(false)
+      setPlayGateDone(false)
       writeInstrument('piano')
       writeInstrumentPicked(false)
       setInstrumentPicked(false)
@@ -2038,11 +2061,19 @@ export default function App() {
         onNext={() => {
           writeInstrumentPicked(false)
           setInstrumentPicked(false)
+          setPlayGateDone(false)
           go(2)
         }}
       />
     )
-  else if (state.slide === 2 && !state.profile.email.trim() && !authSkipped) {
+  else if (state.slide === 2 && !playGateDone && state.profile.email.trim()) {
+    body = (
+      <ReadyToPlay
+        firstName={state.profile.firstName}
+        onContinue={() => setPlayGateDone(true)}
+      />
+    )
+  } else if (state.slide === 2 && !playGateDone) {
     body = (
       <AuthGate
         profile={state.profile}
@@ -2052,11 +2083,10 @@ export default function App() {
           setState((s) => ({ ...s, profile }))
           void syncAccountSessions(profile.email).then(() => setHistoryRev((n) => n + 1))
           setScoreRev((n) => n + 1)
-          setAuthSkipped(true)
+          setPlayGateDone(true)
         }}
-        onNext={() => setAuthSkipped(true)}
+        onNext={() => setPlayGateDone(true)}
         onCancel={() => go(1)}
-        onSkip={() => setAuthSkipped(true)}
       />
     )
   } else if (state.slide === 2 && !instrumentPicked) {
@@ -2227,7 +2257,7 @@ export default function App() {
           onClick={() => {
             setShowHistory(false)
             setShowAccount(false)
-            if (state.slide === 2 && !state.profile.email.trim() && !authSkipped) {
+            if (state.slide === 2 && !playGateDone) {
               go(1)
               return
             }
@@ -2256,7 +2286,7 @@ export default function App() {
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {(showAccount && !state.profile.email.trim()) ||
-          (state.slide === 2 && !state.profile.email.trim() && !authSkipped && !showAccount) ? null : (
+          (state.slide === 2 && !playGateDone && !state.profile.email.trim() && !showAccount) ? null : (
             <button
               type="button"
               className="top-link"

@@ -199,7 +199,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem var(--pad) 0;
+  padding: 1.1rem var(--pad) 0;
   gap: 1rem;
 }
 
@@ -284,10 +284,10 @@ button {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 0.75rem var(--pad) 1.5rem;
+  padding: 1.25rem var(--pad) 2rem;
   animation: rise 0.45s ease both;
 }
 
@@ -296,19 +296,18 @@ html[data-themes='full'] .slide {
 }
 
 .slide-welcome {
-  justify-content: flex-start;
+  justify-content: space-between;
   min-height: 0;
-  padding-top: 1.35rem;
-  padding-bottom: 1.25rem;
-  gap: 1.5rem;
+  padding-top: clamp(2rem, 8vh, 4rem);
+  padding-bottom: clamp(1.5rem, 5vh, 2.5rem);
 }
 
 .welcome-core {
-  flex: 0 0 auto;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
   max-width: 36rem;
   margin: 0 auto;
@@ -318,6 +317,14 @@ html[data-themes='full'] .slide {
 .slide-welcome .footer-note {
   margin-top: 0;
   padding-top: 1rem;
+}
+
+.welcome-start-hint {
+  margin: 0.85rem 0 0;
+  max-width: 22rem;
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+  line-height: 1.4;
 }
 
 .slide-play {
@@ -562,6 +569,12 @@ html[data-themes='full'] .slide {
   width: 100%;
 }
 
+.slide-instrument {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -642,7 +655,7 @@ html[data-themes='full'] .slide {
 }
 
 .btn-hero {
-  margin-top: 1.2rem;
+  margin-top: 1.75rem;
   width: min(100%, 22rem);
   padding: 1.15rem 1.75rem;
   font-size: 1.12rem;

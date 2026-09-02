@@ -26,7 +26,7 @@ Ce n’est pas l’un ou l’autre.
 ## Connexion
 
 1. Accueil (slogan) → **Commencer**.
-2. **Bienvenue sur Sonique** — Google ou e-mail (lien, pas de mot de passe). Tu peux **Continuer sans compte**.
+2. **Connexion** — Google ou e-mail (lien, pas de mot de passe). Pour jouer, tu te connectes d’abord. **Mon compte**, en haut, garde tes prises.
 3. **Quel est ton instrument ?** — Piano, guitare ou basse.
 
 Dans l’en-tête : **Se connecter** (puis **Mon compte** une fois connectée).
