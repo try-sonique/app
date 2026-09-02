@@ -148,7 +148,7 @@ const FR = {
 
   // Welcome
   readyToPlay: 'Prêt·e à jouer',
-  heroTagline: 'L’app qui te laisse jouer tes morceaux préférés.',
+  heroTagline: 'Joue tes morceaux préférés sans trop de difficultés.',
   start: 'Commencer',
   startHint: 'D’abord tu te connectes. Ensuite tu joues.',
   alreadyInTitle: 'Tu es connectée',
@@ -478,7 +478,7 @@ export const EN: { [K in keyof typeof FR]: string } = {
   supportEmail: 'contact@sonique.co',
 
   readyToPlay: 'Ready to play',
-  heroTagline: 'The app that lets you play your favorite pieces.',
+  heroTagline: 'Play your favorite pieces without too much trouble.',
   start: 'Get started',
   startHint: 'First you sign in. Then you play.',
   alreadyInTitle: 'You’re signed in',

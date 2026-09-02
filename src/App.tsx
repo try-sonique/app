@@ -260,36 +260,54 @@ function ReadyToPlay({
 }
 function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => void }) {
   const copy = t()
+  const base = import.meta.env.BASE_URL
 
   return (
     <section className="slide slide-instrument">
       <div className="instrument-core">
         <h1>{copy.instrumentTitle}</h1>
-        <div className="instrument-grid">
-          <button
-            type="button"
-            className="welcome-instrument"
-            data-kind="piano"
-            onClick={() => onPick('piano')}
-          >
-            <strong>{copy.welcomePiano}</strong>
-          </button>
-          <button
-            type="button"
-            className="welcome-instrument"
-            data-kind="guitar"
-            onClick={() => onPick('guitar')}
-          >
-            <strong>{copy.welcomeGuitar}</strong>
-          </button>
-          <button
-            type="button"
-            className="welcome-instrument"
-            data-kind="bass"
-            onClick={() => onPick('bass')}
-          >
-            <strong>{copy.welcomeBass}</strong>
-          </button>
+        <div className="instrument-split">
+          <div className="instrument-pane">
+            <img
+              className="instrument-photo"
+              src={`${base}instruments/piano-queue.png`}
+              alt=""
+            />
+            <button
+              type="button"
+              className="welcome-instrument"
+              data-kind="piano"
+              onClick={() => onPick('piano')}
+            >
+              <strong>{copy.welcomePiano}</strong>
+            </button>
+          </div>
+          <div className="instrument-rule" aria-hidden />
+          <div className="instrument-pane">
+            <img
+              className="instrument-photo"
+              src={`${base}instruments/guitare-accoustique.png`}
+              alt=""
+            />
+            <div className="instrument-strings">
+              <button
+                type="button"
+                className="welcome-instrument"
+                data-kind="guitar"
+                onClick={() => onPick('guitar')}
+              >
+                <strong>{copy.welcomeGuitar}</strong>
+              </button>
+              <button
+                type="button"
+                className="welcome-instrument"
+                data-kind="bass"
+                onClick={() => onPick('bass')}
+              >
+                <strong>{copy.welcomeBass}</strong>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <FooterLine />

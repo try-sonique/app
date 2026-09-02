@@ -1,6 +1,6 @@
 # Sonique
 
-L’app qui te laisse jouer tes morceaux préférés.
+Joue tes morceaux préférés sans trop de difficultés.
 
 Démo publique : https://try-sonique.github.io/app/
 
