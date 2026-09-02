@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -254,63 +255,50 @@ function ReadyToPlay({
           {copy.alreadyInContinue}
         </button>
       </div>
-      <FooterLine />
+      <FooterLine support={false} />
     </section>
   )
 }
+
 function InstrumentSlide({ onPick }: { onPick: (instrument: InstrumentKind) => void }) {
   const copy = t()
   const base = import.meta.env.BASE_URL
+  const choices: { kind: InstrumentKind; file: string; label: string }[] = [
+    { kind: 'piano', file: 'piano-dessin.png', label: copy.welcomePiano },
+    { kind: 'guitar', file: 'guitare-dessin.png', label: copy.welcomeGuitar },
+    { kind: 'bass', file: 'basse-dessin.png', label: copy.welcomeBass },
+  ]
 
   return (
     <section className="slide slide-instrument">
       <div className="instrument-core">
         <h1>{copy.instrumentTitle}</h1>
         <div className="instrument-split">
-          <div className="instrument-pane">
-            <img
-              className="instrument-photo"
-              src={`${base}instruments/piano-queue.png`}
-              alt=""
-            />
-            <button
-              type="button"
-              className="welcome-instrument"
-              data-kind="piano"
-              onClick={() => onPick('piano')}
-            >
-              <strong>{copy.welcomePiano}</strong>
-            </button>
-          </div>
-          <div className="instrument-rule" aria-hidden />
-          <div className="instrument-pane">
-            <img
-              className="instrument-photo"
-              src={`${base}instruments/guitare-accoustique.png`}
-              alt=""
-            />
-            <div className="instrument-strings">
-              <button
-                type="button"
-                className="welcome-instrument"
-                data-kind="guitar"
-                onClick={() => onPick('guitar')}
-              >
-                <strong>{copy.welcomeGuitar}</strong>
-              </button>
-              <button
-                type="button"
-                className="welcome-instrument"
-                data-kind="bass"
-                onClick={() => onPick('bass')}
-              >
-                <strong>{copy.welcomeBass}</strong>
-              </button>
-            </div>
-          </div>
+          {choices.map((item, i) => (
+            <Fragment key={item.kind}>
+              {i > 0 ? <div className="instrument-rule" aria-hidden /> : null}
+              <div className="instrument-pane">
+                <div className="instrument-frame">
+                  <img
+                    className="instrument-photo"
+                    src={`${base}instruments/${item.file}`}
+                    alt=""
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="welcome-instrument"
+                  data-kind={item.kind}
+                  onClick={() => onPick(item.kind)}
+                >
+                  <strong>{item.label}</strong>
+                </button>
+              </div>
+            </Fragment>
+          ))}
         </div>
       </div>
-      <FooterLine />
+      <FooterLine support={false} />
     </section>
   )
 }

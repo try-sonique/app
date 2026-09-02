@@ -392,11 +392,6 @@ export function AuthGate({
       </div>
 
       <p className="auth-legal">
-        {copy.supportLabel}{' '}
-        <a className="support" href={`mailto:${copy.supportEmail}`}>
-          {copy.supportEmail}
-        </a>
-        <br />
         <button type="button" onClick={() => setLegal('terms')}>
           {copy.authTerms}
         </button>
