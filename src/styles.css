@@ -602,10 +602,10 @@ html[data-themes='full'] .slide {
 
 .instrument-rule {
   width: min(42%, 8rem);
-  height: 1px;
+  height: 2px;
   margin: 0.15rem auto;
   background: var(--gold);
-  opacity: 0.7;
+  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 .instrument-pane {
@@ -638,7 +638,7 @@ html[data-themes='full'] .slide {
   }
 
   .instrument-rule {
-    width: 1px;
+    width: 2px;
     height: auto;
     margin: 0;
     align-self: stretch;
